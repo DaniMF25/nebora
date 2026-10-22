@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { ProductFields } from "@/components/product-fields";
@@ -6,6 +7,7 @@ import { formatEuros } from "@/lib/money";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { listProducts } from "@/server/modules/menus/products";
+import { listProductCostings } from "@/server/modules/recipes/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createProductAction, deleteProductAction, updateProductAction } from "./actions";
 
@@ -16,6 +18,7 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       products: await listProducts(tx, ctx),
+      costings: ctx.permissions.has("costs.read") ? await listProductCostings(tx, ctx) : null,
       canEdit: ctx.permissions.has("menus.edit"),
     }));
   } catch (err) {
@@ -34,7 +37,22 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
           <ul className="cards">
             {data.products.map((p) => (
               <li key={p.id}>
-                <strong>{p.name}</strong> · {formatEuros(p.priceCents)}
+                <Link href={`/app/${orgId}/products/${p.id}`}>
+                  <strong>{p.name}</strong>
+                </Link>{" "}
+                · {formatEuros(p.priceCents)}
+                {data.costings && (
+                  <span className="muted">
+                    {" "}
+                    ·{" "}
+                    {(() => {
+                      const c = data.costings.get(p.id);
+                      if (!c) return "sin receta";
+                      if (c.costPercent === null) return "escandallo incompleto";
+                      return `coste ${c.costPercent.toLocaleString("es-ES")} %`;
+                    })()}
+                  </span>
+                )}
                 {!p.active && <span className="muted"> · archivado</span>}
                 {p.description && <div className="muted">{p.description}</div>}
                 {p.allergens.length > 0 && (

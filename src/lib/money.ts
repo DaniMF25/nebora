@@ -17,3 +17,25 @@ export function formatEuros(cents: number): string {
 export function centsToInput(cents: number): string {
   return `${Math.floor(cents / 100)},${String(cents % 100).padStart(2, "0")}`;
 }
+
+/**
+ * Coste unitario en euros con hasta 4 decimales ("0,1875", "12,5") → céntimos
+ * como literal numeric con hasta 2 decimales ("18.75", "1250.00").
+ */
+export function parseEuroCost(value: string): string | null {
+  const m = /^(\d{1,7})(?:[.,](\d{1,4}))?$/.exec(value.trim().replace(/\s|€/g, ""));
+  if (!m) return null;
+  const tenThousandths = BigInt(m[1]!) * 10000n + BigInt((m[2] ?? "").padEnd(4, "0") || "0");
+  return `${tenThousandths / 100n}.${String(tenThousandths % 100n).padStart(2, "0")}`;
+}
+
+/** Céntimos (literal numeric, puede tener decimales) → "12,35 €" redondeado al céntimo. */
+export function formatCentsNumeric(value: string): string {
+  return formatEuros(Math.round(Number(value)));
+}
+
+/** Céntimos (numeric) → texto editable en euros con hasta 4 decimales ("0,1875"). */
+export function centsNumericToInput(value: string): string {
+  const euros = Number(value) / 100;
+  return euros.toLocaleString("es-ES", { useGrouping: false, maximumFractionDigits: 4 });
+}

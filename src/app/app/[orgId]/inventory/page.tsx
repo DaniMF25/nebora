@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
+import { ALLERGENS, ALLERGEN_LABELS } from "@/lib/allergens";
+import { centsNumericToInput, formatCentsNumeric } from "@/lib/money";
 import { BASE_UNIT_LABELS, BASE_UNITS, formatQuantity, INPUT_UNITS, type InputUnit } from "@/lib/quantity";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
@@ -19,7 +21,10 @@ import {
   createWarehouseAction,
   recordMovementAction,
   setIngredientActiveAction,
+  updateIngredientDetailsAction,
 } from "./actions";
+
+const COST_UNIT: Record<string, string> = { g: "€/kg", ml: "€/l", unit: "€/ud." };
 
 const KIND_LABELS: Record<MovementKind, string> = {
   receipt: "Entrada",
@@ -46,13 +51,14 @@ export default async function InventoryPage({ params }: { params: Promise<{ orgI
         establishments: canManage ? await listEstablishments(tx, ctx) : [],
         canMove: ctx.permissions.has("inventory.move"),
         canManage,
+        canSeeCosts: ctx.permissions.has("costs.read"),
       };
     });
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { stock, movements, ingredients, warehouses, establishments, canMove, canManage } = data;
+  const { stock, movements, ingredients, warehouses, establishments, canMove, canManage, canSeeCosts } = data;
   const activeIngredients = ingredients.filter((i) => i.active);
 
   return (
@@ -228,6 +234,55 @@ export default async function InventoryPage({ params }: { params: Promise<{ orgI
                 <strong>{i.name}</strong> <span className="muted">· {BASE_UNIT_LABELS[i.baseUnit]}</span>
                 {i.reorderLevel && <span className="muted"> · mínimo {formatQuantity(i.reorderLevel, i.baseUnit)}</span>}
                 {!i.active && <span className="muted"> · archivado</span>}
+                {canSeeCosts && (
+                  <span className="muted">
+                    {" "}
+                    · coste{" "}
+                    {i.costCentsPerRef ? `${formatCentsNumeric(i.costCentsPerRef)} ${COST_UNIT[i.baseUnit]!.slice(1)}` : "sin definir"}
+                  </span>
+                )}
+                {i.allergens.length > 0 && (
+                  <div className="muted">Alérgenos: {i.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ")}</div>
+                )}
+                {canManage && (
+                  <details>
+                    <summary>Editar {i.name}</summary>
+                    <ActionForm action={updateIngredientDetailsAction.bind(null, orgId, i.id)} submitLabel="Guardar">
+                      <label>
+                        Coste ({COST_UNIT[i.baseUnit]})
+                        <input
+                          name="cost"
+                          inputMode="decimal"
+                          placeholder="Sin definir"
+                          defaultValue={i.costCentsPerRef ? centsNumericToInput(i.costCentsPerRef) : ""}
+                        />
+                      </label>
+                      <label>
+                        Nivel mínimo ({BASE_UNIT_LABELS[i.baseUnit]})
+                        <input
+                          name="reorderLevel"
+                          inputMode="decimal"
+                          defaultValue={i.reorderLevel ? i.reorderLevel.replace(/\.?0+$/, "").replace(".", ",") : ""}
+                        />
+                      </label>
+                      <fieldset className="allergens">
+                        <legend>Alérgenos</legend>
+                        {ALLERGENS.map((a) => (
+                          <label key={a} className="inline-form" htmlFor={`${i.id}-${a}`}>
+                            <input
+                              id={`${i.id}-${a}`}
+                              type="checkbox"
+                              name="allergens"
+                              value={a}
+                              defaultChecked={i.allergens.includes(a)}
+                            />
+                            {ALLERGEN_LABELS[a]}
+                          </label>
+                        ))}
+                      </fieldset>
+                    </ActionForm>
+                  </details>
+                )}
                 {canManage && (
                   <ActionForm
                     action={setIngredientActiveAction.bind(null, orgId, i.id, !i.active)}

@@ -140,3 +140,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Borrar ingredientes, almacenes o establecimientos con historial está bloqueado (FK RESTRICT); se archivan.
 
 **Pendiente:** traspasos entre almacenes, recuentos de inventario (ajuste a cantidad contada con bloqueo), recetas/escandallos, proveedores y compras.
+
+## D-015 — Recetas, escandallos y alérgenos derivados
+**Fecha:** 2026-10-22. **Estado:** aceptada.
+
+**Decisión:**
+- Recetas por ración (`recipe_lines`) ligadas a productos de la carta, en la unidad base del ingrediente. Un producto tiene como máximo una línea por ingrediente.
+- Coste de referencia manual por ingrediente en céntimos por kg, litro o unidad (`numeric(14,4)`); cuando existan compras se actualizará desde las recepciones. Si falta el coste de algún ingrediente, el escandallo se muestra como **incompleto** (no se estiman costes).
+- Indicadores: coste por ración, margen bruto y % de coste **sobre el precio de carta tal como se introduce** (no se asume IVA).
+- Nuevo permiso `costs.read` (owner, admin, manager): sin él no se devuelven costes ni márgenes, tampoco el coste de los ingredientes.
+- Los ingredientes declaran alérgenos; si la receta contiene alérgenos no declarados en el producto se avisa y se ofrece declararlos (no se hace automáticamente). Recordatorio: el cambio solo llega a la carta pública al volver a publicar.
+- «Registrar elaboración» descuenta los ingredientes de N raciones en una única transacción (todo o nada) con claves de idempotencia derivadas (`clave:ingrediente`).
+
+**Pendiente:** subrecetas/elaboraciones intermedias, mermas de limpieza (rendimiento) por ingrediente, coste medio ponderado.

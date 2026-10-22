@@ -1,5 +1,7 @@
 import "server-only";
 import { z } from "zod";
+import { ALLERGENS, type Allergen } from "@/lib/allergens";
+import { parseEuroCost } from "@/lib/money";
 import {
   BASE_UNITS,
   INPUT_UNITS,
@@ -22,6 +24,9 @@ export interface Ingredient {
   baseUnit: BaseUnit;
   reorderLevel: string | null;
   active: boolean;
+  allergens: Allergen[];
+  /** Céntimos por kg / litro / unidad. Null si no hay coste o no se tiene permiso para verlo. */
+  costCentsPerRef: string | null;
 }
 
 export interface Warehouse {
@@ -71,18 +76,26 @@ const noteSchema = z
   .optional();
 // La clave la genera el cliente por envío de formulario (o el integrador) y
 // permite reintentar sin duplicar el movimiento.
-const idempotencyKeySchema = z
+export const idempotencyKeySchema = z
   .string()
   .regex(/^[A-Za-z0-9_-]{8,100}$/, { message: "Clave de idempotencia no válida" });
 
 export const createIngredientSchema = z
   .object({ name: nameSchema, baseUnit: z.enum(BASE_UNITS), reorderLevel: quantityText.optional() })
   .strict();
+const allergenListSchema = z
+  .array(z.enum(ALLERGENS))
+  .max(ALLERGENS.length)
+  .transform((a) => [...new Set(a)].sort());
+
 export const updateIngredientSchema = z
   .object({
     name: nameSchema.optional(),
     reorderLevel: quantityText.nullable().optional(),
     active: z.boolean().optional(),
+    allergens: allergenListSchema.optional(),
+    // Euros por kg, litro o unidad (según la unidad base); cadena vacía o null lo elimina.
+    cost: z.string().nullable().optional(),
   })
   .strict();
 export const createWarehouseSchema = z.object({ name: nameSchema }).strict();
@@ -112,7 +125,13 @@ function reorderToNumeric(value: string | null | undefined): string | null {
 // Ingredientes y almacenes
 // ---------------------------------------------------------------------------
 
-const INGREDIENT_COLUMNS = `id, name, base_unit AS "baseUnit", reorder_level::text AS "reorderLevel", active`;
+const INGREDIENT_COLUMNS = `id, name, base_unit AS "baseUnit", reorder_level::text AS "reorderLevel", active,
+  allergens, cost_cents_per_ref::text AS "costCentsPerRef"`;
+
+/** Los costes solo se exponen con el permiso costs.read. */
+function hideCosts(ctx: TenantContext, rows: Ingredient[]): Ingredient[] {
+  return ctx.permissions.has("costs.read") ? rows : rows.map((r) => ({ ...r, costCentsPerRef: null }));
+}
 
 export async function listIngredients(tx: Tx, ctx: TenantContext): Promise<Ingredient[]> {
   requirePermission(ctx, "inventory.read");
@@ -120,7 +139,7 @@ export async function listIngredients(tx: Tx, ctx: TenantContext): Promise<Ingre
     `SELECT ${INGREDIENT_COLUMNS} FROM ingredients WHERE organization_id = $1 ORDER BY active DESC, name`,
     [ctx.organizationId],
   );
-  return rows;
+  return hideCosts(ctx, rows);
 }
 
 export async function createIngredient(tx: Tx, ctx: TenantContext, input: unknown): Promise<Ingredient> {
@@ -148,6 +167,18 @@ export async function updateIngredient(tx: Tx, ctx: TenantContext, id: string, i
   if (data.name !== undefined) values.name = data.name;
   if (data.reorderLevel !== undefined) values.reorder_level = reorderToNumeric(data.reorderLevel);
   if (data.active !== undefined) values.active = data.active;
+  if (data.allergens !== undefined) values.allergens = data.allergens;
+  if (data.cost !== undefined) {
+    requirePermission(ctx, "costs.read");
+    if (data.cost === null || data.cost.trim() === "") {
+      values.cost_cents_per_ref = null;
+    } else {
+      const cents = parseEuroCost(data.cost);
+      if (cents === null) throw new ValidationError("Coste no válido (euros, hasta 4 decimales)");
+      values.cost_cents_per_ref = cents;
+    }
+    values.cost_updated_at = new Date();
+  }
   const cols = Object.keys(values);
   if (cols.length === 0) return;
   try {
@@ -255,7 +286,7 @@ async function getMovement(tx: Tx, ctx: TenantContext, id: string): Promise<Move
   return rows[0] ?? null;
 }
 
-interface NewMovement {
+export interface NewMovement {
   warehouseId: string;
   ingredientId: string;
   kind: MovementKind;
@@ -271,7 +302,7 @@ interface NewMovement {
  * aplicarlo; si se usó con datos distintos, es un conflicto. El saldo lo
  * actualiza el trigger de BD; si quedaría negativo, la transacción falla.
  */
-async function insertMovement(
+export async function insertMovement(
   tx: Tx,
   ctx: TenantContext,
   m: NewMovement,

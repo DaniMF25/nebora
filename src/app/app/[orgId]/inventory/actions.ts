@@ -75,3 +75,23 @@ export async function createWarehouseAction(orgId: string, _p: FormState, fd: Fo
     "Almacén creado",
   );
 }
+
+export async function updateIngredientDetailsAction(
+  orgId: string,
+  ingredientId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  const allergens = fd.getAll("allergens").filter((a): a is string => typeof a === "string");
+  return runTenantAction(
+    orgId,
+    path(orgId),
+    (tx, ctx) =>
+      updateIngredient(tx, ctx, ingredientId, {
+        allergens,
+        cost: formString(fd, "cost"),
+        reorderLevel: formString(fd, "reorderLevel") || null,
+      }),
+    "Guardado",
+  );
+}

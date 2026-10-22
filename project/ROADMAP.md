@@ -42,7 +42,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 ## Fase 4 — Inventario
 - [x] Ingredientes y unidades (g/ml/unidades con conversión kg, l, cl).
 - [x] Almacenes y movimientos (entradas, consumos, mermas, ajustes, correcciones). Traspasos y recuentos pendientes.
-- [ ] Recetas y escandallos.
+- [x] Recetas y escandallos (coste por ración, margen, % coste, alérgenos derivados, elaboración que descuenta stock).
 - [ ] Proveedores y órdenes de compra.
 - [ ] Recepciones y alertas — alerta de stock bajo mínimo hecha; recepciones de compra pendientes.
 - [x] Pruebas de concurrencia e idempotencia.
