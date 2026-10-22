@@ -35,7 +35,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Borradores y publicación atómica.
 - [x] Versiones (historial, reactivar, despublicar).
 - [x] Página pública (solo versión publicada).
-- [ ] QR SVG/PNG.
+- [x] QR SVG/PNG con enlace corto estable (D-013).
 - [ ] Idiomas y alérgenos — alérgenos UE hechos; idiomas pendientes.
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 

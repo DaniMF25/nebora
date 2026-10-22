@@ -66,3 +66,6 @@ details { margin-top: 0.5rem; }
 summary { cursor: pointer; color: var(--accent); }
 .menu-section { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
 .menu-section h4 { margin: 0 0 0.5rem; }
+.qr { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+.qr img { background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+code { overflow-wrap: anywhere; }

@@ -19,6 +19,8 @@ export interface MenuSummary {
   name: string;
   slug: string;
   theme: MenuTheme;
+  /** Código estable para el enlace corto /q/<código> y el QR. */
+  publicCode: string;
   publishedVersionNumber: number | null;
   publishedAt: Date | null;
 }
@@ -76,6 +78,7 @@ const directionSchema = z.enum(["up", "down"]);
 
 const SUMMARY_SQL = `
   SELECT m.id, m.establishment_id AS "establishmentId", m.name, m.slug::text AS slug, m.theme,
+         m.public_code AS "publicCode",
          v.version_number AS "publishedVersionNumber", v.published_at AS "publishedAt"
     FROM menus m
     LEFT JOIN menu_versions v ON v.id = m.published_version_id AND v.menu_id = m.id`;
@@ -579,4 +582,18 @@ export async function getPublishedMenu(
   }>("SELECT * FROM app.published_menu($1, $2, $3)", slugs);
   const r = rows[0];
   return r ? { versionNumber: r.version_number, publishedAt: r.published_at, snapshot: r.snapshot } : null;
+}
+
+/**
+ * Ruta pública vigente de la carta con ese código, o null si no existe o no
+ * está publicada. Permite que un QR impreso sobreviva a cambios de slug.
+ */
+export async function resolveMenuCode(code: string): Promise<string | null> {
+  if (!/^[0-9a-f]{12}$/.test(code)) return null;
+  const { rows } = await getPool().query<{ organization_slug: string; establishment_slug: string; menu_slug: string }>(
+    "SELECT * FROM app.resolve_menu_code($1)",
+    [code],
+  );
+  const r = rows[0];
+  return r ? `/m/${r.organization_slug}/${r.establishment_slug}/${r.menu_slug}` : null;
 }

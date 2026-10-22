@@ -360,3 +360,36 @@ describe("cartas: aislamiento entre organizaciones", () => {
     expect(await getPublishedMenu(a.orgSlug, b.est.slug, "carta")).toBeNull();
   });
 });
+
+describe("cartas: código público estable (QR)", () => {
+  it("sobrevive a cambios de slug, solo resuelve cartas publicadas y la app no puede cambiarlo", async () => {
+    const f = await setupRestaurant("menu-qr");
+    const m = await buildMenu(f, "qr-carta");
+    const { resolveMenuCode, getMenuSummary } = await import("@/server/modules/menus/menus");
+    const code = m.menu.publicCode;
+    expect(code).toMatch(/^[0-9a-f]{12}$/);
+
+    expect(await resolveMenuCode(code)).toBeNull(); // sin publicar
+    await withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id));
+    expect(await resolveMenuCode(code)).toBe(`/m/${f.orgSlug}/${f.est.slug}/qr-carta`);
+
+    await withTenant(f.owner, f.org, (tx, ctx) => updateMenu(tx, ctx, m.menu.id, { slug: "carta-renombrada" }));
+    expect(await resolveMenuCode(code)).toBe(`/m/${f.orgSlug}/${f.est.slug}/carta-renombrada`);
+    const after = await withTenant(f.owner, f.org, (tx, ctx) => getMenuSummary(tx, ctx, m.menu.id));
+    expect(after.publicCode).toBe(code);
+
+    await withAppClient(async (c) => {
+      await c.query("BEGIN");
+      await c.query("SELECT set_config('app.user_id', $1, true), set_config('app.org_id', $2, true)", [f.owner.id, f.org]);
+      await expect(c.query("UPDATE menus SET public_code = '000000000000'")).rejects.toThrow(/permission denied/);
+      await c.query("ROLLBACK");
+    });
+
+    await withTenant(f.owner, f.org, (tx, ctx) => unpublishMenu(tx, ctx, m.menu.id));
+    expect(await resolveMenuCode(code)).toBeNull();
+    expect(await resolveMenuCode("../../etc")).toBeNull();
+
+    const other = await buildMenu(f, "otra-carta");
+    expect(other.menu.publicCode).not.toBe(code);
+  });
+});

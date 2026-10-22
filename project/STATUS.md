@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 avanzada (cartas con publicación; faltan QR e idiomas). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
+**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
 
-**Última actualización:** 2026-10-22 — cartas: catálogo, borrador, publicación, versiones y página pública.
+**Última actualización:** 2026-10-22 — códigos QR de cartas.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -18,6 +18,7 @@
 - [x] Redirección segura tras login (`?next=`).
 - [x] Horarios (migración 0003): horario semanal con turnos nocturnos, excepciones por fecha (cerrado o turnos especiales), cálculo de apertura con zona horaria y cambios de hora, restricciones de exclusión y FKs compuestas. Página `/app/<org>/establishments/<id>` con editor, «abierto ahora» y próximos 7 días.
 - [x] Cartas (migración 0004): catálogo de productos con precio en céntimos y alérgenos UE; cartas por establecimiento con categorías, orden y precio específico; publicación atómica de versiones inmutables (historial, reactivar, despublicar); vista previa del borrador; página pública `/m/<org>/<local>/<carta>` que solo lee la versión publicada; 4 temas.
+- [x] QR de cada carta (migración 0005): enlace corto permanente `/q/<código>` que sobrevive a cambios de identificador, descarga SVG/PNG protegida; requiere `APP_BASE_URL`.
 - [x] Cabeceras de seguridad básicas y workflow de CI (`.github/workflows/ci.yml`, aún no ejecutado en GitHub).
 
 ## No implementado todavía
@@ -26,7 +27,7 @@
 - [ ] MFA, verificación de correo y recuperación de contraseña (requieren proveedor de correo).
 - [ ] Limitación de peticiones por IP.
 - [ ] CSP completa con nonces para scripts.
-- [ ] Cartas: códigos QR, traducciones, imágenes, redirección si cambia el identificador de una carta publicada.
+- [ ] Cartas: traducciones e imágenes. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
 - [ ] Dashboard, inventario, reservas, personal, informes.
 - [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
 - [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
@@ -37,10 +38,10 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test` | PASÓ — 6 archivos, 27 pruebas |
-| `pnpm test:integration` | PASÓ — 7 archivos, 80 pruebas (BD efímera migrada desde cero) |
+| `pnpm test` | PASÓ — 8 archivos, 34 pruebas |
+| `pnpm test:integration` | PASÓ — 7 archivos, 81 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 8 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 9 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | NO EJECUTADO todavía |
 
 Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión).
@@ -49,7 +50,7 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Fase 3 (cierre): códigos QR SVG/PNG de la página pública de cada carta (generados en servidor) y decisión sobre identificadores estables para que un QR impreso no se rompa al renombrar la carta. Después, Fase 4: inventario (ingredientes, unidades, almacenes y movimientos de solo inserción con idempotencia).
+Fase 4 — inventario, primer paso: unidades e ingredientes, almacenes por establecimiento y movimientos de stock de solo inserción con clave de idempotencia y saldo actualizado en la misma transacción (D-009), con pruebas de concurrencia, reintentos y aislamiento.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -58,6 +59,6 @@ Fase 3 (cierre): códigos QR SVG/PNG de la página pública de cada carta (gener
 - Tablas de identidad (`users`, `sessions`) sin RLS: solo accesibles desde el módulo de autenticación.
 - Copias de seguridad y restauración no definidas.
 - El token de invitación viaja en la URL (historial del navegador, logs de proxies); mitigado con un solo uso, caducidad y vínculo al correo.
-- Cambiar el identificador de una carta publicada cambia su URL pública al instante.
+- Cambiar el identificador de una carta publicada cambia su URL directa `/m/...` (los QR no se ven afectados).
 - La página pública no tiene limitación de peticiones ni caché.
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.

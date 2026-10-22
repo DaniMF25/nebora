@@ -114,3 +114,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Consecuencias:** cambiar el catálogo, el borrador o el tema no altera lo publicado hasta volver a publicar. Cambiar el identificador (slug) de la carta sí cambia la URL pública inmediatamente (y rompería QR ya impresos): pendiente de valorar redirecciones antes de implementar QR.
 
 **Pendiente:** traducciones, QR, imágenes, permisos por establecimiento.
+
+## D-013 — QR con enlace corto estable y dependencia `qrcode`
+**Fecha:** 2026-10-22. **Estado:** aceptada.
+
+**Contexto:** un QR impreso no puede romperse si se renombra la carta (D-012). Codificar QR a mano (Reed-Solomon, máscaras, versiones) es propenso a errores.
+
+**Decisión:**
+- Cada carta tiene `public_code` (12 hex, 48 bits aleatorios, único, no modificable por el rol de aplicación). `/q/<código>` redirige (307) a la URL pública vigente solo si la carta está publicada; si no, 404.
+- El QR codifica ese enlace corto absoluto, construido con `APP_BASE_URL` (origen validado; https obligatorio en producción salvo loopback). Sin `APP_BASE_URL` la función se muestra como no configurada.
+- Dependencia `qrcode@1.5.4` (MIT, ampliamente usada, sin vulnerabilidades conocidas según `pnpm audit --prod`) para generar SVG y PNG en servidor, con corrección de errores nivel M.
+- La descarga del QR exige sesión y `menus.read` en la organización (401/404 en otro caso) y se sirve con `Cache-Control: private, no-store` y una CSP restrictiva.
+
+**Consecuencias:** la redirección añade un salto de red al escanear. El código público no es secreto: cualquiera con el QR puede ver la carta publicada, que es su finalidad.

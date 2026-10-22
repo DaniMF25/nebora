@@ -5,9 +5,11 @@ import { ALLERGEN_LABELS } from "@/lib/allergens";
 import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
 import { centsToInput, formatEuros } from "@/lib/money";
 import { requireUser } from "@/server/auth/current-user";
+import { getEnv } from "@/server/config/env";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getMenuDraft, listVersions, publicationProblems } from "@/server/modules/menus/menus";
 import { listProducts } from "@/server/modules/menus/products";
+import { menuShortUrl } from "@/server/modules/menus/qr";
 import { withTenant } from "@/server/tenancy/context";
 import {
   activateVersionAction,
@@ -49,6 +51,9 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
   const { menu } = draft;
   const publicPath = `/m/${draft.organizationSlug}/${draft.establishmentSlug}/${menu.slug}`;
   const problems = publicationProblems(draft);
+  const baseUrl = getEnv().APP_BASE_URL;
+  const shortUrl = baseUrl ? menuShortUrl(baseUrl, menu.publicCode) : null;
+  const qrPath = `/app/${orgId}/menus/${menuId}/qr`;
 
   return (
     <>
@@ -92,6 +97,34 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
           </div>
         </section>
       )}
+
+      <section>
+        <h3>Código QR</h3>
+        {shortUrl ? (
+          <div className="qr">
+            {/* eslint-disable-next-line @next/next/no-img-element -- imagen generada en servidor, no optimizable */}
+            <img src={`${qrPath}?format=svg`} alt={`Código QR de ${menu.name}`} width={160} height={160} />
+            <div>
+              <p>
+                Enlace permanente: <code>{shortUrl}</code>
+              </p>
+              <p className="muted">
+                El QR apunta a este enlace, que lleva a la versión publicada aunque cambies el identificador de la carta.
+                {!menu.publishedVersionNumber && " Ahora mismo la carta no está publicada: el enlace mostrará «no disponible»."}
+              </p>
+              <p>
+                <a href={`${qrPath}?format=svg&download=1`}>Descargar SVG</a> ·{" "}
+                <a href={`${qrPath}?format=png&download=1`}>Descargar PNG</a>
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="notice">
+            QR no configurado: falta la variable de entorno <code>APP_BASE_URL</code> con la dirección pública de la
+            aplicación.
+          </p>
+        )}
+      </section>
 
       <section>
         <h3>Borrador</h3>

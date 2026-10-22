@@ -42,6 +42,7 @@ const child = spawn("pnpm", ["exec", "next", "start", "-p", port], {
     NODE_ENV: "production",
     DATABASE_URL: appUrl.toString(),
     AUTH_ALLOW_SIGNUP: "true",
+    APP_BASE_URL: `http://localhost:${port}`,
   },
 });
 const stop = () => child.kill("SIGTERM");
