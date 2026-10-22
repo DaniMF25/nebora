@@ -45,7 +45,7 @@ export function MenuView({ snapshot, footer }: Props) {
           </section>
         ))}
         <footer className={styles.footer}>
-          <p>Precios en euros, IVA incluido. Consulta al personal cualquier duda sobre alérgenos.</p>
+          <p>Precios en euros. Consulta al personal cualquier duda sobre alérgenos.</p>
           {footer}
         </footer>
       </article>
