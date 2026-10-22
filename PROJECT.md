@@ -1,8 +1,8 @@
-# GastroFlow — definición del producto
+# Nébora — definición del producto
 
 ## Visión
 
-GastroFlow es un SaaS multiempresa para que restaurantes y grupos de restauración gestionen desde una plataforma sus establecimientos, cartas digitales, inventario, reservas, mesas, horarios, proveedores, personal e informes.
+Nébora es un SaaS multiempresa para que restaurantes y grupos de restauración gestionen desde una plataforma sus establecimientos, cartas digitales, inventario, reservas, mesas, horarios, proveedores, personal e informes.
 
 ## Usuarios y organizaciones
 
