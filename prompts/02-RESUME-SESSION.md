@@ -1,6 +1,6 @@
 # Prompt — Recuperar contexto en una nueva sesión
 
-Vamos a continuar GastroFlow desde el estado persistente del repositorio, no desde la memoria de la conversación.
+Vamos a continuar Nébora desde el estado persistente del repositorio, no desde la memoria de la conversación.
 
 1. Lee `CLAUDE.md`, `PROJECT.md`, `project/STATUS.md`, `project/ROADMAP.md` y `project/DECISIONS.md`.
 2. Inspecciona Git, los cambios sin guardar y los archivos relevantes.
