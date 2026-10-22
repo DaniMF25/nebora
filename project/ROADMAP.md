@@ -25,7 +25,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 ## Fase 2 — Interfaz y configuración
 - [ ] Layout responsive y navegación.
 - [ ] Selector de organización/establecimiento.
-- [ ] Configuración de horarios y zona horaria.
+- [x] Configuración de horarios y zona horaria (horario semanal, turnos nocturnos, excepciones, cálculo con DST).
 - [ ] Dashboard con datos reales y estados vacíos.
 
 ## Fase 3 — Cartas digitales
@@ -50,7 +50,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 ## Fase 5 — Mesas y reservas
 - [ ] Zonas y plano.
 - [ ] Mesas y capacidades.
-- [ ] Horarios y excepciones.
+- [x] Horarios y excepciones (hechos en Fase 2; ver D-011).
 - [ ] Calendario.
 - [ ] Reservas públicas y privadas.
 - [ ] Asignaciones y prevención de solapamientos.

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { requireUser } from "@/server/auth/current-user";
@@ -32,7 +33,9 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
           <ul className="cards">
             {data.establishments.map((e) => (
               <li key={e.id}>
-                <strong>{e.name}</strong> <span className="muted">· {e.timezone}</span>
+                <Link href={`/app/${orgId}/establishments/${e.id}`}>
+                  <strong>{e.name}</strong>
+                </Link> <span className="muted">· {e.timezone}</span>
                 {e.address && <div className="muted">{e.address}</div>}
               </li>
             ))}

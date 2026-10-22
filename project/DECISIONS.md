@@ -91,3 +91,12 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Reglas de membresía:** nadie cambia su propio rol; solo un owner concede o retira la propiedad; siempre queda al menos un owner. Los cambios se serializan bloqueando la fila de la organización y releyendo el rol del actor tras el bloqueo (probado con operaciones concurrentes).
 
 **Consecuencias:** el token viaja en la URL (`/invite/<token>`): puede quedar en el historial del navegador o en logs de proxies. Mitigaciones: un solo uso, caducidad, ligado al correo, `noindex` y `Referrer-Policy`. Cuando haya correo se enviará directamente al invitado.
+
+## D-011 — Representación de horarios
+**Fecha:** 2026-10-22. **Estado:** aceptada.
+
+**Decisión:** los turnos se guardan como minutos locales de apertura (0..1439) más duración (1..1440), interpretados con la zona horaria IANA del establecimiento. Un turno que pasa de medianoche pertenece al día en que abre. Las excepciones por fecha local sustituyen por completo el horario semanal de ese día (cerrado o turnos especiales). La conversión a instantes UTC se hace en el dominio con `Intl` (sin dependencias); en el cambio de hora de primavera una hora inexistente se desplaza hacia delante y en otoño la hora repetida toma la segunda ocurrencia. El cierre se calcula como hora local (un turno 20:00–02:00 la noche del cambio de otoño dura 7 h reales).
+
+**Integridad:** restricciones de exclusión `btree_gist` impiden turnos solapados en BD (el cruce domingo→lunes lo valida el dominio); FKs compuestas `(organization_id, establishment_id)`; trigger que impide turnos en un día marcado como cerrado.
+
+**Consecuencias:** las reservas (Fase 5) usarán `resolveOpeningIntervals` para calcular disponibilidad.
