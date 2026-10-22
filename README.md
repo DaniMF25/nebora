@@ -22,8 +22,38 @@ Este paquete contiene la documentación y las instrucciones iniciales para desar
 - `prompts/`: prompts de inicio, trabajo por tarea y recuperación de contexto.
 - `.gitignore`: evita subir secretos y archivos generados.
 
+## Desarrollo local
+
+Requisitos: Node.js ≥ 22.12, pnpm 10 y PostgreSQL ≥ 16.
+
+1. Crea en PostgreSQL un rol propietario **no superusuario** para migraciones:
+   ```sql
+   CREATE ROLE nebora_admin LOGIN CREATEDB CREATEROLE PASSWORD '<contraseña local>';
+   ```
+2. Copia `.env.example` a `.env.local` (ignorado por Git) y rellena `DATABASE_ADMIN_URL`, `DATABASE_URL` y `NEBORA_APP_DB_PASSWORD`. Para probar el alta de cuentas en local añade `AUTH_ALLOW_SIGNUP=true`.
+3. Instala y prepara la base de datos:
+   ```bash
+   pnpm install
+   pnpm db:setup-local   # crea la BD, aplica migraciones y habilita el rol nebora_app
+   pnpm dev
+   ```
+
+### Comprobaciones
+
+| Comando | Qué hace |
+|---|---|
+| `pnpm lint` | ESLint (configuración de Next.js), sin avisos permitidos |
+| `pnpm typecheck` | TypeScript estricto |
+| `pnpm test` | Pruebas unitarias |
+| `pnpm test:integration` | Pruebas contra una base de datos efímera creada y migrada desde cero (falla si no hay PostgreSQL) |
+| `pnpm test:e2e` | `next build` + Playwright contra una BD `nebora_e2e` recreada. Si ya tienes Chromium, usa `PLAYWRIGHT_CHROMIUM_EXECUTABLE`; si no, `pnpm exec playwright install chromium` |
+| `pnpm build` | Build de producción |
+| `pnpm db:migrate` | Aplica migraciones pendientes con `DATABASE_ADMIN_URL` |
+
+El estado verificado del proyecto está en `project/STATUS.md`.
+
 ## Importante
 
-Este paquete es un **starter de documentación**, no una aplicación implementada ni una certificación de seguridad. No contiene una aplicación funcional, credenciales ni infraestructura ya desplegada. Claude debe construir el producto fase por fase, ejecutar pruebas reales y documentar las limitaciones.
+El proyecto está en construcción: consulta `project/STATUS.md` para saber qué está implementado y probado. No es una certificación de seguridad ni está listo para producción. No contiene credenciales ni infraestructura desplegada.
 
 No subas nunca `.env` con secretos reales. Usa `.env.example` como plantilla y un gestor de secretos para entornos desplegados.

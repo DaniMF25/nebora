@@ -1,26 +1,26 @@
-# Roadmap de Nébula
+# Roadmap de Nébora
 
-Estado inicial: todas las fases están pendientes. Actualizar solo tras verificar trabajo real.
+Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 
 ## Fase 0 — Descubrimiento y arquitectura
-- [ ] Verificar capacidades de Claude y entorno de ejecución.
-- [ ] Confirmar stack y proveedores.
-- [ ] Diseñar modelo de datos.
-- [ ] Definir amenazas y fronteras de confianza.
-- [ ] Definir criterios de aceptación.
-- [ ] Documentar decisiones.
+- [x] Verificar capacidades de Claude y entorno de ejecución.
+- [x] Confirmar stack (D-004). Proveedores externos: pendientes (Fase 7).
+- [x] Diseñar modelo de datos inicial (implementado el núcleo; resto en `docs/DATA_MODEL.md`).
+- [x] Definir fronteras de confianza (rol `nebora_app`, RLS, contexto en servidor). Modelo de amenazas formal: pendiente para Fase 8.
+- [x] Definir criterios de aceptación de la Fase 1.
+- [x] Documentar decisiones (D-004 a D-009).
 
 ## Fase 1 — Fundación segura
-- [ ] Inicializar aplicación y scripts de calidad.
-- [ ] Configurar base de datos y migraciones.
-- [ ] Implementar autenticación y sesiones.
-- [ ] Implementar organizaciones y establecimientos.
-- [ ] Implementar membresías y permisos.
-- [ ] Implementar aislamiento multiempresa.
-- [ ] Implementar auditoría mínima.
-- [ ] Probar acceso cruzado entre organizaciones.
+- [x] Inicializar aplicación y scripts de calidad.
+- [x] Configurar base de datos y migraciones.
+- [x] Implementar autenticación y sesiones (sin MFA ni recuperación: requieren correo).
+- [x] Implementar organizaciones y establecimientos.
+- [ ] Implementar membresías y permisos — matriz de roles y membresía de propietario hechas; invitaciones y gestión de miembros pendientes.
+- [x] Implementar aislamiento multiempresa (RLS + servicios).
+- [x] Implementar auditoría mínima.
+- [x] Probar acceso cruzado entre organizaciones (servicios, RLS y E2E).
 
-**Puerta de salida:** las pruebas negativas de aislamiento pasan y el proyecto compila.
+**Puerta de salida:** las pruebas negativas de aislamiento pasan y el proyecto compila. — Superada el 2026-10-22 (CI de GitHub aún no ejecutado).
 
 ## Fase 2 — Interfaz y configuración
 - [ ] Layout responsive y navegación.

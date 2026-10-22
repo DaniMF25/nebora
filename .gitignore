@@ -33,3 +33,7 @@ test-results/
 *.dump
 *.backup
 backups/
+
+# Next.js / TypeScript generated
+next-env.d.ts
+*.tsbuildinfo

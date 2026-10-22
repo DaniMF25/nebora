@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Preparar roles de base de datos (contraseñas efímeras por ejecución)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          ADMIN_PW=$(openssl rand -hex 16)
+          APP_PW=$(openssl rand -hex 16)
+          echo "::add-mask::$ADMIN_PW"
+          echo "::add-mask::$APP_PW"
+          psql -h 127.0.0.1 -U postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE nebora_admin LOGIN CREATEDB CREATEROLE PASSWORD '$ADMIN_PW'"
+          echo "DATABASE_ADMIN_URL=postgres://nebora_admin:$ADMIN_PW@127.0.0.1:5432/nebora_ci" >> "$GITHUB_ENV"
+          echo "NEBORA_APP_DB_PASSWORD=$APP_PW" >> "$GITHUB_ENV"
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm test:integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
