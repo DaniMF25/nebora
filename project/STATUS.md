@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 en curso (stock, movimientos, recetas y escandallos). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
+**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
 
-**Última actualización:** 2026-10-22 — recetas y escandallos.
+**Última actualización:** 2026-10-22 — proveedores, pedidos de compra y recepciones.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -21,6 +21,7 @@
 - [x] QR de cada carta (migración 0005): enlace corto permanente `/q/<código>` que sobrevive a cambios de identificador, descarga SVG/PNG protegida; requiere `APP_BASE_URL`.
 - [x] Inventario (migración 0006): ingredientes con unidad base y mínimo de reposición, almacenes por establecimiento, movimientos de solo inserción (entrada, consumo, merma, ajuste, corrección compensatoria) con idempotencia; saldo mantenido por trigger, nunca negativo; página `/app/<org>/inventory`.
 - [x] Recetas y escandallos (migración 0007): receta por ración de cada producto; coste de referencia y alérgenos por ingrediente; coste por ración, margen y % de coste (incompleto si falta algún coste, visible solo con `costs.read`); aviso de alérgenos no declarados; elaboración de N raciones que descuenta stock de forma atómica e idempotente. Página `/app/<org>/products/<id>`.
+- [x] Compras (migración 0008): proveedores; pedidos con estados y numeración correlativa; recepciones parciales/totales que generan entradas de stock en la misma transacción, idempotentes, sin superar lo pedido y que actualizan el coste de referencia; el personal recibe sin ver precios. Páginas `/app/<org>/purchasing`.
 - [x] Cabeceras de seguridad básicas y workflow de CI (`.github/workflows/ci.yml`, aún no ejecutado en GitHub).
 
 ## No implementado todavía
@@ -30,7 +31,7 @@
 - [ ] Limitación de peticiones por IP.
 - [ ] CSP completa con nonces para scripts.
 - [ ] Cartas: traducciones e imágenes. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
-- [ ] Inventario: traspasos entre almacenes, recuentos, proveedores, órdenes de compra y recepciones; subrecetas.
+- [ ] Inventario: traspasos entre almacenes, recuentos físicos, subrecetas, devoluciones a proveedor, envío de pedidos por correo.
 - [ ] Dashboard, reservas, personal, informes.
 - [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
 - [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
@@ -42,9 +43,9 @@
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
 | `pnpm test` | PASÓ — 9 archivos, 39 pruebas |
-| `pnpm test:integration` | PASÓ — 9 archivos, 101 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:integration` | PASÓ — 10 archivos, 109 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 11 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 12 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | NO EJECUTADO todavía |
 
 Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión).
@@ -53,7 +54,7 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Fase 4 (continuación): proveedores, órdenes de compra (borrador → enviada → recibida parcial/total) y recepciones que generen entradas de stock idempotentes y actualicen el coste de referencia del ingrediente con el último precio de compra.
+Fase 5 — mesas y reservas: zonas y mesas con capacidad por establecimiento; reservas con duración y asignación de mesa protegida por restricción de exclusión (`btree_gist`) frente a solapes concurrentes; validación contra los horarios de apertura (D-011). Alternativa: completar Fase 4 (traspasos y recuentos).
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).

@@ -153,3 +153,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - «Registrar elaboración» descuenta los ingredientes de N raciones en una única transacción (todo o nada) con claves de idempotencia derivadas (`clave:ingrediente`).
 
 **Pendiente:** subrecetas/elaboraciones intermedias, mermas de limpieza (rendimiento) por ingrediente, coste medio ponderado.
+
+## D-016 — Compras: pedidos, recepciones y coste de última compra
+**Fecha:** 2026-10-22. **Estado:** aceptada.
+
+**Decisión:**
+- Pedido de compra con estados `draft → sent → partially_received → received` (o `cancelled` desde borrador/enviado). Solo los borradores se editan. Numeración correlativa por organización con bloqueo consultivo de transacción y `UNIQUE (organization_id, number)`.
+- «Marcar como enviado» solo cambia el estado: no hay integración de correo y la interfaz lo indica.
+- Precios de línea en céntimos por kg, litro o unidad (`numeric(14,4)`); la cantidad, en unidad base.
+- Recepción: con el pedido bloqueado (`FOR UPDATE`) se crean una entrada de stock por línea (mediante el mismo mecanismo idempotente de D-014), las líneas de recepción enlazadas a esos movimientos y el nuevo estado. Lo recibido se calcula sumando recepciones (no se duplica). No se puede recibir más de lo pendiente. Recepciones de solo inserción y clave de idempotencia única por organización.
+- Por defecto, cada recepción actualiza el coste de referencia del ingrediente con el precio de la línea (último precio de compra), que alimenta los escandallos (D-015).
+- Permisos: `purchasing.read`, `purchasing.manage`, `purchasing.receive`. El personal puede consultar pedidos y registrar recepciones sin ver precios (requieren `costs.read`).
+
+**Pendiente:** recepción de cantidades por encima de lo pedido, devoluciones a proveedor, coste medio ponderado, precios por proveedor, envío del pedido por correo cuando haya proveedor configurado.

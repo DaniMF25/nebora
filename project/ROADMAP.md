@@ -43,8 +43,8 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Ingredientes y unidades (g/ml/unidades con conversión kg, l, cl).
 - [x] Almacenes y movimientos (entradas, consumos, mermas, ajustes, correcciones). Traspasos y recuentos pendientes.
 - [x] Recetas y escandallos (coste por ración, margen, % coste, alérgenos derivados, elaboración que descuenta stock).
-- [ ] Proveedores y órdenes de compra.
-- [ ] Recepciones y alertas — alerta de stock bajo mínimo hecha; recepciones de compra pendientes.
+- [x] Proveedores y órdenes de compra.
+- [x] Recepciones y alertas (recepciones parciales/totales idempotentes; alerta de stock bajo mínimo).
 - [x] Pruebas de concurrencia e idempotencia.
 
 ## Fase 5 — Mesas y reservas

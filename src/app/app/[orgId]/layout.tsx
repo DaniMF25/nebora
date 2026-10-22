@@ -28,6 +28,7 @@ export default async function OrganizationLayout({
         <Link href={`/app/${orgId}`}>Establecimientos</Link>
         <Link href={`/app/${orgId}/products`}>Productos</Link>
         <Link href={`/app/${orgId}/inventory`}>Inventario</Link>
+        <Link href={`/app/${orgId}/purchasing`}>Compras</Link>
         <Link href={`/app/${orgId}/members`}>Miembros</Link>
       </nav>
       {children}

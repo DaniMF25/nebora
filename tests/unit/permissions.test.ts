@@ -9,13 +9,15 @@ describe("matriz de permisos", () => {
     }
   });
 
-  it("staff solo lee, salvo registrar movimientos de inventario", () => {
+  it("staff solo lee, salvo registrar movimientos y recepciones", () => {
     expect([...permissionsFor("staff")].sort()).toEqual([
       "establishments.read",
       "inventory.move",
       "inventory.read",
       "menus.read",
       "organization.read",
+      "purchasing.read",
+      "purchasing.receive",
     ]);
   });
 

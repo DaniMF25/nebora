@@ -23,6 +23,9 @@ export const PERMISSIONS = [
   "inventory.move",
   "inventory.manage",
   "costs.read",
+  "purchasing.read",
+  "purchasing.manage",
+  "purchasing.receive",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -41,9 +44,21 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "inventory.move",
     "inventory.manage",
     "costs.read",
+    "purchasing.read",
+    "purchasing.manage",
+    "purchasing.receive",
   ],
-  // El personal registra consumos, mermas y recepciones, pero no corrige ni configura.
-  staff: ["organization.read", "establishments.read", "menus.read", "inventory.read", "inventory.move"],
+  // El personal registra consumos, mermas y recepciones de mercancía, pero no
+  // corrige, no configura ni ve costes o precios de compra.
+  staff: [
+    "organization.read",
+    "establishments.read",
+    "menus.read",
+    "inventory.read",
+    "inventory.move",
+    "purchasing.read",
+    "purchasing.receive",
+  ],
 };
 
 export function isRole(value: unknown): value is Role {
