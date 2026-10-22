@@ -1,6 +1,6 @@
-# GastroFlow — Kit de inicio para Claude
+# Nébula — Kit de inicio para Claude
 
-Este paquete contiene la documentación y las instrucciones iniciales para desarrollar GastroFlow, un SaaS multiempresa de gestión de restaurantes.
+Este paquete contiene la documentación y las instrucciones iniciales para desarrollar Nébula, un SaaS multiempresa de gestión de restaurantes.
 
 ## Cómo empezar
 
