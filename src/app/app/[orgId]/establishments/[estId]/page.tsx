@@ -4,7 +4,9 @@ import { ActionForm } from "@/components/action-form";
 import { SLOTS_PER_DAY_IN_FORM, WEEKDAY_LABELS } from "@/lib/schedule-form";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
+import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
 import { getEstablishment } from "@/server/modules/establishments/service";
+import { listMenus } from "@/server/modules/menus/menus";
 import { getSchedule } from "@/server/modules/schedules/service";
 import {
   formatMinutes,
@@ -15,7 +17,7 @@ import {
   type Slot,
 } from "@/server/modules/schedules/time";
 import { withTenant } from "@/server/tenancy/context";
-import { deleteExceptionAction, saveExceptionAction, saveWeeklyHoursAction } from "./actions";
+import { createMenuAction, deleteExceptionAction, saveExceptionAction, saveWeeklyHoursAction } from "./actions";
 
 function SlotInputs({ prefix, slots, label }: { prefix: string; slots: Slot[]; label: string }) {
   return (
@@ -66,6 +68,8 @@ export default async function EstablishmentPage({
         today,
         schedule: await getSchedule(tx, ctx, estId, { exceptionsFrom: today }),
         canEdit: ctx.permissions.has("establishments.update"),
+        menus: ctx.permissions.has("menus.read") ? await listMenus(tx, ctx, estId) : [],
+        canEditMenus: ctx.permissions.has("menus.edit"),
       };
     });
   } catch (err) {
@@ -73,7 +77,7 @@ export default async function EstablishmentPage({
     throw err;
   }
 
-  const { establishment: est, schedule, today, canEdit } = data;
+  const { establishment: est, schedule, today, canEdit, menus, canEditMenus } = data;
   const tz = est.timezone;
   const now = new Date();
   const openNow = isOpenAt(schedule, tz, now);
@@ -95,6 +99,51 @@ export default async function EstablishmentPage({
         <strong>{openNow ? "Abierto ahora" : "Cerrado ahora"}</strong>{" "}
         <span className="muted">(hora local {fmtTime.format(now)})</span>
       </p>
+
+      <section>
+        <h3>Cartas</h3>
+        {menus.length === 0 ? (
+          <p className="muted">Este establecimiento aún no tiene cartas.</p>
+        ) : (
+          <ul className="cards">
+            {menus.map((m) => (
+              <li key={m.id}>
+                <Link href={`/app/${orgId}/menus/${m.id}`}>
+                  <strong>{m.name}</strong>
+                </Link>{" "}
+                <span className="muted">
+                  · {m.publishedVersionNumber ? `publicada (v${m.publishedVersionNumber})` : "sin publicar"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {canEditMenus && (
+          <details>
+            <summary>Nueva carta</summary>
+            <ActionForm action={createMenuAction.bind(null, orgId, est.id)} submitLabel="Crear carta">
+              <label>
+                Nombre de la carta
+                <input name="name" required maxLength={120} placeholder="Carta principal" />
+              </label>
+              <label>
+                Identificador de la carta (URL)
+                <input name="slug" required placeholder="carta" />
+              </label>
+              <label>
+                Tema
+                <select name="theme" defaultValue="moderno">
+                  {MENU_THEMES.map((t) => (
+                    <option key={t} value={t}>
+                      {MENU_THEME_LABELS[t]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </ActionForm>
+          </details>
+        )}
+      </section>
 
       <section>
         <h3>Próximos 7 días</h3>

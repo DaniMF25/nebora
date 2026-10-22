@@ -1,0 +1,153 @@
+/* Temas de carta. Cada tema define sus variables; la estructura es común. */
+.page {
+  --m-bg: #ffffff;
+  --m-fg: #1d1d1b;
+  --m-muted: #66665f;
+  --m-accent: #2f5d50;
+  --m-chip: #eef3f1;
+  --m-font-title: system-ui, sans-serif;
+  --m-font-body: system-ui, sans-serif;
+  background: var(--m-bg);
+  color: var(--m-fg);
+  font-family: var(--m-font-body);
+  min-height: 100vh;
+  padding: 2rem 1rem 3rem;
+}
+
+.moderno {
+  --m-bg: #fafaf9;
+  --m-fg: #18181b;
+  --m-muted: #6b6b70;
+  --m-accent: #18181b;
+  --m-chip: #ececee;
+}
+
+.clasico {
+  --m-bg: #fbf7ef;
+  --m-fg: #2b2118;
+  --m-muted: #6f5f4f;
+  --m-accent: #7a2e1d;
+  --m-chip: #f1e7d6;
+  --m-font-title: Georgia, "Times New Roman", serif;
+  --m-font-body: Georgia, "Times New Roman", serif;
+}
+
+.futurista {
+  --m-bg: #0b0f1a;
+  --m-fg: #e6f1ff;
+  --m-muted: #8aa0bf;
+  --m-accent: #4de2ff;
+  --m-chip: #16213a;
+  --m-font-title: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.mediterraneo {
+  --m-bg: #f6fbff;
+  --m-fg: #0f2a43;
+  --m-muted: #4d6782;
+  --m-accent: #1f6fb2;
+  --m-chip: #e3f0fa;
+  --m-font-title: Georgia, serif;
+}
+
+.menu {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.establishment {
+  margin: 0;
+  color: var(--m-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.title {
+  font-family: var(--m-font-title);
+  color: var(--m-accent);
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+  margin: 0.25rem 0 0;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.sectionTitle {
+  font-family: var(--m-font-title);
+  color: var(--m-accent);
+  border-bottom: 1px solid var(--m-chip);
+  padding-bottom: 0.35rem;
+  font-size: 1.3rem;
+}
+
+.items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.itemLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--m-muted);
+  transform: translateY(-0.25em);
+  min-width: 1rem;
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.description {
+  margin: 0.15rem 0 0;
+  color: var(--m-muted);
+}
+
+.allergens {
+  margin: 0.35rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.allergen {
+  background: var(--m-chip);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.footer {
+  margin-top: 3rem;
+  color: var(--m-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}

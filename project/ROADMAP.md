@@ -29,15 +29,15 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [ ] Dashboard con datos reales y estados vacíos.
 
 ## Fase 3 — Cartas digitales
-- [ ] Categorías y productos.
-- [ ] Editor y ordenación.
-- [ ] Temas Moderno, Clásico, Futurista y Mediterráneo.
-- [ ] Borradores y publicación atómica.
-- [ ] Versiones.
-- [ ] Página pública.
+- [x] Categorías y productos (catálogo por organización, categorías por carta, precio específico por carta).
+- [x] Editor y ordenación (interfaz básica de formularios).
+- [x] Temas Moderno, Clásico, Futurista y Mediterráneo (estilos básicos; diseño a refinar).
+- [x] Borradores y publicación atómica.
+- [x] Versiones (historial, reactivar, despublicar).
+- [x] Página pública (solo versión publicada).
 - [ ] QR SVG/PNG.
-- [ ] Idiomas y alérgenos.
-- [ ] Pruebas de aislamiento y publicación.
+- [ ] Idiomas y alérgenos — alérgenos UE hechos; idiomas pendientes.
+- [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 
 ## Fase 4 — Inventario
 - [ ] Ingredientes y unidades.

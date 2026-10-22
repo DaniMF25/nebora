@@ -16,14 +16,25 @@ export const PERMISSIONS = [
   "establishments.create",
   "establishments.update",
   "audit.read",
+  "menus.read",
+  "menus.edit",
+  "menus.publish",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
 const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   owner: PERMISSIONS,
   admin: PERMISSIONS,
-  manager: ["organization.read", "members.read", "establishments.read", "establishments.update"],
-  staff: ["organization.read", "establishments.read"],
+  manager: [
+    "organization.read",
+    "members.read",
+    "establishments.read",
+    "establishments.update",
+    "menus.read",
+    "menus.edit",
+    "menus.publish",
+  ],
+  staff: ["organization.read", "establishments.read", "menus.read"],
 };
 
 export function isRole(value: unknown): value is Role {

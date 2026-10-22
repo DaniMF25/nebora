@@ -26,6 +26,7 @@ export default async function OrganizationLayout({
       <h1>{org.name}</h1>
       <nav className="sub" aria-label="Secciones de la organización">
         <Link href={`/app/${orgId}`}>Establecimientos</Link>
+        <Link href={`/app/${orgId}/products`}>Productos</Link>
         <Link href={`/app/${orgId}/members`}>Miembros</Link>
       </nav>
       {children}

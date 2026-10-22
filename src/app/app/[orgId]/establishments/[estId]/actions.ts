@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/form-state";
 import { SLOTS_PER_DAY_IN_FORM } from "@/lib/schedule-form";
 import { toFormState } from "@/server/actions/form-state";
 import { requireUser } from "@/server/auth/current-user";
 import { ValidationError } from "@/server/errors";
+import { createMenu } from "@/server/modules/menus/menus";
 import { deleteDateException, setDateException, setWeeklyHours } from "@/server/modules/schedules/service";
 import { withTenant } from "@/server/tenancy/context";
 
@@ -92,4 +94,23 @@ export async function deleteExceptionAction(
   }
   revalidatePath(path(orgId, estId));
   return { ok: true };
+}
+
+export async function createMenuAction(
+  orgId: string,
+  estId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await requireUser();
+  let menuId: string;
+  try {
+    const menu = await withTenant(user, orgId, (tx, ctx) =>
+      createMenu(tx, ctx, estId, { name: str(formData, "name"), slug: str(formData, "slug"), theme: str(formData, "theme") }),
+    );
+    menuId = menu.id;
+  } catch (err) {
+    return toFormState(err);
+  }
+  redirect(`/app/${orgId}/menus/${menuId}`);
 }

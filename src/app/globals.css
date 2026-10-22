@@ -60,3 +60,9 @@ fieldset { border: none; padding: 0; margin: 0; }
 .schedule-grid { display: grid; gap: 0.5rem; }
 .schedule-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
 .schedule-day { width: 6rem; font-weight: 500; }
+fieldset.allergens { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+fieldset.allergens legend { font-weight: 500; margin-bottom: 0.25rem; }
+details { margin-top: 0.5rem; }
+summary { cursor: pointer; color: var(--accent); }
+.menu-section { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
+.menu-section h4 { margin: 0 0 0.5rem; }

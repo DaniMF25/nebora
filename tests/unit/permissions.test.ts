@@ -10,7 +10,7 @@ describe("matriz de permisos", () => {
   });
 
   it("staff solo tiene permisos de lectura", () => {
-    expect([...permissionsFor("staff")].sort()).toEqual(["establishments.read", "organization.read"]);
+    expect([...permissionsFor("staff")].sort()).toEqual(["establishments.read", "menus.read", "organization.read"]);
   });
 
   it("manager no puede crear establecimientos, renombrar la organización ni leer auditoría", () => {

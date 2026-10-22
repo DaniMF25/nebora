@@ -100,3 +100,17 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Integridad:** restricciones de exclusión `btree_gist` impiden turnos solapados en BD (el cruce domingo→lunes lo valida el dominio); FKs compuestas `(organization_id, establishment_id)`; trigger que impide turnos en un día marcado como cerrado.
 
 **Consecuencias:** las reservas (Fase 5) usarán `resolveOpeningIntervals` para calcular disponibilidad.
+
+## D-012 — Modelo de cartas: catálogo, borrador y versiones inmutables
+**Fecha:** 2026-10-22. **Estado:** aceptada.
+
+**Decisión:**
+- Los productos forman un catálogo por organización (`menu_products`) compartido entre establecimientos; cada carta (`menus`) pertenece a un establecimiento y su borrador se compone de categorías (`menu_sections`) y elementos (`menu_items`) que apuntan a productos, con precio específico opcional por carta.
+- Precios en céntimos enteros (`integer`), moneda EUR fija por ahora. Alérgenos: los 14 del anexo II del Reglamento (UE) 1169/2011, validados en servidor y con CHECK en BD.
+- Publicar genera una instantánea JSON completa (`menu_versions.snapshot`, que incluye el tema) en una tabla de solo inserción y apunta `menus.published_version_id` a ella en la misma transacción, con la carta bloqueada (`FOR UPDATE`) para numerar versiones sin carreras. Se puede reactivar una versión anterior o despublicar.
+- La página pública `/m/<org>/<establecimiento>/<carta>` solo lee mediante `app.published_menu()` (SECURITY DEFINER), que únicamente devuelve la instantánea publicada, sin identificadores internos.
+- Un producto usado en un borrador no se puede borrar (FK `RESTRICT`); se archiva. Un borrador con productos archivados o categorías vacías no se puede publicar.
+
+**Consecuencias:** cambiar el catálogo, el borrador o el tema no altera lo publicado hasta volver a publicar. Cambiar el identificador (slug) de la carta sí cambia la URL pública inmediatamente (y rompería QR ya impresos): pendiente de valorar redirecciones antes de implementar QR.
+
+**Pendiente:** traducciones, QR, imágenes, permisos por establecimiento.
