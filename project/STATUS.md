@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
+**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 iniciada (stock y movimientos). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
 
-**Última actualización:** 2026-10-22 — códigos QR de cartas.
+**Última actualización:** 2026-10-22 — inventario: ingredientes, almacenes y movimientos.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -19,6 +19,7 @@
 - [x] Horarios (migración 0003): horario semanal con turnos nocturnos, excepciones por fecha (cerrado o turnos especiales), cálculo de apertura con zona horaria y cambios de hora, restricciones de exclusión y FKs compuestas. Página `/app/<org>/establishments/<id>` con editor, «abierto ahora» y próximos 7 días.
 - [x] Cartas (migración 0004): catálogo de productos con precio en céntimos y alérgenos UE; cartas por establecimiento con categorías, orden y precio específico; publicación atómica de versiones inmutables (historial, reactivar, despublicar); vista previa del borrador; página pública `/m/<org>/<local>/<carta>` que solo lee la versión publicada; 4 temas.
 - [x] QR de cada carta (migración 0005): enlace corto permanente `/q/<código>` que sobrevive a cambios de identificador, descarga SVG/PNG protegida; requiere `APP_BASE_URL`.
+- [x] Inventario (migración 0006): ingredientes con unidad base y mínimo de reposición, almacenes por establecimiento, movimientos de solo inserción (entrada, consumo, merma, ajuste, corrección compensatoria) con idempotencia; saldo mantenido por trigger, nunca negativo; página `/app/<org>/inventory`.
 - [x] Cabeceras de seguridad básicas y workflow de CI (`.github/workflows/ci.yml`, aún no ejecutado en GitHub).
 
 ## No implementado todavía
@@ -28,7 +29,8 @@
 - [ ] Limitación de peticiones por IP.
 - [ ] CSP completa con nonces para scripts.
 - [ ] Cartas: traducciones e imágenes. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
-- [ ] Dashboard, inventario, reservas, personal, informes.
+- [ ] Inventario: traspasos entre almacenes, recuentos, recetas y escandallos, proveedores, órdenes de compra y recepciones.
+- [ ] Dashboard, reservas, personal, informes.
 - [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
 - [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
 - [ ] Infraestructura y despliegue.
@@ -38,10 +40,10 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test` | PASÓ — 8 archivos, 34 pruebas |
-| `pnpm test:integration` | PASÓ — 7 archivos, 81 pruebas (BD efímera migrada desde cero) |
+| `pnpm test` | PASÓ — 9 archivos, 38 pruebas |
+| `pnpm test:integration` | PASÓ — 8 archivos, 94 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 9 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 10 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | NO EJECUTADO todavía |
 
 Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión).
@@ -50,7 +52,7 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Fase 4 — inventario, primer paso: unidades e ingredientes, almacenes por establecimiento y movimientos de stock de solo inserción con clave de idempotencia y saldo actualizado en la misma transacción (D-009), con pruebas de concurrencia, reintentos y aislamiento.
+Fase 4 (continuación): recetas y escandallos (ingredientes por producto de la carta con cantidades y coste calculado a partir del último coste de compra), proveedores y órdenes de compra con recepción que genere entradas de stock idempotentes. Alternativa si se prioriza: Fase 5 (mesas y reservas con restricción de exclusión, D-009).
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -61,4 +63,5 @@ Fase 4 — inventario, primer paso: unidades e ingredientes, almacenes por estab
 - El token de invitación viaja en la URL (historial del navegador, logs de proxies); mitigado con un solo uso, caducidad y vínculo al correo.
 - Cambiar el identificador de una carta publicada cambia su URL directa `/m/...` (los QR no se ven afectados).
 - La página pública no tiene limitación de peticiones ni caché.
+- La política de stock no negativo puede no encajar con cocinas que registran consumos antes que entradas; revisar con usuarios.
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.

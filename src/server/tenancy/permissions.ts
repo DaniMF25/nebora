@@ -19,6 +19,9 @@ export const PERMISSIONS = [
   "menus.read",
   "menus.edit",
   "menus.publish",
+  "inventory.read",
+  "inventory.move",
+  "inventory.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -33,8 +36,12 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "menus.read",
     "menus.edit",
     "menus.publish",
+    "inventory.read",
+    "inventory.move",
+    "inventory.manage",
   ],
-  staff: ["organization.read", "establishments.read", "menus.read"],
+  // El personal registra consumos, mermas y recepciones, pero no corrige ni configura.
+  staff: ["organization.read", "establishments.read", "menus.read", "inventory.read", "inventory.move"],
 };
 
 export function isRole(value: unknown): value is Role {

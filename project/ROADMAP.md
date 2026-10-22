@@ -40,12 +40,12 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 
 ## Fase 4 — Inventario
-- [ ] Ingredientes y unidades.
-- [ ] Almacenes y movimientos.
+- [x] Ingredientes y unidades (g/ml/unidades con conversión kg, l, cl).
+- [x] Almacenes y movimientos (entradas, consumos, mermas, ajustes, correcciones). Traspasos y recuentos pendientes.
 - [ ] Recetas y escandallos.
 - [ ] Proveedores y órdenes de compra.
-- [ ] Recepciones y alertas.
-- [ ] Pruebas de concurrencia e idempotencia.
+- [ ] Recepciones y alertas — alerta de stock bajo mínimo hecha; recepciones de compra pendientes.
+- [x] Pruebas de concurrencia e idempotencia.
 
 ## Fase 5 — Mesas y reservas
 - [ ] Zonas y plano.

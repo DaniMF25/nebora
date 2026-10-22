@@ -75,7 +75,7 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Decisión:** pnpm 10 (`packageManager` en `package.json`), con scripts de instalación permitidos solo para `esbuild`.
 
 ## D-009 — Estrategias de concurrencia para reservas e inventario
-**Fecha:** 2026-10-22. **Estado:** propuesta (sin implementar).
+**Fecha:** 2026-10-22. **Estado:** inventario implementado (ver D-014); reservas propuesta.
 
 **Decisión propuesta:** reservas con restricción de exclusión `btree_gist` sobre `(table_id, tstzrange)`; inventario con movimientos de solo inserción, clave de idempotencia única por organización y saldo actualizado en la misma transacción. Detalle en `docs/ARCHITECTURE.md`.
 
@@ -127,3 +127,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - La descarga del QR exige sesión y `menus.read` en la organización (401/404 en otro caso) y se sirve con `Cache-Control: private, no-store` y una CSP restrictiva.
 
 **Consecuencias:** la redirección añade un salto de red al escanear. El código público no es secreto: cualquiera con el QR puede ver la carta publicada, que es su finalidad.
+
+## D-014 — Inventario: saldo mantenido por la base de datos
+**Fecha:** 2026-10-22. **Estado:** aceptada.
+
+**Decisión:**
+- Cantidades en la unidad base del ingrediente (g, ml, unidades) como `numeric(14,3)`; en la aplicación se operan como milésimas enteras (`BigInt`), nunca en coma flotante. Entradas en kg, l o cl se convierten en servidor.
+- `stock_movements` es de solo inserción para `nebora_app` (sin UPDATE/DELETE). Tipos: entrada, consumo, merma, ajuste y corrección; el signo se valida con CHECK según el tipo. Las correcciones referencian el movimiento original y solo puede haber una por movimiento.
+- `stock_levels` no es escribible por la aplicación: lo actualiza un trigger `AFTER INSERT` (SECURITY DEFINER) que asegura la fila con saldo 0 y luego suma el delta con un UPDATE, que bloquea la fila y serializa movimientos del mismo artículo. Un único `INSERT … ON CONFLICT DO UPDATE` no sirve porque PostgreSQL valida el CHECK sobre la fila propuesta antes de resolver el conflicto (detectado por las pruebas).
+- Política: el stock no puede ser negativo (CHECK); una salida sin existencias aborta la transacción.
+- Idempotencia: clave obligatoria única por organización; `INSERT … ON CONFLICT DO NOTHING` y comparación con lo registrado (mismo contenido → se devuelve el existente sin reaplicar; distinto → conflicto). El formulario genera una clave nueva en cada renderizado.
+- Borrar ingredientes, almacenes o establecimientos con historial está bloqueado (FK RESTRICT); se archivan.
+
+**Pendiente:** traspasos entre almacenes, recuentos de inventario (ajuste a cantidad contada con bloqueo), recetas/escandallos, proveedores y compras.
