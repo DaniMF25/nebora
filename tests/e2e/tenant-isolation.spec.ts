@@ -1,30 +1,5 @@
-import { randomBytes } from "node:crypto";
-import { expect, test, type Page } from "@playwright/test";
-
-const PASSWORD = "contraseña-e2e-suficientemente-larga";
-
-function suffix() {
-  return randomBytes(4).toString("hex");
-}
-
-async function register(page: Page, name: string): Promise<string> {
-  const email = `${name}-${suffix()}@example.test`;
-  await page.goto("/register");
-  await page.getByLabel("Nombre").fill(name);
-  await page.getByLabel("Correo electrónico").fill(email);
-  await page.getByLabel(/Contraseña/).fill(PASSWORD);
-  await page.getByRole("button", { name: "Crear cuenta" }).click();
-  await expect(page).toHaveURL(/\/app$/);
-  return email;
-}
-
-async function createOrganization(page: Page, name: string): Promise<string> {
-  await page.getByLabel("Nombre").fill(name);
-  await page.getByLabel("Identificador (URL)").fill(`${name.toLowerCase().replace(/\s+/g, "-")}-${suffix()}`);
-  await page.getByRole("button", { name: "Crear organización" }).click();
-  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-  return page.url();
-}
+import { expect, test } from "@playwright/test";
+import { createOrganization, register, suffix } from "./helpers";
 
 test("una ruta privada sin sesión redirige al login", async ({ page }) => {
   await page.goto("/app");

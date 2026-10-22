@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fase 0 completada. Fase 1 (fundación segura) implementada y probada salvo gestión de miembros/invitaciones. Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila.
+**Estado:** Fases 0 y 1 completadas. Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
 
-**Última actualización:** 2026-10-22 — bootstrap, base de datos, autenticación y aislamiento multiempresa.
+**Última actualización:** 2026-10-22 — invitaciones y gestión de miembros.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -14,10 +14,12 @@
 - [x] Auditoría mínima de solo inserción (alta de organización, cambios de organización y establecimientos).
 - [x] Interfaz mínima: login, registro, listado/alta de organizaciones, listado/alta de establecimientos.
 - [x] Pruebas de aislamiento entre dos restaurantes en tres niveles: servicios, RLS directo en PostgreSQL y E2E en navegador.
+- [x] Invitaciones (migración 0002): token hasheado de un solo uso, ligado al correo, caducidad de 7 días, alta de cuenta desde el enlace; gestión de miembros (cambio de rol, baja) sin escalada y con al menos un propietario, también bajo concurrencia. Página `/app/<org>/members` e `/invite/<token>`.
+- [x] Redirección segura tras login (`?next=`).
 - [x] Cabeceras de seguridad básicas y workflow de CI (`.github/workflows/ci.yml`, aún no ejecutado en GitHub).
 
 ## No implementado todavía
-- [ ] Invitaciones y gestión de miembros (alta, cambio de rol, baja; reglas de "último propietario"). Requiere decidir el canal de entrega del enlace (sin proveedor de correo).
+- [ ] Envío de invitaciones por correo (hoy el enlace lo entrega quien invita; D-010).
 - [ ] Permisos por establecimiento (`establishment_memberships`).
 - [ ] MFA, verificación de correo y recuperación de contraseña (requieren proveedor de correo).
 - [ ] Limitación de peticiones por IP.
@@ -30,19 +32,19 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test` | PASÓ — 3 archivos, 13 pruebas |
-| `pnpm test:integration` | PASÓ — 4 archivos, 38 pruebas (BD efímera migrada desde cero) |
-| `pnpm build` | PASÓ |
-| `pnpm test:e2e` | PASÓ — 4 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test` | PASÓ — 4 archivos, 15 pruebas |
+| `pnpm test:integration` | PASÓ — 5 archivos, 55 pruebas (BD efímera migrada desde cero) |
+| `pnpm build` | PASÓ (incluido en `test:e2e`) |
+| `pnpm test:e2e` | PASÓ — 6 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | NO EJECUTADO todavía |
 
-Comprobación de mutación: al debilitar temporalmente la política `app.can_access_org`, 6 pruebas RLS fallaron, lo que confirma que detectan la regresión.
+Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones.
 
 ## Bloqueos
-Ninguno. Proveedor de correo no configurado: bloquea invitaciones, verificación y recuperación de contraseña.
+Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Fase 1 (cierre): invitaciones y gestión de miembros con token hasheado de un solo uso y caducidad, entregado como enlace copiable por el administrador mientras no haya proveedor de correo; reglas de último propietario y de no escalada (un admin no puede nombrar owners). Después, Fase 2/3: horarios del establecimiento y modelo de cartas (categorías, productos, borrador/publicación).
+Fase 2 (parcial, lo necesario para cartas y reservas): horarios de apertura por establecimiento con zona horaria (`opening_hours`, `schedule_exceptions`) usando FKs compuestas por organización, con pruebas de aislamiento. Después, Fase 3: categorías y productos, carta en borrador y publicación atómica de versiones.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -50,4 +52,5 @@ Fase 1 (cierre): invitaciones y gestión de miembros con token hasheado de un so
 - La cookie caduca a los 30 días desde el login aunque la sesión se renueve en BD.
 - Tablas de identidad (`users`, `sessions`) sin RLS: solo accesibles desde el módulo de autenticación.
 - Copias de seguridad y restauración no definidas.
+- El token de invitación viaja en la URL (historial del navegador, logs de proxies); mitigado con un solo uso, caducidad y vínculo al correo.
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.

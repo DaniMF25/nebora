@@ -80,3 +80,14 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Decisión propuesta:** reservas con restricción de exclusión `btree_gist` sobre `(table_id, tstzrange)`; inventario con movimientos de solo inserción, clave de idempotencia única por organización y saldo actualizado en la misma transacción. Detalle en `docs/ARCHITECTURE.md`.
 
 **Revisión:** al iniciar las Fases 4 y 5, con pruebas de concurrencia como criterio de aceptación.
+
+## D-010 — Invitaciones sin proveedor de correo
+**Fecha:** 2026-10-22. **Estado:** aceptada (provisional hasta configurar correo).
+
+**Contexto:** no hay proveedor de correo; las invitaciones son necesarias para tener más de un miembro.
+
+**Decisión:** la invitación genera un token de 256 bits que se muestra **una sola vez** a quien invita (owner/admin) para que lo entregue por su cuenta; en BD solo se guarda su SHA-256. Está ligada al correo invitado, caduca a los 7 días, se acepta una vez (fila bloqueada con `FOR UPDATE`) y no puede conceder el rol de propietario. Si el invitado no tiene cuenta, puede crearla desde el enlace aunque el registro público esté desactivado; el correo se toma de la invitación.
+
+**Reglas de membresía:** nadie cambia su propio rol; solo un owner concede o retira la propiedad; siempre queda al menos un owner. Los cambios se serializan bloqueando la fila de la organización y releyendo el rol del actor tras el bloqueo (probado con operaciones concurrentes).
+
+**Consecuencias:** el token viaja en la URL (`/invite/<token>`): puede quedar en el historial del navegador o en logs de proxies. Mitigaciones: un solo uso, caducidad, ligado al correo, `noindex` y `Referrer-Policy`. Cuando haya correo se enviará directamente al invitado.

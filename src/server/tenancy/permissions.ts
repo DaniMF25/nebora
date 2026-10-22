@@ -11,6 +11,7 @@ export const PERMISSIONS = [
   "organization.read",
   "organization.update",
   "members.read",
+  "members.manage",
   "establishments.read",
   "establishments.create",
   "establishments.update",

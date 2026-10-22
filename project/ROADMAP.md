@@ -15,7 +15,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Configurar base de datos y migraciones.
 - [x] Implementar autenticación y sesiones (sin MFA ni recuperación: requieren correo).
 - [x] Implementar organizaciones y establecimientos.
-- [ ] Implementar membresías y permisos — matriz de roles y membresía de propietario hechas; invitaciones y gestión de miembros pendientes.
+- [x] Implementar membresías y permisos (roles, invitaciones, cambio de rol, baja, regla de último propietario). Permisos por establecimiento: pendientes hasta que un módulo los necesite.
 - [x] Implementar aislamiento multiempresa (RLS + servicios).
 - [x] Implementar auditoría mínima.
 - [x] Probar acceso cruzado entre organizaciones (servicios, RLS y E2E).

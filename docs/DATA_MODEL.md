@@ -2,7 +2,7 @@
 
 El modelo final debe diseñarse y migrarse de forma versionada. Este documento no sustituye las migraciones: la fuente de verdad es `db/migrations/`.
 
-**Implementado (migración 0001):** `users`, `sessions`, `auth_login_attempts`, `organizations`, `memberships` (roles tipados owner/admin/manager/staff), `establishments`, `audit_events`. El resto de tablas de este documento siguen siendo un borrador.
+**Implementado (migración 0001):** `users`, `sessions`, `auth_login_attempts`, `organizations`, `memberships` (roles tipados owner/admin/manager/staff), `establishments`, `audit_events`. Migración 0002: `invitations`. El resto de tablas de este documento siguen siendo un borrador.
 
 ## Núcleo de identidad y organización
 

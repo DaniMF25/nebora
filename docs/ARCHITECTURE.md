@@ -65,7 +65,13 @@ tests/e2e                 Playwright contra `next start` y una BD recreada
 - Contraseñas: scrypt (N=2^17, r=8, p=1, sal de 16 bytes), formato versionado con los parámetros. Mínimo 12 caracteres y máximo 256, sin reglas de composición.
 - Sesiones: token opaco de 256 bits en cookie `HttpOnly`, `SameSite=Lax` y, en producción, `Secure` con prefijo `__Host-`. En BD solo se guarda el SHA-256 del token. Caducidad de 30 días con renovación por uso en BD; revocación individual y global; un usuario deshabilitado pierde sus sesiones.
 - Login: mismo error para usuario inexistente y contraseña incorrecta, hash ficticio para igualar tiempos, bloqueo temporal tras 5 fallos en 15 minutos por correo.
-- Registro: desactivado salvo `AUTH_ALLOW_SIGNUP=true`.
+- Registro: desactivado salvo `AUTH_ALLOW_SIGNUP=true`. Las personas invitadas pueden crear su cuenta con el enlace de invitación (D-010).
+- Redirección tras login (`?next=`): solo rutas internas (`src/lib/safe-redirect.ts`).
+
+## Membresías e invitaciones
+
+- Invitaciones con token hasheado, ligadas al correo, de un solo uso y con caducidad de 7 días; aceptación mediante `app.accept_invitation` (bloqueo de fila, crea la membresía y audita en la misma transacción).
+- Reglas: nadie cambia su propio rol; solo owners conceden/retiran la propiedad; siempre queda al menos un owner. Los cambios bloquean la fila de la organización y releen el rol del actor tras el bloqueo.
 - CSRF: las Server Actions de Next.js comparan `Origin` con `Host`; además `SameSite=Lax`.
 - Cabeceras: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` y una CSP parcial (`frame-ancestors`, `base-uri`, `form-action`, `object-src`).
 

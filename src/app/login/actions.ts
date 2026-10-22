@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/form-state";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { formToObject, toFormState } from "@/server/actions/form-state";
 import {
   clearSessionCookie,
@@ -17,7 +18,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   } catch (err) {
     return toFormState(err);
   }
-  redirect("/app");
+  redirect(safeRedirectPath(formData.get("next")));
 }
 
 export async function logoutAction(): Promise<void> {

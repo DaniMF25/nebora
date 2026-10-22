@@ -3,7 +3,6 @@ import { ActionForm } from "@/components/action-form";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
 import { listEstablishments } from "@/server/modules/establishments/service";
-import { getOrganization } from "@/server/modules/organizations/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createEstablishmentAction } from "./actions";
 
@@ -14,7 +13,6 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
   let data;
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
-      org: await getOrganization(tx, ctx),
       establishments: await listEstablishments(tx, ctx),
       // Solo controla qué se muestra; el servidor vuelve a comprobarlo en la acción.
       canCreate: ctx.permissions.has("establishments.create"),
@@ -26,7 +24,6 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
 
   return (
     <>
-      <h1>{data.org.name}</h1>
       <section>
         <h2>Establecimientos</h2>
         {data.establishments.length === 0 ? (
