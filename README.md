@@ -1,6 +1,6 @@
-# Nébula — Kit de inicio para Claude
+# Nébora — Kit de inicio para Claude
 
-Este paquete contiene la documentación y las instrucciones iniciales para desarrollar Nébula, un SaaS multiempresa de gestión de restaurantes.
+Este paquete contiene la documentación y las instrucciones iniciales para desarrollar Nébora, un SaaS multiempresa de gestión de restaurantes.
 
 ## Cómo empezar
 
