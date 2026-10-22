@@ -13,7 +13,7 @@ Examina también el estado de Git y el código real. La documentación no demues
 
 ## Objetivo
 
-Desarrollar GastroFlow, un SaaS multiempresa de gestión de restaurantes, con cartas digitales, inventario, mesas, reservas, horarios, proveedores, personal e informes. El alcance inicial excluye TPV, procesamiento de pagos, cierres de caja y ventas operativas.
+Desarrollar Nébora, un SaaS multiempresa de gestión de restaurantes, con cartas digitales, inventario, mesas, reservas, horarios, proveedores, personal e informes. El alcance inicial excluye TPV, procesamiento de pagos, cierres de caja y ventas operativas.
 
 ## Protocolo de ejecución
 
