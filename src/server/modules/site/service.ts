@@ -182,6 +182,25 @@ export async function updateSiteProfile(
   return rows[0]!;
 }
 
+/** Cambia solo el estilo de la página (el contenido no se toca). */
+export async function setSiteTheme(tx: Tx, ctx: TenantContext, establishmentId: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  const { theme } = parseInput(z.object({ theme: z.enum(MENU_THEMES) }).strict(), input);
+  await getEstablishment(tx, ctx, establishmentId);
+  await lockProfile(tx, ctx, establishmentId);
+  await tx.query("UPDATE establishment_profiles SET theme = $3 WHERE organization_id = $1 AND establishment_id = $2", [
+    ctx.organizationId,
+    establishmentId,
+    theme,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: "site.theme_set",
+    entityType: "establishment",
+    entityId: establishmentId,
+    metadata: { theme },
+  });
+}
+
 export async function setSiteHeroImage(
   tx: Tx,
   ctx: TenantContext,
@@ -286,5 +305,57 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
       opensMinute: h.opens_minute,
       durationMinutes: h.duration_minutes,
     })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Vista previa para el panel (también sin publicar)
+// ---------------------------------------------------------------------------
+
+export interface SitePreview {
+  profile: SiteProfile;
+  establishmentName: string;
+  establishmentSlug: string;
+  organizationSlug: string;
+  address: string | null;
+  openingHours: { weekday: number; opensMinute: number; durationMinutes: number }[];
+  bookingEnabled: boolean;
+  /** Slug de la carta destacada solo si está publicada. */
+  featuredMenuSlug: string | null;
+}
+
+/** Datos de la página tal como está guardada (publicada o no), para miembros. */
+export async function getSitePreview(tx: Tx, ctx: TenantContext, establishmentId: string): Promise<SitePreview> {
+  const profile = await getSiteProfile(tx, ctx, establishmentId);
+  const est = await getEstablishment(tx, ctx, establishmentId);
+  const { rows } = await tx.query<{
+    organization_slug: string;
+    booking_enabled: boolean;
+    featured_menu_slug: string | null;
+  }>(
+    `SELECT o.slug::text AS organization_slug,
+            COALESCE((SELECT s.public_enabled FROM reservation_settings s
+                       WHERE s.organization_id = o.id AND s.establishment_id = $2), false) AS booking_enabled,
+            (SELECT m.slug::text FROM menus m
+              WHERE m.organization_id = o.id AND m.establishment_id = $2 AND m.id = $3
+                AND m.published_version_id IS NOT NULL) AS featured_menu_slug
+       FROM organizations o WHERE o.id = $1`,
+    [ctx.organizationId, establishmentId, profile.featuredMenuId],
+  );
+  const hours = await tx.query<{ weekday: number; opensMinute: number; durationMinutes: number }>(
+    `SELECT weekday, opens_minute AS "opensMinute", duration_minutes AS "durationMinutes"
+       FROM opening_hours WHERE organization_id = $1 AND establishment_id = $2 ORDER BY weekday, opens_minute`,
+    [ctx.organizationId, establishmentId],
+  );
+  const r = rows[0]!;
+  return {
+    profile,
+    establishmentName: est.name,
+    establishmentSlug: est.slug,
+    organizationSlug: r.organization_slug,
+    address: est.address,
+    openingHours: hours.rows,
+    bookingEnabled: r.booking_enabled,
+    featuredMenuSlug: r.featured_menu_slug,
   };
 }

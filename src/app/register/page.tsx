@@ -10,7 +10,7 @@ export default async function RegisterPage() {
   if (await getCurrentUser()) redirect("/app");
   if (getEnv().AUTH_ALLOW_SIGNUP !== "true") {
     return (
-      <main>
+      <main className="auth">
         <h1>Registro no disponible</h1>
         <p className="muted">El alta de cuentas no está habilitada en este entorno.</p>
         <Link href="/login">Volver</Link>
@@ -18,7 +18,7 @@ export default async function RegisterPage() {
     );
   }
   return (
-    <main>
+    <main className="auth">
       <h1>Crear cuenta</h1>
       <ActionForm action={registerAction} submitLabel="Crear cuenta">
         <label>

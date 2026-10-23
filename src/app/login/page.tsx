@@ -15,7 +15,7 @@ export default async function LoginPage({
   if (await getCurrentUser()) redirect(next);
   const signupEnabled = getEnv().AUTH_ALLOW_SIGNUP === "true";
   return (
-    <main>
+    <main className="auth">
       <h1>Nébora</h1>
       <h2>Iniciar sesión</h2>
       <ActionForm action={loginAction} submitLabel="Entrar">

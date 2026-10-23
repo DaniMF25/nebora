@@ -23,7 +23,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 **Puerta de salida:** las pruebas negativas de aislamiento pasan y el proyecto compila. — Superada el 2026-10-22; CI de GitHub en verde desde el 2026-10-23.
 
 ## Fase 2 — Interfaz y configuración
-- [x] Layout responsive y navegación (pestañas con sección actual, sin desbordes a 390 px).
+- [x] Layout responsive y navegación: barra lateral con secciones y locales, menú en móvil, sin desbordes a 390 px (D-027).
 - [x] Selector de organización (cambio en la cabecera) y de establecimiento (tarjetas de la portada).
 - [x] Configuración de horarios y zona horaria (horario semanal, turnos nocturnos, excepciones, cálculo con DST).
 - [x] Edición de los datos del establecimiento desde la interfaz.

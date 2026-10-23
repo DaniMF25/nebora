@@ -60,7 +60,7 @@ const MAX_LISTED = 5;
 /** Locales de la organización con su resumen del día (es también la lista de locales). */
 function Today({ orgId, dashboard }: { orgId: string; dashboard: Dashboard }) {
   return (
-    <section aria-labelledby="hoy">
+    <section aria-labelledby="hoy" className="bare">
       <h2 id="hoy">Hoy</h2>
       {dashboard.establishments.length === 0 && <p className="muted">No hay establecimientos todavía.</p>}
       <div className="dash-grid">
@@ -190,7 +190,7 @@ function Alerts({ orgId, dashboard: d }: { orgId: string; dashboard: Dashboard }
   const anyChecked = d.lowStock || d.orders || d.menusToPublish || d.incompleteCostings;
   if (!anyChecked) return null;
   return (
-    <section aria-labelledby="avisos">
+    <section aria-labelledby="avisos" className="bare">
       <h2 id="avisos">Avisos</h2>
       {blocks.length === 0 ? (
         <p className="muted">Todo al día: no hay avisos pendientes.</p>

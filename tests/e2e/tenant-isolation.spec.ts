@@ -29,7 +29,7 @@ test("el restaurante B no puede ver la organización ni los locales del restaura
   await pageA.getByLabel("Nombre").fill("Local secreto A");
   await pageA.getByLabel("Identificador (URL)").fill(`local-a-${suffix()}`);
   await pageA.getByRole("button", { name: "Crear establecimiento" }).click();
-  await expect(pageA.getByText("Local secreto A")).toBeVisible();
+  await expect(pageA.getByRole("main").getByText("Local secreto A")).toBeVisible();
 
   const bob = await browser.newContext();
   const pageB = await bob.newPage();

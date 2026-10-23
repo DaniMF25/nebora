@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
-import { MENU_THEME_LABELS, MENU_THEMES } from "@/lib/menu-snapshot";
+import { ThemePicker } from "@/components/panel/theme-picker";
 import { HIGHLIGHT_ICON_LABELS, HIGHLIGHT_ICONS, MAX_HIGHLIGHTS, privateMediaUrl } from "@/lib/site";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getEstablishment } from "@/server/modules/establishments/service";
 import { listMenus } from "@/server/modules/menus/menus";
+import { getOrganization } from "@/server/modules/organizations/service";
 import { getSiteProfile } from "@/server/modules/site/service";
 import { withTenant } from "@/server/tenancy/context";
-import { removeHeroImageAction, setHeroImageAction, updateSiteAction } from "./actions";
+import { removeHeroImageAction, setHeroImageAction, setThemeAction, updateSiteAction } from "./actions";
 
 export default async function SiteProfilePage({ params }: { params: Promise<{ orgId: string; estId: string }> }) {
   const { orgId, estId } = await params;
@@ -18,6 +19,7 @@ export default async function SiteProfilePage({ params }: { params: Promise<{ or
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       establishment: await getEstablishment(tx, ctx, estId),
+      orgSlug: (await getOrganization(tx, ctx)).slug,
       profile: await getSiteProfile(tx, ctx, estId),
       menus: ctx.permissions.has("menus.read") ? await listMenus(tx, ctx, estId) : [],
       canEdit: ctx.permissions.has("establishments.update"),
@@ -26,7 +28,7 @@ export default async function SiteProfilePage({ params }: { params: Promise<{ or
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, profile: p, menus, canEdit } = data;
+  const { establishment: est, profile: p, menus, canEdit, orgSlug } = data;
   const slots = Array.from({ length: MAX_HIGHLIGHTS }, (_, n) => p.highlights[n]);
 
   return (
@@ -34,11 +36,42 @@ export default async function SiteProfilePage({ params }: { params: Promise<{ or
       <p>
         <Link href={`/app/${orgId}/establishments/${est.id}`}>← {est.name}</Link>
       </p>
-      <h2>Página pública</h2>
-      <p className="muted">
-        Lo que ven tus clientes: presentación, carta destacada, horario y contacto. El horario y la dirección se toman
-        de la ficha del local. Estado: <strong>{p.published ? "publicada" : "sin publicar"}</strong>.
-      </p>
+      <div className="page-head">
+        <div>
+          <h2>Diseño de tu web</h2>
+          <p className="muted">
+            Lo que ven tus clientes: presentación, carta destacada, horario y contacto. El horario y la dirección se
+            toman de la ficha del local.
+          </p>
+        </div>
+        <div className="info-box">
+          <p>
+            Estado: <strong>{p.published ? "publicada" : "sin publicar"}</strong>
+            {p.published && (
+              <>
+                {" · "}
+                <a href={`/${orgSlug}/${est.slug}`} target="_blank" rel="noopener">
+                  Ver página pública
+                </a>
+              </>
+            )}
+          </p>
+          <p className="muted">Puedes cambiar de estilo cuando quieras: tu contenido se mantiene.</p>
+        </div>
+      </div>
+
+      <section className="bare" aria-labelledby="estilos">
+        <h3 id="estilos">Estilo</h3>
+        <ThemePicker
+          current={p.theme}
+          brand={est.name}
+          tagline={p.tagline}
+          title={p.heroTitle ?? est.name}
+          heroImageUrl={p.heroMediaId ? privateMediaUrl(orgId, p.heroMediaId) : null}
+          previewHref={(theme) => `/preview/site/${orgId}/${est.id}?theme=${theme}`}
+          choose={canEdit ? (theme) => setThemeAction.bind(null, orgId, est.id, theme) : undefined}
+        />
+      </section>
 
       <section>
         <h3>Foto principal</h3>
@@ -74,16 +107,7 @@ export default async function SiteProfilePage({ params }: { params: Promise<{ or
         ) : (
           <ActionForm action={updateSiteAction.bind(null, orgId, est.id)} submitLabel="Guardar página">
             <fieldset className="form">
-              <label>
-                Estilo
-                <select name="theme" defaultValue={p.theme}>
-                  {MENU_THEMES.map((t) => (
-                    <option key={t} value={t}>
-                      {MENU_THEME_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <input type="hidden" name="theme" value={p.theme} readOnly />
               <label>
                 Eslogan (junto al nombre)
                 <input name="tagline" maxLength={60} defaultValue={p.tagline ?? ""} placeholder="Cocina sin límites" />

@@ -289,3 +289,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Pendiente:** alta desde la web pública (necesitará consentimiento y límites de peticiones como la reserva online).
 
+## D-027 — Sistema visual del panel
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Contexto:** el usuario pidió un panel «más moderno y funcional» con una referencia de barra lateral oscura y contenido en tarjetas.
+
+**Decisión:**
+- Estructura: barra lateral fija (menú desplegable en móvil, se cierra al navegar) con grupos: Inicio; Gestión (Productos, Inventario, Compras); un grupo por local (Resumen, Reservas, Sala, Web pública); Organización (Miembros, Privacidad). Abajo, cambio de organización si hay varias, y usuario con su rol y salida. El nombre de la organización sigue siendo el `h1` de cada página.
+- Estilo: tokens en `globals.css` (contenido claro, tarjetas blancas, acento violeta, barra oscura); tipografías Inter y Fraunces con next/font, sin precarga para no afectarlas a la web pública. Solo tema claro.
+- **Sin elementos ficticios**: no se incluyen apartados de la referencia que no existen (pedidos, idiomas, dominio, suscripción, notificaciones, integraciones, «PRO»).
+- «Diseño de tu web»: tarjetas por estilo con miniatura construida con los datos reales; elegir estilo es una acción propia (`setSiteTheme`) que no toca el contenido. La vista previa vive fuera de `/app` (`/preview/site/...`) para verse a pantalla completa, pero exige sesión y pertenencia, y sirve la foto principal por la ruta privada.
+- `ActionForm` envía con JavaScript sin el restablecimiento automático de React: con error se conserva lo escrito; con éxito se limpia.
+

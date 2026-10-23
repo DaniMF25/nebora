@@ -74,7 +74,6 @@ test("página pública del local con foto, carta destacada y despublicación", a
   });
   await page.getByRole("button", { name: "Subir foto principal" }).click();
   await expect(page.getByRole("img", { name: "Foto principal" })).toBeVisible();
-  await page.getByLabel("Estilo").selectOption("futurista");
   await page.getByLabel("Eslogan (junto al nombre)").fill("Cocina mediterránea");
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Sabores del mar");
   await page.getByLabel("Carta destacada").selectOption({ label: "Carta" });
@@ -85,8 +84,26 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
 
+  // Estilos en tarjetas: el actual marcado, cambiar sin tocar el contenido y vista previa de otro.
+  const card = (name: string) => page.getByRole("article", { name: `Estilo ${name}` });
+  await expect(card("Mediterráneo").getByText("Actual")).toBeVisible();
+  await card("Futurista").getByRole("button", { name: "Usar Futurista" }).click();
+  await expect(card("Futurista").getByText("Actual")).toBeVisible();
+  await expect(card("Mediterráneo").getByRole("button", { name: "Usar Mediterráneo" })).toBeVisible();
+  await expect(page.getByLabel("Titular (obligatorio para publicar)")).toHaveValue("Sabores del mar");
+  const previewHref = (await card("Clásico").getByRole("link", { name: /Vista previa/ }).getAttribute("href"))!;
+  expect(previewHref).toMatch(/\/preview\/site\/.+\?theme=clasico$/);
+  const previewPage = await page.context().newPage();
+  await previewPage.goto(previewHref);
+  await expect(previewPage.getByText(/Vista previa · estilo Clásico/)).toBeVisible();
+  await expect(previewPage.getByRole("heading", { level: 1, name: "Sabores del mar" })).toBeVisible();
+  await previewPage.close();
+
   // Visitante anónimo
   const visitor = await (await browser.newContext()).newPage();
+  // La vista previa exige sesión.
+  await visitor.goto(previewHref);
+  await expect(visitor).toHaveURL(/\/login/);
   const siteUrl = `/${orgSlug}/altamar`;
   await visitor.goto(siteUrl);
   await expect(visitor.getByRole("heading", { level: 1, name: "Sabores del mar" })).toBeVisible();

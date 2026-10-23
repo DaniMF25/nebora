@@ -21,7 +21,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   if (!preview || preview.status !== "pending") {
     return (
-      <main>
+      <main className="auth">
         <h1>Invitación no válida</h1>
         <p className="muted">La invitación no existe, ha caducado, fue revocada o ya se utilizó.</p>
         <Link href="/login">Ir al inicio de sesión</Link>
@@ -39,7 +39,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (user) {
     const sameEmail = user.email.toLowerCase() === preview.email.toLowerCase();
     return (
-      <main>
+      <main className="auth">
         <h1>Invitación</h1>
         {intro}
         {sameEmail ? (
@@ -54,7 +54,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   }
 
   return (
-    <main>
+    <main className="auth">
       <h1>Invitación</h1>
       {intro}
       <p>

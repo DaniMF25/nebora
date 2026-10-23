@@ -20,7 +20,7 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Arroz" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Compras" }).click();
+  await page.getByRole("link", { name: "Compras", exact: true }).click();
   await expect(page.getByText("necesitas un proveedor activo")).toBeVisible();
   await page.getByText("Nuevo proveedor").click();
   await page.getByLabel("Nombre del proveedor").fill("Distribuciones Levante");

@@ -17,7 +17,14 @@ import {
 import { createProduct, getProduct, setProductImage } from "@/server/modules/menus/products";
 import { createOrganization } from "@/server/modules/organizations/service";
 import { setWeeklyHours } from "@/server/modules/schedules/service";
-import { getPublicSite, getSiteProfile, setSiteHeroImage, updateSiteProfile } from "@/server/modules/site/service";
+import {
+  getPublicSite,
+  getSitePreview,
+  getSiteProfile,
+  setSiteHeroImage,
+  setSiteTheme,
+  updateSiteProfile,
+} from "@/server/modules/site/service";
 import { withTenant, withUser } from "@/server/tenancy/context";
 import { withAdminClient } from "../support/db";
 import { addMember, createTestOrganization, createTestUser, uniqueSuffix } from "../support/factories";
@@ -396,3 +403,45 @@ describe("identificadores de organización reservados", () => {
     ).rejects.toMatchObject({ code: "23514" });
   });
 });
+
+describe("estilo y vista previa de la web", () => {
+  it("cambiar el estilo no toca el contenido; la vista previa funciona sin publicar y solo para miembros", async () => {
+    const f = await setupRestaurant("theme");
+    await withTenant(f.owner, f.org, (tx, ctx) =>
+      updateSiteProfile(tx, ctx, f.est.id, { ...baseProfile, theme: "clasico", published: false }),
+    );
+    await withTenant(f.owner, f.org, (tx, ctx) => setSiteTheme(tx, ctx, f.est.id, { theme: "futurista" }));
+    const profile = await withTenant(f.owner, f.org, (tx, ctx) => getSiteProfile(tx, ctx, f.est.id));
+    expect(profile).toMatchObject({ theme: "futurista", heroTitle: baseProfile.heroTitle, published: false });
+    await expect(
+      withTenant(f.owner, f.org, (tx, ctx) => setSiteTheme(tx, ctx, f.est.id, { theme: "neon" })),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    // Vista previa sin publicar: los datos guardados, sin carta destacada (no hay ninguna publicada).
+    const preview = await withTenant(f.owner, f.org, (tx, ctx) => getSitePreview(tx, ctx, f.est.id));
+    expect(preview).toMatchObject({
+      establishmentName: f.est.name,
+      organizationSlug: f.orgSlug,
+      featuredMenuSlug: null,
+      bookingEnabled: false,
+    });
+    expect(preview.profile.published).toBe(false);
+    expect(await getPublicSite(f.orgSlug, f.est.slug)).toBeNull();
+
+    // El personal la ve pero no cambia el estilo; otra organización no ve nada.
+    const staff = await createTestUser("theme-staff");
+    await addMember(f.org, staff, "staff");
+    await expect(withTenant(staff, f.org, (tx, ctx) => getSitePreview(tx, ctx, f.est.id))).resolves.toBeDefined();
+    await expect(
+      withTenant(staff, f.org, (tx, ctx) => setSiteTheme(tx, ctx, f.est.id, { theme: "moderno" })),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    const other = await setupRestaurant("theme-other");
+    await expect(withTenant(other.owner, other.org, (tx, ctx) => getSitePreview(tx, ctx, f.est.id))).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
+    await expect(
+      withTenant(other.owner, other.org, (tx, ctx) => setSiteTheme(tx, ctx, f.est.id, { theme: "moderno" })),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+

@@ -4,7 +4,7 @@ import type { FormState } from "@/lib/form-state";
 import { MAX_HIGHLIGHTS } from "@/lib/site";
 import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
-import { setSiteHeroImage, updateSiteProfile } from "@/server/modules/site/service";
+import { setSiteHeroImage, setSiteTheme, updateSiteProfile } from "@/server/modules/site/service";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/site`;
 
@@ -38,7 +38,12 @@ export async function updateSiteAction(orgId: string, estId: string, _p: FormSta
   );
 }
 
-export async function setHeroImageAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+export async function setHeroImageAction(
+  orgId: string,
+  estId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
   return runTenantAction(
     orgId,
     path(orgId, estId),
@@ -47,6 +52,31 @@ export async function setHeroImageAction(orgId: string, estId: string, _p: FormS
   );
 }
 
-export async function removeHeroImageAction(orgId: string, estId: string, _p: FormState, _fd: FormData): Promise<FormState> {
-  return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => setSiteHeroImage(tx, ctx, estId, null), "Foto quitada");
+export async function removeHeroImageAction(
+  orgId: string,
+  estId: string,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => setSiteHeroImage(tx, ctx, estId, null),
+    "Foto quitada",
+  );
+}
+
+export async function setThemeAction(
+  orgId: string,
+  estId: string,
+  theme: string,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => setSiteTheme(tx, ctx, estId, { theme }),
+    "Estilo aplicado",
+  );
 }

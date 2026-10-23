@@ -169,6 +169,10 @@
   z-index: 5;
 }
 
+.overlay {
+  position: relative;
+}
+
 .overlay .header {
   position: absolute;
   inset: 0 0 auto;
@@ -1030,3 +1034,9 @@
 .pageBody section {
   margin-top: 2rem;
 }
+
+/* Botones de formularios (reservas) con el color de texto del tema sobre el acento. */
+.pageBody button {
+  color: var(--s-on-accent);
+}
+
