@@ -83,3 +83,7 @@ label.slot { display: inline-flex; align-items: center; gap: 0.35rem; border: 1p
 label.slot:has(input:checked) { border-color: var(--accent); outline: 2px solid var(--accent); }
 .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .confirmation { font-size: 1.05rem; }
+.media-thumb { max-width: 20rem; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); display: block; }
+.media-hero { max-width: 32rem; aspect-ratio: 16 / 9; object-fit: cover; }
+textarea { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg, transparent); color: inherit; }
+fieldset.highlight { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: grid; gap: 0.5rem; }

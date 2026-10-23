@@ -17,6 +17,7 @@ import {
   removeItem,
   renameSection,
   setItemPrice,
+  setItemRecommended,
   unpublishMenu,
   updateMenu,
 } from "@/server/modules/menus/menus";
@@ -106,6 +107,19 @@ export async function setItemPriceAction(
 ): Promise<FormState> {
   return runTenantAction(orgId, editorPath(orgId, menuId), (tx, ctx) =>
     setItemPrice(tx, ctx, menuId, itemId, { priceOverrideCents: optionalPrice(formString(fd, "price")) }),
+  );
+}
+
+export async function setItemRecommendedAction(
+  orgId: string,
+  menuId: string,
+  itemId: string,
+  recommended: boolean,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(orgId, editorPath(orgId, menuId), (tx, ctx) =>
+    setItemRecommended(tx, ctx, menuId, itemId, { recommended }),
   );
 }
 

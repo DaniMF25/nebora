@@ -221,3 +221,20 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - La página pública informa del plazo de conservación en el texto de consentimiento.
 
 **Límites:** no es una certificación de cumplimiento RGPD; el texto informativo, el plazo y el procedimiento deben validarlos el responsable del tratamiento y su asesoría. Las copias de seguridad (no definidas aún) también contendrán datos durante su propio periodo de retención.
+
+## D-021 — Web pública del local e imágenes
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Contexto:** el usuario quiere una experiencia pública atractiva inspirada en tres diseños de referencia (futurista, taberna clásica y mediterráneo) con fotos de platos y de la sala.
+
+**Decisión:**
+- Web pública en `/<organización>/<local>`, servida solo mediante funciones `SECURITY DEFINER` (`app.public_site`, `app.public_site_hours`) que devuelven el perfil únicamente si está publicado. Para evitar choques con rutas de la aplicación, los identificadores de organización reservados (`app`, `login`, `m`, `q`, `r`, `media`, …) se rechazan en zod y con una restricción en BD.
+- Imágenes: se aceptan JPEG/PNG/WebP de hasta 8 MB reconocidos por su firma; se reprocesan con **sharp** (nueva dependencia: necesaria para reducir tamaño y, sobre todo, eliminar metadatos EXIF/GPS; es la librería que usa el propio Next.js) a WebP de 1600 px como máximo, con límite de píxeles de entrada. Nunca se guarda el original. Cupo de 200 MB por organización.
+- **Provisional:** las imágenes se guardan en PostgreSQL (`media_assets.data`, máx. 1,5 MB por imagen) mientras no haya almacenamiento de objetos configurado. Las imágenes no se modifican (solo inserción); al cambiar una foto se crea otra y la antigua se conserva porque puede figurar en versiones publicadas. Falta limpieza de imágenes huérfanas.
+- Visibilidad: `/media/<id>` sirve una imagen solo si es la foto principal de un perfil publicado o figura en una versión de carta publicada (`app.public_media`); caché pública de 5 minutos. El panel usa `/app/<org>/media/<id>` con sesión y pertenencia.
+- Las fotos y la marca «recomendado» forman parte de la instantánea publicada (campos opcionales `imageId` y `recommended`, compatibles con versiones anteriores): cambiarlas exige volver a publicar, igual que precios y alérgenos.
+- Fuentes de los temas con `next/font/google`: se descargan al compilar y se sirven desde la propia aplicación (el visitante no contacta con Google); sin precarga, el navegador solo descarga las del tema visible.
+- Sin elementos ficticios: no hay selector de idioma, «eventos» ni «mi cuenta»; el horario y la dirección salen de la ficha del local; los enlaces a carta y reservas solo aparecen si existen.
+
+**Riesgos:** tamaño de la BD y de las copias de seguridad con imágenes; el cupo es una mitigación. Migrar a almacenamiento de objetos requerirá copiar los datos y cambiar la ruta de servicio, no el modelo de visibilidad.
+

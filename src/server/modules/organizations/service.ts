@@ -4,7 +4,7 @@ import { recordAudit } from "@/server/audit/audit";
 import type { Tx } from "@/server/db/pool";
 import { isUniqueViolation } from "@/server/db/pool";
 import { ConflictError, NotFoundError } from "@/server/errors";
-import { nameSchema, slugSchema } from "@/server/modules/shared-schemas";
+import { nameSchema, organizationSlugSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext, type UserContext } from "@/server/tenancy/context";
 import type { Role } from "@/server/tenancy/permissions";
 import { parseInput } from "@/server/validation";
@@ -24,7 +24,7 @@ export interface Organization {
 }
 
 // `.strict()` rechaza campos no previstos (asignación masiva: organization_id, role...).
-export const createOrganizationSchema = z.object({ name: nameSchema, slug: slugSchema }).strict();
+export const createOrganizationSchema = z.object({ name: nameSchema, slug: organizationSlugSchema }).strict();
 export const updateOrganizationSchema = z.object({ name: nameSchema }).strict();
 
 /** Organizaciones en las que el usuario es miembro activo. */

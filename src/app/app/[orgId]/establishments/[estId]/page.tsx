@@ -97,7 +97,8 @@ export default async function EstablishmentPage({
       </p>
       <p>
         <Link href={`/app/${orgId}/establishments/${est.id}/reservations`}>Reservas</Link> ·{" "}
-        <Link href={`/app/${orgId}/establishments/${est.id}/floor`}>Plano de sala (zonas y mesas)</Link>
+        <Link href={`/app/${orgId}/establishments/${est.id}/floor`}>Plano de sala (zonas y mesas)</Link> ·{" "}
+        <Link href={`/app/${orgId}/establishments/${est.id}/site`}>Página pública</Link>
       </p>
       <p>
         <strong>{openNow ? "Abierto ahora" : "Cerrado ahora"}</strong>{" "}

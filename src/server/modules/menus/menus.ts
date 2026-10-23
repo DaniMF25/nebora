@@ -35,6 +35,8 @@ export interface DraftItem {
   priceCents: number;
   allergens: Allergen[];
   productActive: boolean;
+  imageMediaId: string | null;
+  recommended: boolean;
 }
 
 export interface DraftSection {
@@ -75,6 +77,7 @@ const addItemSchema = z
   .strict();
 const itemPriceSchema = z.object({ priceOverrideCents: priceCentsSchema.nullable() }).strict();
 const directionSchema = z.enum(["up", "down"]);
+const recommendedSchema = z.object({ recommended: z.boolean() }).strict();
 
 const SUMMARY_SQL = `
   SELECT m.id, m.establishment_id AS "establishmentId", m.name, m.slug::text AS slug, m.theme,
@@ -216,7 +219,7 @@ export async function getMenuDraft(tx: Tx, ctx: TenantContext, menuId: string): 
     `SELECT i.id, i.section_id AS "sectionId", i.product_id AS "productId", p.name, p.description,
             p.price_cents AS "basePriceCents", i.price_override_cents AS "priceOverrideCents",
             COALESCE(i.price_override_cents, p.price_cents) AS "priceCents",
-            p.allergens, p.active AS "productActive"
+            p.allergens, p.active AS "productActive", p.image_media_id AS "imageMediaId", i.recommended
        FROM menu_items i
        JOIN menu_sections s ON s.organization_id = i.organization_id AND s.id = i.section_id
        JOIN menu_products p ON p.organization_id = i.organization_id AND p.id = i.product_id
@@ -402,6 +405,26 @@ export async function setItemPrice(
   await audit(tx, ctx, menuId, "menu.item_price_set");
 }
 
+/** Marca un elemento como «recomendado» (se destaca en la página pública). */
+export async function setItemRecommended(
+  tx: Tx,
+  ctx: TenantContext,
+  menuId: string,
+  itemId: string,
+  input: unknown,
+): Promise<void> {
+  requirePermission(ctx, "menus.edit");
+  const { recommended } = parseInput(recommendedSchema, input);
+  await lockMenu(tx, ctx, menuId);
+  await requireItem(tx, ctx, menuId, itemId);
+  await tx.query("UPDATE menu_items SET recommended = $3 WHERE organization_id = $1 AND id = $2", [
+    ctx.organizationId,
+    itemId,
+    recommended,
+  ]);
+  await audit(tx, ctx, menuId, "menu.item_recommended_set");
+}
+
 export async function moveItem(
   tx: Tx,
   ctx: TenantContext,
@@ -451,6 +474,8 @@ export async function buildSnapshot(tx: Tx, ctx: TenantContext, menuId: string):
         description: i.description,
         priceCents: i.priceCents,
         allergens: i.allergens,
+        ...(i.imageMediaId ? { imageId: i.imageMediaId } : {}),
+        ...(i.recommended ? { recommended: true } : {}),
       })),
     })),
   };

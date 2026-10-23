@@ -8,12 +8,16 @@ import { BASE_UNIT_LABELS, formatQuantity, INPUT_UNITS, type InputUnit } from "@
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { listIngredients, listWarehouses } from "@/server/modules/inventory/service";
+import { getProduct } from "@/server/modules/menus/products";
 import { getRecipe } from "@/server/modules/recipes/service";
+import { privateMediaUrl } from "@/lib/site";
 import { withTenant } from "@/server/tenancy/context";
 import {
   applyRecipeAllergensAction,
   produceRecipeAction,
+  removeProductImageAction,
   removeRecipeLineAction,
+  setProductImageAction,
   setRecipeLineAction,
 } from "./actions";
 
@@ -26,6 +30,7 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
       const canInventory = ctx.permissions.has("inventory.read");
       return {
         recipe: await getRecipe(tx, ctx, productId),
+        product: await getProduct(tx, ctx, productId),
         ingredients: canInventory ? (await listIngredients(tx, ctx)).filter((i) => i.active) : [],
         warehouses: canInventory ? await listWarehouses(tx, ctx) : [],
         canEdit: ctx.permissions.has("menus.edit"),
@@ -36,7 +41,7 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { recipe, ingredients, warehouses, canEdit, canProduce } = data;
+  const { recipe, product, ingredients, warehouses, canEdit, canProduce } = data;
   const costing = recipe.costing;
 
   return (
@@ -67,6 +72,41 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         Alérgenos declarados en la carta:{" "}
         {recipe.productAllergens.length ? recipe.productAllergens.map((a) => ALLERGEN_LABELS[a]).join(", ") : "ninguno"}
       </p>
+
+      <section>
+        <h3>Foto del plato</h3>
+        {product.imageMediaId ? (
+          // eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada
+          <img
+            src={privateMediaUrl(orgId, product.imageMediaId)}
+            alt={`Foto de ${product.name}`}
+            className="media-thumb"
+          />
+        ) : (
+          <p className="muted">Sin foto.</p>
+        )}
+        {canEdit && (
+          <>
+            <ActionForm action={setProductImageAction.bind(null, orgId, productId)} submitLabel="Subir foto">
+              <label>
+                Imagen (JPEG, PNG o WebP, hasta 8 MB)
+                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required />
+              </label>
+            </ActionForm>
+            {product.imageMediaId && (
+              <ActionForm
+                action={removeProductImageAction.bind(null, orgId, productId)}
+                submitLabel="Quitar foto"
+                className="inline-form"
+              />
+            )}
+            <p className="muted">
+              Se guarda una copia reducida sin datos de ubicación ni de la cámara. Las cartas publicadas muestran la foto
+              al volver a publicarlas.
+            </p>
+          </>
+        )}
+      </section>
 
       {costing && (
         <section>

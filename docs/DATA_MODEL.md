@@ -29,6 +29,8 @@ El modelo final debe diseñarse y migrarse de forma versionada. Este documento n
 
 Definir cómo se comparten productos entre cartas y cómo se representan precios específicos de carta. Publicar una versión consistente y no exponer borradores.
 
+Implementado (migración 0013): `media_assets` (imágenes WebP reprocesadas, provisionalmente en la BD, por organización y con RLS), `menu_products.image_media_id`, `menu_items.recommended` y `establishment_profiles` (contenido de la web pública del local: tema, textos de portada, foto principal, contacto, hasta 3 destacados y carta destacada). Las versiones publicadas guardan `imageId` y `recommended` en la instantánea. Una imagen solo es pública (`app.public_media`) si la usa un perfil publicado o una versión publicada. `organizations.slug` no admite nombres de rutas de la aplicación.
+
 ## Inventario
 
 - `ingredients`

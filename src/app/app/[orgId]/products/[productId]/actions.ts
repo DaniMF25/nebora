@@ -1,7 +1,9 @@
 "use server";
 
 import type { FormState } from "@/lib/form-state";
+import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
+import { setProductImage } from "@/server/modules/menus/products";
 import { applyRecipeAllergens, produceRecipe, removeRecipeLine, setRecipeLine } from "@/server/modules/recipes/service";
 
 const path = (orgId: string, productId: string) => `/app/${orgId}/products/${productId}`;
@@ -60,4 +62,17 @@ export async function produceRecipeAction(orgId: string, productId: string, _p: 
       }),
     "Elaboración registrada: ingredientes descontados del stock",
   );
+}
+
+export async function setProductImageAction(orgId: string, productId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, productId),
+    async (tx, ctx) => setProductImage(tx, ctx, productId, await readImageField(fd)),
+    "Foto guardada. Vuelve a publicar las cartas para que se vea en la página pública.",
+  );
+}
+
+export async function removeProductImageAction(orgId: string, productId: string, _p: FormState, _fd: FormData): Promise<FormState> {
+  return runTenantAction(orgId, path(orgId, productId), (tx, ctx) => setProductImage(tx, ctx, productId, null), "Foto quitada");
 }

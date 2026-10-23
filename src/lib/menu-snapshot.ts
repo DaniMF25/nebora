@@ -12,7 +12,8 @@ export const MENU_THEME_LABELS: Record<MenuTheme, string> = {
 
 /**
  * Contenido congelado de una versión publicada. Es lo único que lee la página
- * pública: no contiene identificadores internos ni datos de borrador.
+ * pública: no contiene datos de borrador ni más identificadores que el de
+ * las fotos.
  */
 export interface MenuSnapshot {
   schemaVersion: 1;
@@ -29,6 +30,14 @@ export interface MenuSnapshot {
       description: string | null;
       priceCents: number;
       allergens: Allergen[];
+      /**
+       * Foto del plato. Es el identificador público de la imagen (no da acceso
+       * a nada más): app.public_media solo la sirve si figura en una versión
+       * publicada. Ausente en versiones anteriores a la migración 0013.
+       */
+      imageId?: string;
+      /** Destacado como «recomendado». */
+      recommended?: boolean;
     }[];
   }[];
 }

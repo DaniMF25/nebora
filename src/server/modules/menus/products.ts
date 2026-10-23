@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { ALLERGENS, type Allergen } from "@/lib/allergens";
 import { recordAudit } from "@/server/audit/audit";
+import { storeImage } from "@/server/modules/media/service";
 import type { Tx } from "@/server/db/pool";
 import { ConflictError, NotFoundError } from "@/server/errors";
 import { nameSchema } from "@/server/modules/shared-schemas";
@@ -17,6 +18,8 @@ export interface Product {
   priceCents: number;
   allergens: Allergen[];
   active: boolean;
+  /** Foto del plato (WebP reprocesado), o null. */
+  imageMediaId: string | null;
 }
 
 const descriptionSchema = z
@@ -52,7 +55,8 @@ export const updateProductSchema = z
   })
   .strict();
 
-const COLUMNS = `id, name, description, price_cents AS "priceCents", allergens, active`;
+const COLUMNS = `id, name, description, price_cents AS "priceCents", allergens, active,
+  image_media_id AS "imageMediaId"`;
 const COLUMN_BY_FIELD = {
   name: "name",
   description: "description",
@@ -133,4 +137,24 @@ export async function deleteProduct(tx: Tx, ctx: TenantContext, id: string): Pro
   ]);
   if (res.rowCount !== 1) throw new NotFoundError();
   await recordAudit(tx, ctx, { action: "product.deleted", entityType: "product", entityId: id });
+}
+
+/**
+ * Cambia (o quita, con null) la foto del producto. Las cartas ya publicadas
+ * conservan la foto de su versión hasta que se vuelvan a publicar.
+ */
+export async function setProductImage(tx: Tx, ctx: TenantContext, id: string, bytes: Uint8Array | null): Promise<void> {
+  requirePermission(ctx, "menus.edit");
+  await getProduct(tx, ctx, id);
+  const image = bytes ? await storeImage(tx, ctx, bytes) : null;
+  await tx.query("UPDATE menu_products SET image_media_id = $3 WHERE organization_id = $1 AND id = $2", [
+    ctx.organizationId,
+    id,
+    image?.id ?? null,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: image ? "product.image_set" : "product.image_removed",
+    entityType: "product",
+    entityId: id,
+  });
 }

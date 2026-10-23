@@ -16,7 +16,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // pg es un módulo de Node con dependencias opcionales nativas; no se empaqueta.
-  serverExternalPackages: ["pg"],
+  // sharp (reprocesado de imágenes) es nativo y tampoco se empaqueta.
+  serverExternalPackages: ["pg", "sharp"],
+  // Subida de fotos por Server Action: 8 MB de imagen más el resto del formulario.
+  // El servicio vuelve a comprobar el tamaño y el formato.
+  experimental: { serverActions: { bodySizeLimit: "9mb" } },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -23,6 +23,7 @@ import {
   removeItemAction,
   renameSectionAction,
   setItemPriceAction,
+  setItemRecommendedAction,
   unpublishMenuAction,
   updateMenuAction,
 } from "./actions";
@@ -175,6 +176,8 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
                   {section.items.map((item, ii) => (
                     <li key={item.id}>
                       <strong>{item.name}</strong> · {formatEuros(item.priceCents)}
+                      {item.recommended && <span className="badge"> Recomendado</span>}
+                      {item.imageMediaId && <span className="muted"> · con foto</span>}
                       {item.priceOverrideCents !== null && (
                         <span className="muted"> (precio de catálogo {formatEuros(item.basePriceCents)})</span>
                       )}
@@ -214,6 +217,11 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
                               className="inline-form"
                             />
                           )}
+                          <ActionForm
+                            action={setItemRecommendedAction.bind(null, orgId, menuId, item.id, !item.recommended)}
+                            submitLabel={item.recommended ? `Quitar recomendado de ${item.name}` : `Recomendar ${item.name}`}
+                            className="inline-form"
+                          />
                           <ActionForm
                             action={removeItemAction.bind(null, orgId, menuId, item.id)}
                             submitLabel={`Quitar ${item.name}`}

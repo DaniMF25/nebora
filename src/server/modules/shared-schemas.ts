@@ -15,3 +15,18 @@ const supportedTimezones = new Set(Intl.supportedValuesOf("timeZone"));
 export const timezoneSchema = z.string().refine((tz) => supportedTimezones.has(tz), {
   message: "Zona horaria no válida",
 });
+
+/**
+ * La web pública del local vive en /<organización>/<local>, así que una
+ * organización no puede usar el nombre de una ruta de la aplicación. La misma
+ * lista está en la restricción organizations_slug_not_reserved (migración 0013).
+ */
+export const RESERVED_ORGANIZATION_SLUGS = [
+  "app", "api", "login", "register", "invite", "logout", "m", "q", "r", "media", "static",
+  "public", "admin", "assets", "favicon", "robots", "sitemap", "nebora",
+] as const;
+
+export const organizationSlugSchema = slugSchema.refine(
+  (s) => !(RESERVED_ORGANIZATION_SLUGS as readonly string[]).includes(s),
+  { message: "Ese identificador está reservado" },
+);
