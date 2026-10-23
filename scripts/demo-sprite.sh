@@ -14,6 +14,7 @@ REPO_URL="${NEBORA_REPO_URL:-https://github.com/DaniMF25/nebora.git}"
 BRANCH="${NEBORA_BRANCH:-claude/festive-rubin-bxwmo0}"
 APP_DIR="${NEBORA_DIR:-$HOME/nebora}"
 PORT="${PORT:-8080}"
+NODE_VERSION="22.22.0"
 STATE_DIR="$HOME/.nebora-demo"
 
 log() { printf '\n==> %s\n' "$*"; }
@@ -27,6 +28,7 @@ command -v git > /dev/null || need+=(git)
 command -v curl > /dev/null || need+=(curl ca-certificates)
 command -v psql > /dev/null || need+=(postgresql postgresql-contrib)
 command -v openssl > /dev/null || need+=(openssl)
+command -v xz > /dev/null || need+=(xz-utils)
 if [ "${#need[@]}" -gt 0 ]; then
   $SUDO apt-get update -qq
   DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y -qq "${need[@]}" > /dev/null
@@ -36,9 +38,24 @@ node_ok() {
   command -v node > /dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number);process.exit(a>22||(a===22&&b>=12)?0:1)'
 }
 if ! node_ok; then
-  log "Node.js 22"
-  curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash - > /dev/null
-  DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y -qq nodejs > /dev/null
+  log "Node.js $NODE_VERSION (binario oficial verificado con SHA-256)"
+  case "$(uname -m)" in
+    x86_64) arch=x64 ;;
+    aarch64 | arm64) arch=arm64 ;;
+    *) echo "Arquitectura no soportada: $(uname -m)"; exit 1 ;;
+  esac
+  tarball="node-v$NODE_VERSION-linux-$arch.tar.xz"
+  tmp=$(mktemp -d)
+  curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/$tarball" -o "$tmp/$tarball"
+  curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt" -o "$tmp/SHASUMS256.txt"
+  (cd "$tmp" && grep " $tarball\$" SHASUMS256.txt | sha256sum -c - > /dev/null)
+  $SUDO mkdir -p /usr/local/lib/nodejs
+  $SUDO tar -xJf "$tmp/$tarball" -C /usr/local/lib/nodejs
+  for bin in node npm npx corepack; do
+    $SUDO ln -sf "/usr/local/lib/nodejs/node-v$NODE_VERSION-linux-$arch/bin/$bin" "/usr/local/bin/$bin"
+  done
+  rm -rf "$tmp"
+  hash -r
 fi
 node_ok || { echo "Se necesita Node.js >= 22.12"; exit 1; }
 
