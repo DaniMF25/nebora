@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
+**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-23 — panel de inicio con datos reales y navegación del panel adaptada al móvil.
+**Última actualización:** 2026-10-23 — traspasos entre almacenes y recuentos físicos.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -37,7 +37,7 @@
 - [ ] Limitación de peticiones por IP.
 - [ ] CSP completa con nonces para scripts.
 - [ ] Cartas: traducciones. Almacenamiento de imágenes fuera de la BD y limpieza de huérfanas. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
-- [ ] Inventario: traspasos entre almacenes, recuentos físicos, subrecetas, devoluciones a proveedor, envío de pedidos por correo.
+- [ ] Inventario: subrecetas, devoluciones a proveedor, envío de pedidos por correo.
 - [ ] Lista de espera, avisos al cliente (correo/SMS), cancelación por el cliente.
 - [ ] Programar `pnpm privacy:retention` a diario en el despliegue (sin ello la anonimización no es automática).
 - [ ] Personal, informes.
@@ -46,6 +46,8 @@
 - [x] Aviso de «cambios sin publicar» en el editor de cartas y en la lista de cartas del local (compara el borrador con la versión publicada: precios, alérgenos, fotos, recomendados, tema y orden).
 - [x] Panel de inicio (`/app/<org>`): por local, abierto/cerrado y próxima apertura, reservas activas, comensales, pendientes de confirmar y próxima reserva de hoy; avisos de stock bajo mínimo, pedidos pendientes de recibir y borradores, escandallos incompletos y cartas por publicar, cada uno con enlace. Cada bloque solo aparece con su permiso. Las tarjetas de locales sustituyen a la lista anterior.
 - [x] Navegación del panel: pestañas con la sección actual marcada y desplazables en móvil, cambio de organización, controles de formulario que no desbordan. Comprobado sin desplazamiento horizontal a 390 px en las 11 páginas del panel.
+- [x] Traspasos entre almacenes (migración 0014): salida y entrada en la misma transacción, la BD exige ambas patas al confirmar; idempotentes; sin stock negativo también con peticiones simultáneas; no se anulan pata a pata (se compensan con otro traspaso).
+- [x] Recuentos físicos (migración 0014): uno abierto por almacén; recuento «ciego» (no muestra el stock del sistema mientras está abierto); 0 es un valor válido; lo aplica un responsable (`inventory.manage`) y la BD calcula cada diferencia con el saldo bloqueado en ese instante; resultado con contado, en sistema y ajuste; cancelable; la aplicación no puede marcarlo aplicado sin ajustes ni tocar líneas cerradas. Página `/app/<org>/inventory/counts/<id>`.
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -57,19 +59,19 @@
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
 | `pnpm test` | PASÓ — 13 archivos, 55 pruebas |
-| `pnpm test:integration` | PASÓ — 16 archivos, 174 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:integration` | PASÓ — 17 archivos, 185 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 21 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 22 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | PASÓ — ejecución 2 en `claude/festive-rubin-bxwmo0` (551657a): lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
-Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente; con el formulario de horario de 2 huecos fijos, falló la prueba E2E de turnos.
+Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente; con el formulario de horario de 2 huecos fijos, falló la prueba E2E de turnos; sin el bloqueo del recuento en `app.apply_stock_count`, falló la prueba de aplicaciones simultáneas (una primera versión de esa prueba no detectaba el fallo y se rehízo con orden forzado).
 
 ## Bloqueos
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Inventario: traspasos entre almacenes y recuentos físicos (con ajuste automático de diferencias). Después: límite de peticiones por IP en el login; lista de espera.
+Límite de intentos de login por IP (además del límite por correo). Después: lista de espera de reservas; subrecetas.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).

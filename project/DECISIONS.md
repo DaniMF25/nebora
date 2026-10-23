@@ -264,3 +264,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Coste:** más consultas que una vista agregada (en especial, detectar cartas desactualizadas reconstruye la instantánea de cada carta). Se optimizará si se mide lentitud real.
 
+## D-025 — Traspasos y recuentos de inventario
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:**
+- **Traspaso** = fila en `stock_transfers` + dos movimientos (`transfer_out` en origen, `transfer_in` en destino) en la misma transacción. Un trigger de restricción diferido comprueba al confirmar que existen ambas patas con la cantidad exacta. Se permite entre cualquier par de almacenes de la organización (p. ej. cocina central → locales). Requiere `inventory.move`. Idempotente por clave (las patas usan la clave con sufijo).
+- **Recuento** = `stock_counts` (uno abierto por almacén) + `stock_count_lines` con lo contado. Es **ciego**: mientras está abierto no se muestra el stock del sistema. Contar lo hace quien tenga `inventory.move`; aplicar o cancelar, `inventory.manage`.
+- Aplicar lo hace `app.apply_stock_count` (SECURITY DEFINER, comprueba organización y rol): bloquea el recuento y cada saldo, guarda el saldo esperado y crea un movimiento `count` por diferencia. Así la diferencia es exacta aunque haya movimientos mientras se contaba, y dos aplicaciones simultáneas no ajustan dos veces.
+- Triggers (SECURITY INVOKER) impiden al rol de la aplicación marcar un recuento como aplicado, reabrirlo o tocar líneas de un recuento cerrado; la columna del saldo esperado no es escribible por la aplicación.
+- Las patas de traspaso y los ajustes de recuento no se anulan sueltos (servicio y BD): se compensan con otro traspaso o recuento.
+
+**Límite:** el recuento ajusta solo lo contado; los artículos no contados no se tocan (no se asume 0).
+

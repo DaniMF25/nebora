@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { ALLERGENS, ALLERGEN_LABELS } from "@/lib/allergens";
@@ -14,13 +15,16 @@ import {
   listWarehouses,
   type MovementKind,
 } from "@/server/modules/inventory/service";
+import { listCounts, listTransfers } from "@/server/modules/inventory/operations";
 import { withTenant } from "@/server/tenancy/context";
 import {
   correctMovementAction,
   createIngredientAction,
   createWarehouseAction,
+  openCountAction,
   recordMovementAction,
   setIngredientActiveAction,
+  transferStockAction,
   updateIngredientDetailsAction,
 } from "./actions";
 
@@ -32,7 +36,12 @@ const KIND_LABELS: Record<MovementKind, string> = {
   waste: "Merma",
   adjustment: "Ajuste",
   correction: "Corrección",
+  transfer_out: "Traspaso (salida)",
+  transfer_in: "Traspaso (entrada)",
+  count: "Recuento",
 };
+
+const COUNT_STATUS: Record<string, string> = { open: "abierto", applied: "aplicado", cancelled: "cancelado" };
 
 const dateFormat = new Intl.DateTimeFormat("es-ES", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Madrid" });
 
@@ -46,6 +55,8 @@ export default async function InventoryPage({ params }: { params: Promise<{ orgI
       return {
         stock: await listStock(tx, ctx),
         movements: await listMovements(tx, ctx, 30),
+        transfers: await listTransfers(tx, ctx, 10),
+        counts: await listCounts(tx, ctx, 10),
         ingredients: await listIngredients(tx, ctx),
         warehouses: await listWarehouses(tx, ctx),
         establishments: canManage ? await listEstablishments(tx, ctx) : [],
@@ -58,7 +69,8 @@ export default async function InventoryPage({ params }: { params: Promise<{ orgI
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { stock, movements, ingredients, warehouses, establishments, canMove, canManage, canSeeCosts } = data;
+  const { stock, movements, transfers, counts, ingredients, warehouses, establishments, canMove, canManage, canSeeCosts } =
+    data;
   const activeIngredients = ingredients.filter((i) => i.active);
 
   return (
@@ -169,6 +181,121 @@ export default async function InventoryPage({ params }: { params: Promise<{ orgI
         </section>
       )}
 
+      {canMove && warehouses.length >= 2 && activeIngredients.length > 0 && (
+        <section>
+          <h2>Traspaso entre almacenes</h2>
+          <ActionForm action={transferStockAction.bind(null, orgId)} submitLabel="Registrar traspaso">
+            <input type="hidden" name="idempotencyKey" value={randomUUID()} readOnly />
+            <div className="inline-form">
+              <label>
+                Desde
+                <select name="fromWarehouseId">
+                  {warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.establishmentName} · {w.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Hacia
+                <select name="toWarehouseId" defaultValue={warehouses[1]?.id}>
+                  {warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.establishmentName} · {w.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label>
+              Ingrediente a traspasar
+              <select name="ingredientId">
+                {activeIngredients.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name} ({BASE_UNIT_LABELS[i.baseUnit]})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="inline-form">
+              <label>
+                Cantidad a traspasar
+                <input name="quantity" inputMode="decimal" required placeholder="2" size={10} />
+              </label>
+              <label>
+                Unidad del traspaso
+                <select name="unit" defaultValue="kg">
+                  {(Object.keys(INPUT_UNITS) as InputUnit[]).map((u) => (
+                    <option key={u} value={u}>
+                      {INPUT_UNITS[u].label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label>
+              Nota del traspaso (opcional)
+              <input name="note" maxLength={300} />
+            </label>
+          </ActionForm>
+          {transfers.length > 0 && (
+            <ul className="muted">
+              {transfers.map((t) => (
+                <li key={t.id}>
+                  {dateFormat.format(t.createdAt)} · {formatQuantity(t.quantity, t.baseUnit)} de {t.ingredientName}:{" "}
+                  {t.fromWarehouseName} → {t.toWarehouseName}
+                  {t.createdByName && ` · ${t.createdByName}`}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      <section>
+        <h2>Recuentos físicos</h2>
+        <p className="muted">
+          Cuenta lo que hay realmente en un almacén. Al aplicarlo, el stock de cada artículo contado se ajusta a lo
+          contado y la diferencia queda registrada.
+        </p>
+        {counts.length === 0 ? (
+          <p className="muted">Todavía no hay recuentos.</p>
+        ) : (
+          <ul className="cards">
+            {counts.map((c) => (
+              <li key={c.id}>
+                <Link href={`/app/${orgId}/inventory/counts/${c.id}`}>
+                  Recuento de {c.establishmentName} · {c.warehouseName}
+                </Link>{" "}
+                <span className="muted">
+                  · {COUNT_STATUS[c.status]} · {c.lineCount} {c.lineCount === 1 ? "artículo" : "artículos"} ·{" "}
+                  {dateFormat.format(c.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {canMove && warehouses.length > 0 && activeIngredients.length > 0 && (
+          <ActionForm action={openCountAction.bind(null, orgId)} submitLabel="Empezar recuento">
+            <label>
+              Almacén a contar
+              <select name="warehouseId">
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.establishmentName} · {w.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Nota del recuento (opcional)
+              <input name="note" maxLength={300} placeholder="Cierre de mes" />
+            </label>
+          </ActionForm>
+        )}
+      </section>
+
       <section>
         <h2>Movimientos recientes</h2>
         {movements.length === 0 ? (
@@ -205,7 +332,9 @@ export default async function InventoryPage({ params }: { params: Promise<{ orgI
                     <td>{m.createdByName ?? "—"}</td>
                     {canManage && (
                       <td>
-                        {m.kind !== "correction" && !m.correctedByMovementId && (
+                        {/* Traspasos y recuentos se compensan con otro traspaso o recuento, no se anulan sueltos. */}
+                        {!["correction", "transfer_out", "transfer_in", "count"].includes(m.kind) &&
+                          !m.correctedByMovementId && (
                           <ActionForm
                             action={correctMovementAction.bind(null, orgId, m.id, randomUUID())}
                             submitLabel="Anular"

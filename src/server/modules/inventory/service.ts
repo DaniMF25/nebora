@@ -48,7 +48,7 @@ export interface StockLine {
 }
 
 export const MOVEMENT_KINDS = ["receipt", "consumption", "waste", "adjustment"] as const;
-export type MovementKind = (typeof MOVEMENT_KINDS)[number] | "correction";
+export type MovementKind = (typeof MOVEMENT_KINDS)[number] | "correction" | "transfer_out" | "transfer_in" | "count";
 
 export interface Movement {
   id: string;
@@ -294,6 +294,8 @@ export interface NewMovement {
   note: string | null;
   idempotencyKey: string;
   correctsMovementId: string | null;
+  /** Traspaso al que pertenece (patas transfer_out / transfer_in). */
+  transferId?: string | null;
 }
 
 /**
@@ -312,12 +314,12 @@ export async function insertMovement(
     const { rows } = await tx.query<{ id: string }>(
       `INSERT INTO stock_movements
          (organization_id, warehouse_id, ingredient_id, kind, quantity_delta, note, idempotency_key,
-          corrects_movement_id, created_by_user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          corrects_movement_id, created_by_user_id, transfer_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        ON CONFLICT (organization_id, idempotency_key) DO NOTHING
        RETURNING id`,
       [ctx.organizationId, m.warehouseId, m.ingredientId, m.kind, m.delta, m.note, m.idempotencyKey,
-        m.correctsMovementId, ctx.userId],
+        m.correctsMovementId, ctx.userId, m.transferId ?? null],
     );
     insertedId = rows[0]?.id;
   } catch (err) {
@@ -412,6 +414,12 @@ export async function correctMovement(
   const original = await getMovement(tx, ctx, movementId);
   if (!original) throw new NotFoundError();
   if (original.kind === "correction") throw new ValidationError("Una corrección no se puede corregir");
+  if (original.kind === "transfer_out" || original.kind === "transfer_in") {
+    throw new ValidationError("Un traspaso no se corrige por partes: registra un traspaso en sentido contrario");
+  }
+  if (original.kind === "count") {
+    throw new ValidationError("Un ajuste de recuento no se corrige: haz un nuevo recuento del almacén");
+  }
   const delta = original.quantityDelta.startsWith("-") ? original.quantityDelta.slice(1) : `-${original.quantityDelta}`;
   return insertMovement(tx, ctx, {
     warehouseId: original.warehouseId,

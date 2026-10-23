@@ -47,6 +47,8 @@ Implementado (migración 0013): `media_assets` (imágenes WebP reprocesadas, pro
 
 Mantener trazabilidad. Evitar que el stock se actualice sin un movimiento correspondiente.
 
+Implementado (migración 0014): `stock_transfers` (traspaso con sus dos movimientos enlazados por `transfer_id`), `stock_counts` y `stock_count_lines` (recuento físico; los ajustes son movimientos `count` enlazados por `count_id`).
+
 ## Sala y reservas
 
 - `zones`
