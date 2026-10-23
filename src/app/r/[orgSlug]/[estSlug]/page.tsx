@@ -107,7 +107,8 @@ export default async function PublicBookingPage({ params, searchParams }: { para
                 <input type="checkbox" name="consent" required />
                 <span>
                   Acepto que {info.organizationName} trate estos datos únicamente para gestionar esta reserva y contactarme
-                  sobre ella.
+                  sobre ella. Se conservan {info.customerRetentionDays} días después de la reserva y después se anonimizan.
+                  Puedes pedir una copia o su borrado al restaurante.
                 </span>
               </label>
             </PublicBookingForm>

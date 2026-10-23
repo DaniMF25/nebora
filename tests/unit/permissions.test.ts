@@ -31,6 +31,13 @@ describe("matriz de permisos", () => {
     expect(roleHasPermission("manager", "establishments.update")).toBe(true);
   });
 
+  it("solo owner y admin gestionan datos personales de clientes", () => {
+    expect(roleHasPermission("owner", "privacy.manage")).toBe(true);
+    expect(roleHasPermission("admin", "privacy.manage")).toBe(true);
+    expect(roleHasPermission("manager", "privacy.manage")).toBe(false);
+    expect(roleHasPermission("staff", "privacy.manage")).toBe(false);
+  });
+
   it("cada rol solo otorga permisos conocidos", () => {
     for (const r of ROLES) for (const p of permissionsFor(r)) expect(PERMISSIONS).toContain(p);
   });

@@ -15,8 +15,12 @@ export default async function OrganizationLayout({
   const { orgId } = await params;
   const user = await requireUser();
   let org;
+  let canPrivacy: boolean;
   try {
-    org = await withTenant(user, orgId, (tx, ctx) => getOrganization(tx, ctx));
+    ({ org, canPrivacy } = await withTenant(user, orgId, async (tx, ctx) => ({
+      org: await getOrganization(tx, ctx),
+      canPrivacy: ctx.permissions.has("privacy.manage"),
+    })));
   } catch (err) {
     if (err instanceof NotFoundError) notFound();
     throw err;
@@ -30,6 +34,7 @@ export default async function OrganizationLayout({
         <Link href={`/app/${orgId}/inventory`}>Inventario</Link>
         <Link href={`/app/${orgId}/purchasing`}>Compras</Link>
         <Link href={`/app/${orgId}/members`}>Miembros</Link>
+        {canPrivacy && <Link href={`/app/${orgId}/privacy`}>Privacidad</Link>}
       </nav>
       {children}
     </>

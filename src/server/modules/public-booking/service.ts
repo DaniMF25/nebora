@@ -30,6 +30,8 @@ export interface PublicBookingInfo {
   minNoticeMinutes: number;
   maxDaysAhead: number;
   autoConfirm: boolean;
+  /** Días que se conservan los datos del cliente tras la reserva. */
+  customerRetentionDays: number;
 }
 
 /** Límites de peticiones de alta pública. */
@@ -57,6 +59,7 @@ export async function getPublicBookingInfo(orgSlug: string, establishmentSlug: s
     min_notice_minutes: number;
     max_days_ahead: number;
     auto_confirm: boolean;
+    customer_retention_days: number;
   }>("SELECT * FROM app.public_booking_info($1, $2)", slugs);
   const r = rows[0];
   if (!r) return null;
@@ -72,6 +75,7 @@ export async function getPublicBookingInfo(orgSlug: string, establishmentSlug: s
     minNoticeMinutes: r.min_notice_minutes,
     maxDaysAhead: r.max_days_ahead,
     autoConfirm: r.auto_confirm,
+    customerRetentionDays: r.customer_retention_days,
   };
 }
 

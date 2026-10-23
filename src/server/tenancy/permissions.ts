@@ -30,6 +30,8 @@ export const PERMISSIONS = [
   "tables.manage",
   "reservations.read",
   "reservations.manage",
+  // Datos personales de clientes (retención, exportación y borrado): solo owner/admin.
+  "privacy.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 

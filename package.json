@@ -17,7 +17,8 @@
     "test:all": "vitest run",
     "db:migrate": "tsx --env-file-if-exists=.env.local scripts/db-migrate.ts",
     "db:setup-local": "tsx --env-file-if-exists=.env.local scripts/db-setup-local.ts",
-    "test:e2e": "next build && playwright test"
+    "test:e2e": "next build && playwright test",
+    "privacy:retention": "tsx --env-file-if-exists=.env.local scripts/privacy-retention.ts"
   },
   "dependencies": {
     "next": "16.4.2",

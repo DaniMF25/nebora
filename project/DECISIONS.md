@@ -208,3 +208,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Configuración por local en `reservation_settings`, editable con `establishments.update`.
 
 **Riesgos:** `X-Forwarded-For` es falsificable si el proxy de producción no la sobrescribe; el texto de consentimiento es genérico y debe revisarlo el responsable del tratamiento; falta política de retención de datos de clientes.
+
+## D-020 — Retención y derechos sobre datos personales de clientes
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:**
+- Plazo de conservación por organización (`privacy_settings.customer_retention_days`, 30–3650 días, por defecto 365) contado desde el fin de la reserva. Al vencer, la reserva se **anonimiza**: nombre sustituido, teléfono, correo y comentarios a NULL y `anonymized_at` fijado (CHECK impide marcarla sin vaciar el contacto). Se conservan fecha, comensales, mesas y estado para estadísticas.
+- `app.anonymize_expired_reservations(org)` (SECURITY DEFINER) la usan tanto la interfaz («Aplicar ahora») como el script `pnpm privacy:retention`, pensado para programarse a diario con el rol de operaciones; si la llama el rol de aplicación, solo actúa sobre la organización del contexto y con rol owner/admin. El script también elimina huellas de límite de peticiones de más de 48 h.
+- **No hay planificador en el entorno:** la anonimización automática depende de programar el script en el despliegue.
+- Solicitudes de clientes (acceso/portabilidad y supresión): búsqueda por correo (sin distinguir mayúsculas) o teléfono (ignorando espacios y guiones; coincidencia exacta tras normalizar, por lo que «+34600…» y «600…» son contactos distintos). Exportación JSON y borrado por anonimización. No se borra si hay reservas futuras activas (deben cancelarse antes).
+- Solo owner/admin (`privacy.manage`). La búsqueda y la exportación van por POST para que el contacto no quede en URLs ni historiales; la exportación (Route Handler) comprueba el origen. La auditoría registra una huella del contacto, nunca el contacto.
+- La página pública informa del plazo de conservación en el texto de consentimiento.
+
+**Límites:** no es una certificación de cumplimiento RGPD; el texto informativo, el plazo y el procedimiento deben validarlos el responsable del tratamiento y su asesoría. Las copias de seguridad (no definidas aún) también contendrán datos durante su propio periodo de retención.

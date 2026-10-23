@@ -49,6 +49,7 @@ Requisitos: Node.js ≥ 22.12, pnpm 10 y PostgreSQL ≥ 16.
 | `pnpm test:e2e` | `next build` + Playwright contra una BD `nebora_e2e` recreada. Si ya tienes Chromium, usa `PLAYWRIGHT_CHROMIUM_EXECUTABLE`; si no, `pnpm exec playwright install chromium` |
 | `pnpm build` | Build de producción |
 | `pnpm db:migrate` | Aplica migraciones pendientes con `DATABASE_ADMIN_URL` |
+| `pnpm privacy:retention` | Anonimiza datos de clientes caducados en todas las organizaciones (programar a diario en producción) |
 
 El estado verificado del proyecto está en `project/STATUS.md`.
 
