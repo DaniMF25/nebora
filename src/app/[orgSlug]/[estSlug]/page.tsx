@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { siteChrome } from "@/components/site/chrome";
 import { Icon } from "@/components/site/icons";
 import { MenuShowcase } from "@/components/site/menu-showcase";
 import { SiteShell } from "@/components/site/site-shell";
@@ -35,16 +36,13 @@ export default async function PublicSitePage({ params }: { params: Params }) {
   const data = await load(orgSlug, estSlug);
   if (!data) notFound();
   const { site, menu } = data;
-  const org = orgSlug.toLowerCase();
-  const est = estSlug.toLowerCase();
-  const menuHref = menu && site.featuredMenuSlug ? `/m/${org}/${est}/${site.featuredMenuSlug}` : null;
-  const bookingHref = site.bookingEnabled ? `/r/${org}/${est}` : null;
+  const chrome = siteChrome(site, orgSlug, estSlug);
+  // featuredMenuSlug solo existe si la carta está publicada; `menu` lo confirma.
+  const menuHref = menu ? chrome.links.menu : null;
+  const bookingHref = chrome.links.booking;
 
   return (
-    <SiteShell
-      current="home"
-      site={{ ...site, links: { home: `/${org}/${est}`, menu: menuHref, booking: bookingHref } }}
-    >
+    <SiteShell current="home" site={{ ...chrome, links: { ...chrome.links, menu: menuHref } }}>
       <section
         className={`${styles.hero} ${site.heroMediaId ? styles.heroWithImage : ""}`}
         style={site.heroMediaId ? { ["--hero-image" as string]: `url(${publicMediaUrl(site.heroMediaId)})` } : undefined}

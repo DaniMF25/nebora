@@ -151,3 +151,27 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
+.withImage {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.9rem;
+  align-items: start;
+}
+
+.image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.recommended {
+  margin: 0.15rem 0 0;
+  color: var(--m-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}

@@ -5,6 +5,7 @@
  * mediterráneo (oscuro con dorado y crema).
  */
 .site {
+  color-scheme: light;
   --s-bg: #fafaf9;
   --s-fg: #18181b;
   --s-muted: #5f5f66;
@@ -61,6 +62,7 @@
 /* ---------------------------------------------------------------- temas */
 
 .futurista {
+  color-scheme: dark;
   --s-bg: #0a0a14;
   --s-fg: #ecebff;
   --s-muted: #a9a5cc;
@@ -90,6 +92,7 @@
 }
 
 .clasico {
+  color-scheme: light;
   --s-bg: #f3ebdc;
   --s-fg: #1d2f4a;
   --s-muted: #4f5b6e;
@@ -124,6 +127,7 @@
 }
 
 .mediterraneo {
+  color-scheme: light;
   --s-bg: #efebe4;
   --s-fg: #1f2023;
   --s-muted: #6b665e;
@@ -837,4 +841,192 @@
   .bottomNav {
     display: none;
   }
+}
+
+/* ------------------------------------------- páginas interiores (carta, reservas) */
+
+/* Los formularios comunes (globals.css) toman los colores del tema. */
+.site {
+  --bg: var(--s-bg);
+  --fg: var(--s-fg);
+  --muted: var(--s-muted);
+  --accent: var(--s-accent);
+  --border: var(--s-line);
+}
+
+/* El contenido de las páginas interiores mide 52rem; cabecera y pestañas se alinean con él. */
+.pageHead {
+  padding: 2.5rem max(clamp(1.25rem, 5vw, 4rem), calc((100% - 52rem) / 2)) 2.75rem;
+  background: var(--s-hero-plain);
+  color: var(--s-hero-fg);
+}
+
+.pageHead .heroTitle {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+}
+
+.pageHead .rule {
+  margin-bottom: 0;
+}
+
+.sectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 max(clamp(1.25rem, 5vw, 4rem), calc((100% - 52rem) / 2 - 0.9rem));
+  background: var(--s-bg);
+  border-bottom: 1px solid var(--s-line);
+}
+
+.sectionNav a {
+  flex: none;
+  padding: 0.9rem 0.9rem;
+  color: var(--s-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: var(--s-label-spacing);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.sectionNav a:hover {
+  color: var(--s-accent);
+}
+
+.menuList {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1rem clamp(1.25rem, 5vw, 4rem) 3rem;
+}
+
+.menuSection {
+  padding-top: 2.5rem;
+  scroll-margin-top: 3.5rem;
+}
+
+.dishes {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.dish {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem;
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+  border-radius: var(--s-radius);
+}
+
+.dishWithImage {
+  grid-template-columns: 6rem 1fr;
+}
+
+@media (min-width: 640px) {
+  .dishWithImage {
+    grid-template-columns: 9rem 1fr;
+  }
+}
+
+.dishImage {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: calc(var(--s-radius) / 2);
+  display: block;
+}
+
+.dishHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dishName {
+  margin: 0;
+  font-family: var(--s-font-card);
+  font-size: 1.2rem;
+  font-weight: var(--s-display-weight);
+  letter-spacing: var(--s-display-spacing);
+  text-transform: var(--s-display-transform);
+  line-height: 1.25;
+}
+
+.clasico .dishName {
+  text-transform: none;
+  font-weight: 400;
+}
+
+.futurista .dishName {
+  font-size: 1rem;
+}
+
+.dishPrice {
+  flex: none;
+  color: var(--s-accent);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dish .cardBadge {
+  margin-top: 0.3rem;
+}
+
+.dish .cardText {
+  margin-top: 0.35rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--s-line);
+  border-radius: 999px;
+  color: var(--s-muted);
+  font-size: 0.72rem;
+}
+
+.menuNote {
+  margin: 2.5rem 0 0;
+  color: var(--s-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.pageBody {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem clamp(1.25rem, 5vw, 4rem) 3.5rem;
+}
+
+.pageBody h2 {
+  font-family: var(--s-font-card);
+  font-weight: var(--s-display-weight);
+  text-transform: none;
+}
+
+.pageBody input,
+.pageBody select {
+  background: var(--s-surface);
+}
+
+.pageBody section {
+  margin-top: 2rem;
 }

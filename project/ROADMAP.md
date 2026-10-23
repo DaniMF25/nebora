@@ -40,7 +40,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 - [x] Fotos de platos y marca «recomendado» (migración 0013, D-021).
 - [x] Web pública del local `/<org>/<local>` con los temas Futurista, Clásico y Mediterráneo (portada, carta destacada con pestañas y carrusel, destacados, contacto y horario reales, navegación inferior en móvil).
-- [ ] Aplicar el mismo diseño a la carta completa `/m/...` y a la página de reservas `/r/...` (siguiente paso).
+- [x] Mismo diseño en la carta completa `/m/...` (fotos, recomendados, pestañas fijas por categoría) y en la página de reservas `/r/...` cuando el local tiene su web publicada (D-022).
 
 ## Fase 4 — Inventario
 - [x] Ingredientes y unidades (g/ml/unidades con conversión kg, l, cl).

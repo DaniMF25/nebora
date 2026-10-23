@@ -1,20 +1,9 @@
 import sharp from "sharp";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { AuthUser } from "@/server/auth/service";
-import {
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-} from "@/server/errors";
-import {
-  createEstablishment,
-  type Establishment,
-} from "@/server/modules/establishments/service";
-import {
-  getOrganizationMedia,
-  getPublicMedia,
-  MAX_IMAGE_SIDE,
-} from "@/server/modules/media/service";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
+import { createEstablishment, type Establishment } from "@/server/modules/establishments/service";
+import { getOrganizationMedia, getPublicMedia, MAX_IMAGE_SIDE } from "@/server/modules/media/service";
 import {
   addItem,
   addSection,
@@ -25,27 +14,13 @@ import {
   setItemRecommended,
   unpublishMenu,
 } from "@/server/modules/menus/menus";
-import {
-  createProduct,
-  getProduct,
-  setProductImage,
-} from "@/server/modules/menus/products";
+import { createProduct, getProduct, setProductImage } from "@/server/modules/menus/products";
 import { createOrganization } from "@/server/modules/organizations/service";
 import { setWeeklyHours } from "@/server/modules/schedules/service";
-import {
-  getPublicSite,
-  getSiteProfile,
-  setSiteHeroImage,
-  updateSiteProfile,
-} from "@/server/modules/site/service";
+import { getPublicSite, getSiteProfile, setSiteHeroImage, updateSiteProfile } from "@/server/modules/site/service";
 import { withTenant, withUser } from "@/server/tenancy/context";
 import { withAdminClient } from "../support/db";
-import {
-  addMember,
-  createTestOrganization,
-  createTestUser,
-  uniqueSuffix,
-} from "../support/factories";
+import { addMember, createTestOrganization, createTestUser, uniqueSuffix } from "../support/factories";
 
 interface Fixture {
   owner: AuthUser;
@@ -57,9 +32,7 @@ interface Fixture {
 async function setupRestaurant(label: string): Promise<Fixture> {
   const owner = await createTestUser(`${label}-owner`);
   const org = await createTestOrganization(owner, label);
-  const { rows } = await withAdminClient((c) =>
-    c.query("SELECT slug FROM organizations WHERE id = $1", [org]),
-  );
+  const { rows } = await withAdminClient((c) => c.query("SELECT slug FROM organizations WHERE id = $1", [org]));
   const est = await withTenant(owner, org, (tx, ctx) =>
     createEstablishment(tx, ctx, {
       name: `Local ${label}`,
@@ -70,11 +43,7 @@ async function setupRestaurant(label: string): Promise<Fixture> {
 }
 
 /** JPEG grande con metadatos EXIF que no deben llegar a guardarse. */
-async function photo(
-  width = 2400,
-  height = 1200,
-  color = "#336699",
-): Promise<Uint8Array> {
+async function photo(width = 2400, height = 1200, color = "#336699"): Promise<Uint8Array> {
   const buf = await sharp({
     create: { width, height, channels: 3, background: color },
   })
@@ -110,22 +79,15 @@ describe("imágenes: validación y reprocesado", () => {
     productId = await withTenant(
       f.owner,
       f.org,
-      async (tx, ctx) =>
-        (await createProduct(tx, ctx, { name: "Lubina", priceCents: 2200 })).id,
+      async (tx, ctx) => (await createProduct(tx, ctx, { name: "Lubina", priceCents: 2200 })).id,
     );
   });
 
   it("guarda una copia WebP reducida y sin metadatos", async () => {
-    await withTenant(f.owner, f.org, async (tx, ctx) =>
-      setProductImage(tx, ctx, productId, await photo()),
-    );
-    const product = await withTenant(f.owner, f.org, (tx, ctx) =>
-      getProduct(tx, ctx, productId),
-    );
+    await withTenant(f.owner, f.org, async (tx, ctx) => setProductImage(tx, ctx, productId, await photo()));
+    const product = await withTenant(f.owner, f.org, (tx, ctx) => getProduct(tx, ctx, productId));
     expect(product.imageMediaId).toBeTruthy();
-    const file = await withTenant(f.owner, f.org, (tx, ctx) =>
-      getOrganizationMedia(tx, ctx, product.imageMediaId!),
-    );
+    const file = await withTenant(f.owner, f.org, (tx, ctx) => getOrganizationMedia(tx, ctx, product.imageMediaId!));
     expect(file.contentType).toBe("image/webp");
     const meta = await sharp(file.data).metadata();
     expect(meta.format).toBe("webp");
@@ -135,9 +97,7 @@ describe("imágenes: validación y reprocesado", () => {
   });
 
   it("rechaza archivos que no son imágenes aunque se declaren como tales", async () => {
-    const svg = new TextEncoder().encode(
-      '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
-    );
+    const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
     const fakeJpeg = new Uint8Array([
       0xff,
       0xd8,
@@ -147,9 +107,7 @@ describe("imágenes: validación y reprocesado", () => {
     ]);
     for (const bytes of [svg, fakeJpeg, new Uint8Array()]) {
       await expect(
-        withTenant(f.owner, f.org, (tx, ctx) =>
-          setProductImage(tx, ctx, productId, bytes),
-        ),
+        withTenant(f.owner, f.org, (tx, ctx) => setProductImage(tx, ctx, productId, bytes)),
       ).rejects.toBeInstanceOf(ValidationError);
     }
   });
@@ -158,21 +116,15 @@ describe("imágenes: validación y reprocesado", () => {
     const staff = await createTestUser("img-staff");
     await addMember(f.org, staff, "staff");
     await expect(
-      withTenant(staff, f.org, async (tx, ctx) =>
-        setProductImage(tx, ctx, productId, await photo(10, 10)),
-      ),
+      withTenant(staff, f.org, async (tx, ctx) => setProductImage(tx, ctx, productId, await photo(10, 10))),
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("otra organización no puede leer la imagen ni asociarla", async () => {
-    const product = await withTenant(f.owner, f.org, (tx, ctx) =>
-      getProduct(tx, ctx, productId),
-    );
+    const product = await withTenant(f.owner, f.org, (tx, ctx) => getProduct(tx, ctx, productId));
     const other = await setupRestaurant("img-other");
     await expect(
-      withTenant(other.owner, other.org, (tx, ctx) =>
-        getOrganizationMedia(tx, ctx, product.imageMediaId!),
-      ),
+      withTenant(other.owner, other.org, (tx, ctx) => getOrganizationMedia(tx, ctx, product.imageMediaId!)),
     ).rejects.toBeInstanceOf(NotFoundError);
     // La FK compuesta impide apuntar a una imagen ajena incluso escribiendo directamente.
     await expect(
@@ -181,10 +133,10 @@ describe("imágenes: validación y reprocesado", () => {
           "INSERT INTO menu_products (organization_id, name, price_cents) VALUES ($1, 'x', 1) RETURNING id",
           [other.org],
         );
-        await c.query(
-          "UPDATE menu_products SET image_media_id = $2 WHERE id = $1",
-          [p.rows[0].id, product.imageMediaId],
-        );
+        await c.query("UPDATE menu_products SET image_media_id = $2 WHERE id = $1", [
+          p.rows[0].id,
+          product.imageMediaId,
+        ]);
       }),
     ).rejects.toMatchObject({ code: "23503" });
   });
@@ -198,37 +150,27 @@ describe("imágenes públicas: solo las del contenido publicado", () => {
 
   beforeAll(async () => {
     f = await setupRestaurant("pubimg");
-    ({ menuId, productId, itemId } = await withTenant(
-      f.owner,
-      f.org,
-      async (tx, ctx) => {
-        const product = await createProduct(tx, ctx, {
-          name: "Pulpo",
-          priceCents: 1800,
-        });
-        const menu = await createMenu(tx, ctx, f.est.id, {
-          name: "Carta",
-          slug: "carta",
-          theme: "mediterraneo",
-        });
-        const section = await addSection(tx, ctx, menu.id, { name: "Del mar" });
-        const item = await addItem(tx, ctx, menu.id, section, {
-          productId: product.id,
-        });
-        return { menuId: menu.id, productId: product.id, itemId: item };
-      },
-    ));
+    ({ menuId, productId, itemId } = await withTenant(f.owner, f.org, async (tx, ctx) => {
+      const product = await createProduct(tx, ctx, {
+        name: "Pulpo",
+        priceCents: 1800,
+      });
+      const menu = await createMenu(tx, ctx, f.est.id, {
+        name: "Carta",
+        slug: "carta",
+        theme: "mediterraneo",
+      });
+      const section = await addSection(tx, ctx, menu.id, { name: "Del mar" });
+      const item = await addItem(tx, ctx, menu.id, section, {
+        productId: product.id,
+      });
+      return { menuId: menu.id, productId: product.id, itemId: item };
+    }));
   });
 
   it("la foto de un producto no se sirve hasta publicar una carta que la incluya, y deja de servirse al despublicar", async () => {
-    await withTenant(f.owner, f.org, async (tx, ctx) =>
-      setProductImage(tx, ctx, productId, await photo(800, 600)),
-    );
-    const first = (
-      await withTenant(f.owner, f.org, (tx, ctx) =>
-        getProduct(tx, ctx, productId),
-      )
-    ).imageMediaId!;
+    await withTenant(f.owner, f.org, async (tx, ctx) => setProductImage(tx, ctx, productId, await photo(800, 600)));
+    const first = (await withTenant(f.owner, f.org, (tx, ctx) => getProduct(tx, ctx, productId))).imageMediaId!;
     expect(await getPublicMedia(first)).toBeNull();
 
     await withTenant(f.owner, f.org, async (tx, ctx) => {
@@ -247,25 +189,17 @@ describe("imágenes públicas: solo las del contenido publicado", () => {
     await withTenant(f.owner, f.org, async (tx, ctx) =>
       setProductImage(tx, ctx, productId, await photo(800, 600, "#aa3300")),
     );
-    const second = (
-      await withTenant(f.owner, f.org, (tx, ctx) =>
-        getProduct(tx, ctx, productId),
-      )
-    ).imageMediaId!;
+    const second = (await withTenant(f.owner, f.org, (tx, ctx) => getProduct(tx, ctx, productId))).imageMediaId!;
     expect(second).not.toBe(first);
     expect(await getPublicMedia(first)).not.toBeNull();
     expect(await getPublicMedia(second)).toBeNull();
 
-    await withTenant(f.owner, f.org, (tx, ctx) =>
-      unpublishMenu(tx, ctx, menuId),
-    );
+    await withTenant(f.owner, f.org, (tx, ctx) => unpublishMenu(tx, ctx, menuId));
     expect(await getPublicMedia(first)).toBeNull();
   });
 
   it("el borrador refleja la foto y la marca de recomendado; los datos ajenos no", async () => {
-    const draft = await withTenant(f.owner, f.org, (tx, ctx) =>
-      getMenuDraft(tx, ctx, menuId),
-    );
+    const draft = await withTenant(f.owner, f.org, (tx, ctx) => getMenuDraft(tx, ctx, menuId));
     expect(draft.sections[0]!.items[0]).toMatchObject({ recommended: true });
     const other = await setupRestaurant("pubimg-other");
     await expect(
@@ -277,9 +211,7 @@ describe("imágenes públicas: solo las del contenido publicado", () => {
 
   it("identificadores mal formados o inexistentes no se sirven", async () => {
     expect(await getPublicMedia("no-es-uuid")).toBeNull();
-    expect(
-      await getPublicMedia("00000000-0000-4000-8000-000000000000"),
-    ).toBeNull();
+    expect(await getPublicMedia("00000000-0000-4000-8000-000000000000")).toBeNull();
   });
 });
 
@@ -297,9 +229,7 @@ describe("página pública del local", () => {
 
   it("sin perfil o sin publicar no hay página pública", async () => {
     expect(await getPublicSite(f.orgSlug, f.est.slug)).toBeNull();
-    const profile = await withTenant(f.owner, f.org, (tx, ctx) =>
-      getSiteProfile(tx, ctx, f.est.id),
-    );
+    const profile = await withTenant(f.owner, f.org, (tx, ctx) => getSiteProfile(tx, ctx, f.est.id));
     expect(profile).toMatchObject({ published: false, highlights: [] });
     await withTenant(f.owner, f.org, (tx, ctx) =>
       updateSiteProfile(tx, ctx, f.est.id, {
@@ -312,9 +242,7 @@ describe("página pública del local", () => {
 
   it("no se puede publicar sin titular", async () => {
     await expect(
-      withTenant(f.owner, f.org, (tx, ctx) =>
-        updateSiteProfile(tx, ctx, f.est.id, { ...baseProfile, heroTitle: "" }),
-      ),
+      withTenant(f.owner, f.org, (tx, ctx) => updateSiteProfile(tx, ctx, f.est.id, { ...baseProfile, heroTitle: "" })),
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
@@ -335,14 +263,10 @@ describe("página pública del local", () => {
       { organizationId: f.org },
     ]) {
       await expect(
-        withTenant(f.owner, f.org, (tx, ctx) =>
-          updateSiteProfile(tx, ctx, f.est.id, { ...baseProfile, ...bad }),
-        ),
+        withTenant(f.owner, f.org, (tx, ctx) => updateSiteProfile(tx, ctx, f.est.id, { ...baseProfile, ...bad })),
       ).rejects.toBeInstanceOf(ValidationError);
     }
-    const saved = await withTenant(f.owner, f.org, (tx, ctx) =>
-      updateSiteProfile(tx, ctx, f.est.id, baseProfile),
-    );
+    const saved = await withTenant(f.owner, f.org, (tx, ctx) => updateSiteProfile(tx, ctx, f.est.id, baseProfile));
     expect(saved).toMatchObject({
       whatsapp: "34600112233",
       instagram: "altamar.test",
@@ -379,25 +303,19 @@ describe("página pública del local", () => {
     });
     expect(site!.highlights).toHaveLength(2);
 
-    await withTenant(f.owner, f.org, (tx, ctx) =>
-      publishMenu(tx, ctx, menu.id),
-    );
+    await withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, menu.id));
     site = await getPublicSite(f.orgSlug, f.est.slug);
     expect(site).toMatchObject({
       featuredMenuSlug: "carta",
       featuredMenuCode: menu.publicCode,
     });
     // Los slugs no distinguen mayúsculas y los mal formados no consultan nada.
-    expect(
-      await getPublicSite(f.orgSlug.toUpperCase(), f.est.slug),
-    ).not.toBeNull();
+    expect(await getPublicSite(f.orgSlug.toUpperCase(), f.est.slug)).not.toBeNull();
     expect(await getPublicSite("../x", f.est.slug)).toBeNull();
   });
 
   it("la foto principal solo es pública mientras la página está publicada", async () => {
-    await withTenant(f.owner, f.org, async (tx, ctx) =>
-      setSiteHeroImage(tx, ctx, f.est.id, await photo(1600, 900)),
-    );
+    await withTenant(f.owner, f.org, async (tx, ctx) => setSiteHeroImage(tx, ctx, f.est.id, await photo(1600, 900)));
     const heroId = (await getPublicSite(f.orgSlug, f.est.slug))!.heroMediaId!;
     expect(await getPublicMedia(heroId)).not.toBeNull();
     await withTenant(f.owner, f.org, (tx, ctx) =>
@@ -407,12 +325,8 @@ describe("página pública del local", () => {
       }),
     );
     expect(await getPublicMedia(heroId)).toBeNull();
-    await withTenant(f.owner, f.org, (tx, ctx) =>
-      updateSiteProfile(tx, ctx, f.est.id, baseProfile),
-    );
-    await withTenant(f.owner, f.org, (tx, ctx) =>
-      setSiteHeroImage(tx, ctx, f.est.id, null),
-    );
+    await withTenant(f.owner, f.org, (tx, ctx) => updateSiteProfile(tx, ctx, f.est.id, baseProfile));
+    await withTenant(f.owner, f.org, (tx, ctx) => setSiteHeroImage(tx, ctx, f.est.id, null));
     expect(await getPublicMedia(heroId)).toBeNull();
   });
 
@@ -422,8 +336,7 @@ describe("página pública del local", () => {
         name: "Otro local",
         slug: `otro-${uniqueSuffix()}`,
       });
-      return (await createMenu(tx, ctx, e.id, { name: "Carta", slug: "carta" }))
-        .id;
+      return (await createMenu(tx, ctx, e.id, { name: "Carta", slug: "carta" })).id;
     });
     const foreign = await setupRestaurant("site-foreign");
     const foreignMenu = await withTenant(
@@ -453,29 +366,19 @@ describe("página pública del local", () => {
     const staff = await createTestUser("site-staff");
     await addMember(f.org, staff, "staff");
     await expect(
-      withTenant(staff, f.org, (tx, ctx) =>
-        updateSiteProfile(tx, ctx, f.est.id, baseProfile),
-      ),
+      withTenant(staff, f.org, (tx, ctx) => updateSiteProfile(tx, ctx, f.est.id, baseProfile)),
     ).rejects.toBeInstanceOf(ForbiddenError);
     await expect(
-      withTenant(staff, f.org, (tx, ctx) =>
-        setSiteHeroImage(tx, ctx, f.est.id, null),
-      ),
+      withTenant(staff, f.org, (tx, ctx) => setSiteHeroImage(tx, ctx, f.est.id, null)),
     ).rejects.toBeInstanceOf(ForbiddenError);
     const other = await setupRestaurant("site-other");
     for (const op of [
-      (
-        tx: Parameters<Parameters<typeof withTenant>[2]>[0],
-        ctx: Parameters<Parameters<typeof withTenant>[2]>[1],
-      ) => getSiteProfile(tx, ctx, f.est.id),
-      (
-        tx: Parameters<Parameters<typeof withTenant>[2]>[0],
-        ctx: Parameters<Parameters<typeof withTenant>[2]>[1],
-      ) => updateSiteProfile(tx, ctx, f.est.id, baseProfile),
+      (tx: Parameters<Parameters<typeof withTenant>[2]>[0], ctx: Parameters<Parameters<typeof withTenant>[2]>[1]) =>
+        getSiteProfile(tx, ctx, f.est.id),
+      (tx: Parameters<Parameters<typeof withTenant>[2]>[0], ctx: Parameters<Parameters<typeof withTenant>[2]>[1]) =>
+        updateSiteProfile(tx, ctx, f.est.id, baseProfile),
     ]) {
-      await expect(
-        withTenant(other.owner, other.org, op),
-      ).rejects.toBeInstanceOf(NotFoundError);
+      await expect(withTenant(other.owner, other.org, op)).rejects.toBeInstanceOf(NotFoundError);
     }
   });
 });
@@ -485,15 +388,11 @@ describe("identificadores de organización reservados", () => {
     const user = await createTestUser("reserved");
     for (const slug of ["app", "login", "media", "r"]) {
       await expect(
-        withUser(user, (tx, ctx) =>
-          createOrganization(tx, ctx, { name: "X", slug }),
-        ),
+        withUser(user, (tx, ctx) => createOrganization(tx, ctx, { name: "X", slug })),
       ).rejects.toBeInstanceOf(ValidationError);
     }
     await expect(
-      withAdminClient((c) =>
-        c.query("INSERT INTO organizations (name, slug) VALUES ('X', 'app')"),
-      ),
+      withAdminClient((c) => c.query("INSERT INTO organizations (name, slug) VALUES ('X', 'app')")),
     ).rejects.toMatchObject({ code: "23514" });
   });
 });

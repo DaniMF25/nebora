@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { MenuView } from "@/components/menu-view";
+import { siteChrome } from "@/components/site/chrome";
+import { SiteMenu } from "@/components/site/site-menu";
+import { SiteShell } from "@/components/site/site-shell";
 import { getPublishedMenu } from "@/server/modules/menus/menus";
+import { getPublicSite } from "@/server/modules/site/service";
 
 type Params = Promise<{ orgSlug: string; estSlug: string; menuSlug: string }>;
 
@@ -20,5 +24,14 @@ export default async function PublicMenuPage({ params }: { params: Params }) {
   const { orgSlug, estSlug, menuSlug } = await params;
   const menu = await load(orgSlug, estSlug, menuSlug);
   if (!menu) notFound();
-  return <MenuView snapshot={menu.snapshot} />;
+  // Si el local tiene su web publicada, la carta se integra en ella con el
+  // estilo de la web; si no, se muestra sola con el tema de la versión.
+  const site = await getPublicSite(orgSlug, estSlug);
+  if (!site) return <MenuView snapshot={menu.snapshot} />;
+  const href = `/m/${orgSlug.toLowerCase()}/${estSlug.toLowerCase()}/${menuSlug.toLowerCase()}`;
+  return (
+    <SiteShell current="menu" site={siteChrome(site, orgSlug, estSlug, href)}>
+      <SiteMenu snapshot={menu.snapshot} />
+    </SiteShell>
+  );
 }

@@ -2,8 +2,12 @@ import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicBookingForm } from "@/components/public-booking-form";
+import { siteChrome } from "@/components/site/chrome";
+import { SiteShell } from "@/components/site/site-shell";
+import styles from "@/components/site/site.module.css";
 import { bookableDateRange, getPublicBookingInfo, listPublicSlots } from "@/server/modules/public-booking/service";
 import { isValidLocalDate } from "@/server/modules/schedules/time";
+import { getPublicSite } from "@/server/modules/site/service";
 import { publicBookingAction } from "./actions";
 
 type Params = Promise<{ orgSlug: string; estSlug: string }>;
@@ -26,18 +30,27 @@ export default async function PublicBookingPage({ params, searchParams }: { para
   const party = Number(typeof sp.party === "string" ? sp.party : NaN);
   const searched = date !== null && Number.isInteger(party);
   const { slots } = searched ? await listPublicSlots(info, date, party) : { slots: [] as string[] };
-  const longDate = new Intl.DateTimeFormat("es-ES", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
+  const longDate = new Intl.DateTimeFormat("es-ES", {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 
-  return (
-    <main>
-      <p className="muted">{info.organizationName}</p>
-      <h1>Reservar en {info.establishmentName}</h1>
-
+  const content = (
+    <>
       <form method="get" className="form" aria-label="Buscar disponibilidad">
         <div className="inline-form">
           <label>
             Fecha
-            <input type="date" name="date" required min={range.first} max={range.last} defaultValue={date ?? range.first} />
+            <input
+              type="date"
+              name="date"
+              required
+              min={range.first}
+              max={range.last}
+              defaultValue={date ?? range.first}
+            />
           </label>
           <label>
             Comensales
@@ -52,7 +65,8 @@ export default async function PublicBookingPage({ params, searchParams }: { para
         </div>
         <button type="submit">Ver horas disponibles</button>
         <p className="muted">
-          Online se admiten grupos de {info.minParty} a {info.maxParty} personas. Para grupos mayores, llama al restaurante.
+          Online se admiten grupos de {info.minParty} a {info.maxParty} personas. Para grupos mayores, llama al
+          restaurante.
         </p>
       </form>
 
@@ -106,15 +120,38 @@ export default async function PublicBookingPage({ params, searchParams }: { para
               <label className="inline-form">
                 <input type="checkbox" name="consent" required />
                 <span>
-                  Acepto que {info.organizationName} trate estos datos únicamente para gestionar esta reserva y contactarme
-                  sobre ella. Se conservan {info.customerRetentionDays} días después de la reserva y después se anonimizan.
-                  Puedes pedir una copia o su borrado al restaurante.
+                  Acepto que {info.organizationName} trate estos datos únicamente para gestionar esta reserva y
+                  contactarme sobre ella. Se conservan {info.customerRetentionDays} días después de la reserva y después
+                  se anonimizan. Puedes pedir una copia o su borrado al restaurante.
                 </span>
               </label>
             </PublicBookingForm>
           )}
         </section>
       )}
+    </>
+  );
+
+  // Con la web del local publicada, la reserva se integra en ella.
+  const site = await getPublicSite(orgSlug, estSlug);
+  if (site) {
+    return (
+      <SiteShell current="booking" site={siteChrome(site, orgSlug, estSlug)}>
+        <section className={styles.pageHead}>
+          <p className={styles.eyebrow}>Reservas online</p>
+          <h1 className={styles.heroTitle}>Reservar mesa</h1>
+          <span className={styles.rule} aria-hidden="true" />
+        </section>
+        <div className={styles.pageBody}>{content}</div>
+      </SiteShell>
+    );
+  }
+
+  return (
+    <main>
+      <p className="muted">{info.organizationName}</p>
+      <h1>Reservar en {info.establishmentName}</h1>
+      {content}
     </main>
   );
 }

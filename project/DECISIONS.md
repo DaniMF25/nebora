@@ -238,3 +238,10 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Riesgos:** tamaño de la BD y de las copias de seguridad con imágenes; el cupo es una mitigación. Migrar a almacenamiento de objetos requerirá copiar los datos y cambiar la ruta de servicio, no el modelo de visibilidad.
 
+## D-022 — Carta completa y reservas dentro de la web del local
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:** si el local tiene su página pública publicada, `/m/<org>/<local>/<carta>` y `/r/<org>/<local>` se muestran dentro de ella (misma cabecera, contacto, horario y navegación inferior) y con el **estilo de la web**, no con el tema de la versión de la carta, para que la experiencia sea coherente al navegar. Sin web publicada, ambas páginas se muestran como antes y la carta usa el tema guardado en su versión. Los enlaces impresos y los QR no cambian. Los formularios comunes toman los colores del tema redefiniendo las variables globales (`--accent`, `--border`…) dentro de la web.
+
+**Consecuencia:** el tema elegido para una carta solo se aplica cuando el local no tiene web publicada.
+
