@@ -59,6 +59,9 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   await client.getByLabel(/Acepto que Casa Online trate estos datos/).check();
   await client.getByRole("button", { name: "Reservar" }).click();
   await expect(client.getByText(/¡Reserva confirmada! 2 personas, .* Código de reserva: [0-9A-F]{10}\./)).toBeVisible();
+  // Tras confirmar, el formulario desaparece para no inducir a reservar dos veces.
+  await expect(client.getByRole("button", { name: "Reservar" })).toHaveCount(0);
+  await expect(client.getByRole("link", { name: "Hacer otra reserva" })).toBeVisible();
 
   // Esa hora deja de ofrecerse (solo había una mesa).
   await client.goto(`${publicHref}?date=${date}&party=2`);

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ActionForm } from "@/components/action-form";
+import { PublicBookingForm } from "@/components/public-booking-form";
 import { bookableDateRange, getPublicBookingInfo, listPublicSlots } from "@/server/modules/public-booking/service";
 import { isValidLocalDate } from "@/server/modules/schedules/time";
 import { publicBookingAction } from "./actions";
@@ -64,7 +64,7 @@ export default async function PublicBookingPage({ params, searchParams }: { para
           {slots.length === 0 ? (
             <p className="notice">No quedan horas disponibles online para ese día. Prueba otra fecha.</p>
           ) : (
-            <ActionForm action={publicBookingAction.bind(null, orgSlug, estSlug)} submitLabel="Reservar">
+            <PublicBookingForm action={publicBookingAction.bind(null, orgSlug, estSlug)}>
               <input type="hidden" name="idempotencyKey" value={randomUUID()} readOnly />
               <input type="hidden" name="date" value={date} readOnly />
               <input type="hidden" name="partySize" value={party} readOnly />
@@ -110,7 +110,7 @@ export default async function PublicBookingPage({ params, searchParams }: { para
                   sobre ella.
                 </span>
               </label>
-            </ActionForm>
+            </PublicBookingForm>
           )}
         </section>
       )}
