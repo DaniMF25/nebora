@@ -9,6 +9,11 @@ async function cellOf(table: Locator, planWidth: number, planHeight: number) {
   return { x: Math.round((left / 100) * planWidth), y: Math.round((top / 100) * planHeight) };
 }
 
+/** Promesa que se resuelve cuando responde la Server Action (petición POST a la página). */
+function serverActionDone(page: Page) {
+  return page.waitForResponse((r) => r.request().method() === "POST" && r.request().headers()["next-action"] !== undefined);
+}
+
 /** Arrastra la mesa con el ratón hasta la celda (x, y) del plano. */
 async function dragTo(page: Page, plan: Locator, table: Locator, x: number, y: number, w: number, h: number) {
   await plan.scrollIntoViewIfNeeded();
@@ -56,16 +61,18 @@ test("plano de sala: zonas, mesas, arrastrar, teclado y solapes rechazados", asy
   expect(await cellOf(m2, 10, 6)).toEqual({ x: 2, y: 0 });
 
   // Arrastrar M1 a (5, 3) y comprobar que persiste.
+  let saved = serverActionDone(page);
   await dragTo(page, plan, m1, 5, 3, 10, 6);
   expect(await cellOf(m1, 10, 6)).toEqual({ x: 5, y: 3 });
-  await page.waitForLoadState("networkidle");
+  await saved;
   await page.reload();
   expect(await cellOf(plan.getByRole("button", { name: /^Mesa M1,/ }), 10, 6)).toEqual({ x: 5, y: 3 });
 
   // Teclado: M2 una celda a la derecha.
   await plan.getByRole("button", { name: /^Mesa M2,/ }).focus();
+  saved = serverActionDone(page);
   await page.keyboard.press("ArrowRight");
-  await page.waitForLoadState("networkidle");
+  await saved;
   await page.reload();
   expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2,/ }), 10, 6)).toEqual({ x: 3, y: 0 });
 
