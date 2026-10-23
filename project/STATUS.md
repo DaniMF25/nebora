@@ -43,6 +43,8 @@
 - [ ] Dashboard, personal, informes.
 - [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
 - [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
+- [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
+- [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
 - [ ] Despliegue real: hosting, PostgreSQL gestionado, dominio/TLS, almacenamiento de fotos, monitorización y alertas, simulacro de restauración (ver `docs/DEPLOYMENT.md`).
 
 ## Pruebas (última ejecución: 2026-10-23, PostgreSQL 16.15 local)

@@ -96,6 +96,16 @@ Sin esta tarea **no hay anonimización automática** (D-020).
 
 `fly.toml` describe un entorno de pruebas en Madrid: imagen `runtime`, comprobación de salud, apagado sin tráfico, `CLIENT_IP_HEADER=fly-client-ip` y registro abierto solo para crear la primera cuenta. Aún no se ha desplegado: crear la app y la base de datos en Fly tiene coste y requiere la autorización del titular de la cuenta.
 
+## Demo temporal en una máquina Linux (p. ej. un Sprite de Fly.io)
+
+`scripts/demo-sprite.sh` deja Nébora funcionando en el puerto 8080 de una máquina Ubuntu/Debian limpia: instala PostgreSQL y Node 22 (binario oficial de nodejs.org verificado con SHA-256) si faltan, descarga la rama, crea los roles sin privilegios con contraseñas aleatorias (guardadas solo en `~/.nebora-demo/secrets`, permisos 600), aplica migraciones, compila y arranca. Es idempotente: volver a ejecutarlo actualiza el código y reinicia.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/DaniMF25/nebora/claude/festive-rubin-bxwmo0/scripts/demo-sprite.sh | bash
+```
+
+Solo para demostraciones: registro abierto, sin copias de seguridad, sin datos reales. Verificado en un contenedor Ubuntu 24.04 limpio como root (2026-10-23); no probado aún dentro de un Sprite ni como usuario con `sudo`.
+
 ## Verificado y pendiente
 
 Verificado en local (2026-10-23): las dos imágenes se construyen; en contenedores aislados con PostgreSQL 16 las migraciones se aplican desde cero y una segunda ejecución no hace nada; `privacy:retention` funciona; la web arranca como usuario sin privilegios, `/api/health` responde 200 (503 sin base de datos) y el estado Docker pasa a `healthy`; un recorrido completo en navegador contra el contenedor (registro, local, horario, mesas, productos con foto, carta publicada, reservas online y la web pública en los tres temas) terminó sin errores.
