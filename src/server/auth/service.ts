@@ -7,6 +7,7 @@ import {
   InvalidCredentialsError,
   RateLimitedError,
 } from "@/server/errors";
+import { fingerprint, hitRateLimit } from "@/server/rate-limit";
 import { parseInput } from "@/server/validation";
 import { getDummyHash, hashPassword, verifyPassword } from "./password";
 import { loginSchema, registerSchema } from "./schemas";
@@ -18,6 +19,18 @@ const SESSION_RENEW_THRESHOLD_MS = 15 * 24 * 60 * 60 * 1000;
 
 export const LOGIN_MAX_FAILURES = 5;
 export const LOGIN_WINDOW_MINUTES = 15;
+/**
+ * Límites por IP (además del de fallos por correo): frenan el reparto de
+ * intentos entre muchas cuentas desde un mismo origen. Holgados para equipos
+ * que comparten la IP de un local.
+ */
+export const LOGIN_MAX_PER_IP = 50;
+export const REGISTER_MAX_PER_IP_PER_HOUR = 50;
+
+/** Identificador del cliente (p. ej. su IP) para los límites; solo se guarda su huella. */
+export interface ClientOptions {
+  clientId?: string;
+}
 
 export interface AuthUser {
   id: string;
@@ -32,12 +45,18 @@ export interface SessionInfo {
 
 export async function registerUser(
   input: unknown,
-  options: { allowSignup?: boolean } = {},
+  options: { allowSignup?: boolean } & ClientOptions = {},
 ): Promise<AuthUser> {
   const allowSignup = options.allowSignup ?? getEnv().AUTH_ALLOW_SIGNUP === "true";
   if (!allowSignup) throw new FeatureDisabledError("El registro de cuentas no está habilitado");
 
   const data = parseInput(registerSchema, input);
+  if (
+    options.clientId !== undefined &&
+    !(await hitRateLimit(`register-ip:${fingerprint(options.clientId)}`, 3600, REGISTER_MAX_PER_IP_PER_HOUR))
+  ) {
+    throw new RateLimitedError();
+  }
   const passwordHash = await hashPassword(data.password);
   try {
     const { rows } = await getPool().query<{ id: string }>(
@@ -53,9 +72,19 @@ export async function registerUser(
   }
 }
 
-export async function login(input: unknown): Promise<{ user: AuthUser; session: SessionInfo }> {
+export async function login(
+  input: unknown,
+  options: ClientOptions = {},
+): Promise<{ user: AuthUser; session: SessionInfo }> {
   const { email, password } = parseInput(loginSchema, input);
   const pool = getPool();
+
+  if (
+    options.clientId !== undefined &&
+    !(await hitRateLimit(`login-ip:${fingerprint(options.clientId)}`, LOGIN_WINDOW_MINUTES * 60, LOGIN_MAX_PER_IP))
+  ) {
+    throw new RateLimitedError();
+  }
 
   const failures = await pool.query<{ count: string }>(
     `SELECT count(*) FROM auth_login_attempts

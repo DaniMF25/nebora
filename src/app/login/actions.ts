@@ -10,10 +10,13 @@ import {
   setSessionCookie,
 } from "@/server/auth/current-user";
 import { login, revokeSession } from "@/server/auth/service";
+import { clientIdentifier } from "@/server/request-ip";
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
   try {
-    const { session } = await login(formToObject(formData, ["email", "password"]));
+    const { session } = await login(formToObject(formData, ["email", "password"]), {
+      clientId: await clientIdentifier(),
+    });
     await setSessionCookie(session);
   } catch (err) {
     return toFormState(err);

@@ -77,6 +77,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] CI en GitHub (lint, tipos, unitarias, integración, E2E y construcción de imágenes) ejecutándose en cada push.
 - [x] Imágenes Docker (web sin privilegios y herramientas), comprobación de salud y manual de despliegue (`docs/DEPLOYMENT.md`, D-023); ensayo local en contenedores superado.
 - [ ] Elegir hosting, PostgreSQL gestionado, dominio y almacenamiento de fotos.
+- [x] Límites de intentos por IP en login y registro.
 - [ ] Revisar OWASP ASVS aplicable.
 - [ ] Ejecutar análisis de dependencias y secretos.
 - [ ] Pruebas de permisos, aislamiento y concurrencia.

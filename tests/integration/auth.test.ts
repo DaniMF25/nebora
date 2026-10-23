@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   LOGIN_MAX_FAILURES,
+  LOGIN_MAX_PER_IP,
   login,
+  REGISTER_MAX_PER_IP_PER_HOUR,
   registerUser,
   revokeAllSessions,
   revokeSession,
@@ -146,3 +148,38 @@ describe("inicio de sesión y sesiones", () => {
     expect(v!.expiresAt.getTime()).toBeGreaterThan(Date.now() + 20 * 24 * 3600 * 1000);
   });
 });
+
+describe("límites por IP", () => {
+  it("el login se frena por IP aunque se repartan los intentos entre muchas cuentas", async () => {
+    const ip = `198.51.100.${Math.floor(Math.random() * 200)}-${uniqueSuffix()}`;
+    const user = await createTestUser("ip-limit");
+    // Cada intento a un correo distinto: el límite por correo no actúa.
+    for (let i = 0; i < LOGIN_MAX_PER_IP; i++) {
+      await expect(
+        login({ email: `nadie-${i}-${uniqueSuffix()}@example.test`, password: "incorrecta-larga" }, { clientId: ip }),
+      ).rejects.toBeInstanceOf(InvalidCredentialsError);
+    }
+    // Agotado: ni siquiera la contraseña correcta entra desde esa IP…
+    await expect(login({ email: user.email, password: TEST_PASSWORD }, { clientId: ip })).rejects.toBeInstanceOf(
+      RateLimitedError,
+    );
+    // …pero desde otra IP sí, y la huella guardada no contiene la IP.
+    await expect(login({ email: user.email, password: TEST_PASSWORD }, { clientId: `${ip}-otra` })).resolves.toBeDefined();
+    const buckets = await withAdminClient((c) =>
+      c.query<{ bucket: string }>("SELECT DISTINCT bucket FROM rate_limit_hits WHERE bucket LIKE 'login-ip:%'"),
+    );
+    expect(buckets.rows.every((r) => !r.bucket.includes("198.51.100"))).toBe(true);
+  });
+
+  it("el registro se frena por IP", async () => {
+    const ip = `203.0.113.7-${uniqueSuffix()}`;
+    const signup = (n: number) =>
+      registerUser(
+        { email: `alta-${n}-${uniqueSuffix()}@example.test`, displayName: "Alta", password: TEST_PASSWORD },
+        { allowSignup: true, clientId: ip },
+      );
+    for (let i = 0; i < REGISTER_MAX_PER_IP_PER_HOUR; i++) await signup(i);
+    await expect(signup(999)).rejects.toBeInstanceOf(RateLimitedError);
+  });
+});
+
