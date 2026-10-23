@@ -18,7 +18,8 @@
     "db:migrate": "tsx --env-file-if-exists=.env.local scripts/db-migrate.ts",
     "db:setup-local": "tsx --env-file-if-exists=.env.local scripts/db-setup-local.ts",
     "test:e2e": "next build && playwright test",
-    "privacy:retention": "tsx --env-file-if-exists=.env.local scripts/privacy-retention.ts"
+    "privacy:retention": "tsx --env-file-if-exists=.env.local scripts/privacy-retention.ts",
+    "db:provision": "tsx --env-file-if-exists=.env.local scripts/db-provision.ts"
   },
   "dependencies": {
     "next": "16.4.2",

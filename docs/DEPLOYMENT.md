@@ -22,6 +22,7 @@ La web **nunca** recibe `DATABASE_ADMIN_URL`. El rol `nebora_app` no es superusu
 | `APP_BASE_URL` | Recomendada | — | Origen público `https://…`; sin ella no hay QR |
 | `AUTH_ALLOW_SIGNUP` | Opcional | — | `false` por defecto. Para crear la primera cuenta, activarlo temporalmente y desactivarlo después |
 | `PORT` | Opcional | — | 3000 por defecto |
+| `CLIENT_IP_HEADER` | Según plataforma | — | Cabecera con la IP real que fija el proxy y el cliente no puede falsear (`fly-client-ip` en Fly.io). Si se define, es la única fuente de IP para los límites |
 
 Los secretos se inyectan al ejecutar (gestor de secretos del proveedor). No se incluyen en la imagen ni en el repositorio.
 
@@ -50,6 +51,8 @@ Con el usuario administrador del proveedor:
 CREATE ROLE nebora_admin LOGIN CREATEROLE PASSWORD '<secreto>';  -- sin SUPERUSER
 CREATE DATABASE nebora OWNER nebora_admin;
 ```
+
+Alternativa automatizada e idempotente: `pnpm db:provision` con `DATABASE_SUPERUSER_URL`, `NEBORA_ADMIN_DB_PASSWORD` y `NEBORA_APP_DB_PASSWORD` (≥ 24 caracteres) crea o actualiza `nebora_admin`, la base de datos, aplica las migraciones y habilita `nebora_app`, sin mostrar secretos.
 
 Las migraciones necesitan las extensiones `citext` y `btree_gist` (de confianza en PostgreSQL ≥ 13; algunos proveedores exigen habilitarlas en su panel). Después:
 
@@ -88,6 +91,10 @@ Sin esta tarea **no hay anonimización automática** (D-020).
 - Las fotos están en la base de datos (D-021): el volcado las incluye y crece con ellas.
 - Las copias contienen datos personales de clientes: acceso restringido y retención limitada (el plazo de D-020 no se aplica a las copias).
 - **Simulacro de restauración** (al menos trimestral): restaurar en una base de datos nueva con `pg_restore --no-owner --dbname=…`, crear los roles como en la preparación inicial, ejecutar `pnpm db:migrate` (debe decir «Sin migraciones pendientes»), arrancar una web contra ella y comprobar `/api/health` y el acceso de una cuenta.
+
+## Fly.io (pruebas)
+
+`fly.toml` describe un entorno de pruebas en Madrid: imagen `runtime`, comprobación de salud, apagado sin tráfico, `CLIENT_IP_HEADER=fly-client-ip` y registro abierto solo para crear la primera cuenta. Aún no se ha desplegado: crear la app y la base de datos en Fly tiene coste y requiere la autorización del titular de la cuenta.
 
 ## Verificado y pendiente
 

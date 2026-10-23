@@ -27,6 +27,14 @@ const envSchema = z.object({
     .refine(isOriginOnlyUrl, { message: "APP_BASE_URL debe ser un origen http(s), sin ruta" })
     .transform((v) => new URL(v).origin)
     .optional(),
+  // Cabecera con la IP real del cliente que pone el proxy de la plataforma y que
+  // el cliente no puede falsear (p. ej. `fly-client-ip` en Fly.io). Si se define,
+  // es la única fuente de la IP para los límites de peticiones.
+  CLIENT_IP_HEADER: z
+    .string()
+    .regex(/^[a-z0-9-]{1,64}$/i, { message: "CLIENT_IP_HEADER debe ser un nombre de cabecera" })
+    .transform((v) => v.toLowerCase())
+    .optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
