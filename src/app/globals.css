@@ -73,3 +73,4 @@ dl.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1f
 dl.kpis div { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; }
 dl.kpis dt { color: var(--muted); font-size: 0.85rem; }
 dl.kpis dd { margin: 0; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+section.zone { border-top: 1px solid var(--border); padding-top: 1rem; }

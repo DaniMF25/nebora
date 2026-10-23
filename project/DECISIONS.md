@@ -166,3 +166,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Permisos: `purchasing.read`, `purchasing.manage`, `purchasing.receive`. El personal puede consultar pedidos y registrar recepciones sin ver precios (requieren `costs.read`).
 
 **Pendiente:** recepción de cantidades por encima de lo pedido, devoluciones a proveedor, coste medio ponderado, precios por proveedor, envío del pedido por correo cuando haya proveedor configurado.
+
+## D-017 — Plano de sala en cuadrícula
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:**
+- Zonas por establecimiento con un plano en cuadrícula (4–40 × 4–40 celdas). Las mesas ocupan rectángulos de celdas enteras (1–8 × 1–8) con forma (redonda, cuadrada, rectangular) y capacidad mínima/máxima (1–50).
+- Integridad en BD: restricción de exclusión GiST sobre `box(...)` por zona (solo mesas activas) para que dos mesas no se solapen aunque se muevan a la vez; trigger que impide que una mesa quede fuera del plano y que el plano se encoja dejando mesas fuera; FK compuesta `(organization_id, establishment_id, zone_id)` que impide asignar una mesa a una zona de otro local.
+- Los cambios de mesas bloquean la zona (`FOR UPDATE`, en orden estable si intervienen dos zonas).
+- Nuevas mesas se colocan en el primer hueco libre. En la interfaz se mueven arrastrando (eventos de puntero) o con las flechas del teclado; cada movimiento se valida en el servidor y, si se rechaza, se revierte en pantalla.
+- Permisos `tables.read` (todos) y `tables.manage` (owner, admin, manager).
+
+**Pendiente:** combinaciones de mesas para grupos, elementos decorativos del plano (barra, paredes), estado de ocupación (llegará con las reservas).

@@ -18,6 +18,7 @@ describe("matriz de permisos", () => {
       "organization.read",
       "purchasing.read",
       "purchasing.receive",
+      "tables.read",
     ]);
   });
 

@@ -48,8 +48,8 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Pruebas de concurrencia e idempotencia.
 
 ## Fase 5 — Mesas y reservas
-- [ ] Zonas y plano.
-- [ ] Mesas y capacidades.
+- [x] Zonas y plano (cuadrícula editable arrastrando o con teclado).
+- [x] Mesas y capacidades (sin solapes garantizado en BD).
 - [x] Horarios y excepciones (hechos en Fase 2; ver D-011).
 - [ ] Calendario.
 - [ ] Reservas públicas y privadas.

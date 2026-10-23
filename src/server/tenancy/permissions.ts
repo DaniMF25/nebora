@@ -26,6 +26,8 @@ export const PERMISSIONS = [
   "purchasing.read",
   "purchasing.manage",
   "purchasing.receive",
+  "tables.read",
+  "tables.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -47,6 +49,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "purchasing.read",
     "purchasing.manage",
     "purchasing.receive",
+    "tables.read",
+    "tables.manage",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -58,6 +62,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "inventory.move",
     "purchasing.read",
     "purchasing.receive",
+    "tables.read",
   ],
 };
 

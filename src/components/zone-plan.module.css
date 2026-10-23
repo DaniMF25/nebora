@@ -1,0 +1,63 @@
+.plan {
+  position: relative;
+  width: 100%;
+  max-width: 48rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--fg) 3%, transparent);
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--fg) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--fg) 8%, transparent) 1px, transparent 1px);
+  touch-action: none;
+  user-select: none;
+}
+
+.table {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.65rem, 1.6vw, 0.9rem);
+  line-height: 1.1;
+  transition: left 0.08s, top 0.08s;
+}
+
+.table:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.round {
+  border-radius: 50%;
+}
+
+.square,
+.rectangle {
+  border-radius: 6px;
+}
+
+.inactive {
+  border-style: dashed;
+  opacity: 0.45;
+}
+
+.name {
+  font-weight: 700;
+}
+
+.capacity {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.status {
+  min-height: 1.5rem;
+  margin: 0.25rem 0 0;
+}
