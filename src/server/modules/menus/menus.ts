@@ -481,6 +481,23 @@ export async function buildSnapshot(tx: Tx, ctx: TenantContext, menuId: string):
   };
 }
 
+/**
+ * ¿El borrador difiere de la versión publicada? Cubre todo lo que ve el
+ * cliente (precios, textos, alérgenos, fotos, recomendados, tema y orden).
+ * null si la carta no está publicada.
+ */
+export async function hasUnpublishedChanges(tx: Tx, ctx: TenantContext, menuId: string): Promise<boolean | null> {
+  requirePermission(ctx, "menus.read");
+  const snapshot = await buildSnapshot(tx, ctx, menuId);
+  const { rows } = await tx.query<{ same: boolean }>(
+    `SELECT v.snapshot = $3::jsonb AS same
+       FROM menus m JOIN menu_versions v ON v.id = m.published_version_id AND v.menu_id = m.id
+      WHERE m.organization_id = $1 AND m.id = $2`,
+    [ctx.organizationId, menuId, JSON.stringify(snapshot)],
+  );
+  return rows[0] ? !rows[0].same : null;
+}
+
 /** Problemas que impiden publicar el borrador (lista vacía si se puede publicar). */
 export function publicationProblems(draft: MenuDraft): string[] {
   const problems: string[] = [];

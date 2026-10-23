@@ -26,6 +26,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [ ] Layout responsive y navegación.
 - [ ] Selector de organización/establecimiento.
 - [x] Configuración de horarios y zona horaria (horario semanal, turnos nocturnos, excepciones, cálculo con DST).
+- [x] Edición de los datos del establecimiento desde la interfaz.
 - [ ] Dashboard con datos reales y estados vacíos.
 
 ## Fase 3 — Cartas digitales

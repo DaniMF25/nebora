@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/form-state";
-import { SLOTS_PER_DAY_IN_FORM } from "@/lib/schedule-form";
+import { MAX_SLOTS_PER_DAY } from "@/lib/schedule-form";
 import { toFormState } from "@/server/actions/form-state";
 import { requireUser } from "@/server/auth/current-user";
 import { ValidationError } from "@/server/errors";
+import { updateEstablishment } from "@/server/modules/establishments/service";
 import { createMenu } from "@/server/modules/menus/menus";
 import { deleteDateException, setDateException, setWeeklyHours } from "@/server/modules/schedules/service";
 import { withTenant } from "@/server/tenancy/context";
@@ -22,7 +23,7 @@ type SlotInput = { opens: string; closes: string };
 
 function readSlots(formData: FormData, prefix: string): SlotInput[] {
   const slots: SlotInput[] = [];
-  for (let n = 0; n < SLOTS_PER_DAY_IN_FORM; n++) {
+  for (let n = 0; n < MAX_SLOTS_PER_DAY; n++) {
     const opens = str(formData, `${prefix}s${n}o`);
     const closes = str(formData, `${prefix}s${n}c`);
     if (!opens && !closes) continue;
@@ -113,4 +114,27 @@ export async function createMenuAction(
     return toFormState(err);
   }
   redirect(`/app/${orgId}/menus/${menuId}`);
+}
+
+export async function updateEstablishmentAction(
+  orgId: string,
+  estId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await requireUser();
+  try {
+    await withTenant(user, orgId, (tx, ctx) =>
+      updateEstablishment(tx, ctx, estId, {
+        name: str(formData, "name"),
+        slug: str(formData, "slug"),
+        timezone: str(formData, "timezone"),
+        address: str(formData, "address"),
+      }),
+    );
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/app/${orgId}`, "layout");
+  return { ok: true, message: "Datos del local guardados" };
 }

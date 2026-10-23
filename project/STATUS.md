@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
+**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios y edición del local hechos; faltan dashboard, navegación responsive y selector); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-23 — preparación del despliegue (CI en GitHub, imágenes Docker, salud y manual).
+**Última actualización:** 2026-10-23 — checkpoint; edición de datos del local, turnos sin pérdida y aviso de cartas desactualizadas.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -41,8 +41,9 @@
 - [ ] Lista de espera, avisos al cliente (correo/SMS), cancelación por el cliente.
 - [ ] Programar `pnpm privacy:retention` a diario en el despliegue (sin ello la anonimización no es automática).
 - [ ] Dashboard, personal, informes.
-- [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
-- [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
+- [x] Edición de los datos del local desde la interfaz (nombre, dirección, zona horaria, identificador) con aviso de que cambia las URL públicas (los QR siguen funcionando).
+- [x] Horario: el formulario muestra los turnos guardados más uno libre (hasta 6); antes mostraba 2 y al guardar se perdían los demás.
+- [x] Aviso de «cambios sin publicar» en el editor de cartas y en la lista de cartas del local (compara el borrador con la versión publicada: precios, alérgenos, fotos, recomendados, tema y orden).
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -53,20 +54,20 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test` | PASÓ — 12 archivos, 51 pruebas |
-| `pnpm test:integration` | PASÓ — 15 archivos, 169 pruebas (BD efímera migrada desde cero) |
+| `pnpm test` | PASÓ — 13 archivos, 55 pruebas |
+| `pnpm test:integration` | PASÓ — 15 archivos, 170 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 19 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 20 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | PASÓ — ejecución 2 en `claude/festive-rubin-bxwmo0` (551657a): lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
-Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente.
+Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente; con el formulario de horario de 2 huecos fijos, falló la prueba E2E de turnos.
 
 ## Bloqueos
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Decidir el hosting (ver opciones en el informe al usuario) y, con esa decisión, configurar el entorno de pruebas (staging), el almacenamiento de fotos y la monitorización. Alternativas sin despliegue: dashboard con métricas reales, traspasos y recuentos de inventario, o edición de los datos del local.
+Dashboard con métricas reales (reservas y comensales del día, stock bajo mínimo, pedidos pendientes, escandallos incompletos, cartas con cambios sin publicar) y navegación del panel adaptada al móvil. Después: traspasos y recuentos de inventario; límite de peticiones por IP en el login.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -79,8 +80,8 @@ Decidir el hosting (ver opciones en el informe al usuario) y, con esa decisión,
 - Cambiar el identificador de una carta publicada cambia su URL directa `/m/...` (los QR no se ven afectados).
 - La página pública no tiene limitación de peticiones ni caché.
 - La política de stock no negativo puede no encajar con cocinas que registran consumos antes que entradas; revisar con usuarios.
-- Declarar alérgenos en un producto no cambia la carta pública hasta volver a publicarla; conviene avisar de cartas publicadas desactualizadas.
+- Declarar alérgenos en un producto no cambia la carta pública hasta volver a publicarla (ahora se avisa en el panel, pero no se publica solo).
 - La anonimización automática de datos de clientes depende de programar `pnpm privacy:retention`; los textos y plazos de privacidad deben validarlos el responsable del tratamiento y su asesoría.
-- Reservas online: el límite por cliente depende de `X-Forwarded-For`; en producción el proxy debe sobrescribirla. El texto de consentimiento es genérico y debe revisarlo el responsable del tratamiento.
+- Reservas online: el límite por cliente depende de la IP; con `CLIENT_IP_HEADER` (p. ej. Fly) se usa la cabecera de la plataforma, si no `X-Forwarded-For`, que el proxy debe sobrescribir. El texto de consentimiento es genérico y debe revisarlo el responsable del tratamiento.
 - Imágenes guardadas en PostgreSQL de forma provisional (cupo de 200 MB por organización); sin limpieza de huérfanas. La caché pública de imágenes es de 5 minutos: tras despublicar, una imagen puede seguir en cachés intermedias durante ese tiempo.
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.

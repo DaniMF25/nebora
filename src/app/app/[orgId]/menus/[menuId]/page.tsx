@@ -7,7 +7,7 @@ import { centsToInput, formatEuros } from "@/lib/money";
 import { requireUser } from "@/server/auth/current-user";
 import { getEnv } from "@/server/config/env";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
-import { getMenuDraft, listVersions, publicationProblems } from "@/server/modules/menus/menus";
+import { getMenuDraft, hasUnpublishedChanges, listVersions, publicationProblems } from "@/server/modules/menus/menus";
 import { listProducts } from "@/server/modules/menus/products";
 import { menuShortUrl } from "@/server/modules/menus/qr";
 import { withTenant } from "@/server/tenancy/context";
@@ -39,6 +39,7 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       draft: await getMenuDraft(tx, ctx, menuId),
       versions: await listVersions(tx, ctx, menuId),
+      outdated: await hasUnpublishedChanges(tx, ctx, menuId),
       products: await listProducts(tx, ctx, { activeOnly: true }),
       canEdit: ctx.permissions.has("menus.edit"),
       canPublish: ctx.permissions.has("menus.publish"),
@@ -48,7 +49,7 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
     throw err;
   }
 
-  const { draft, versions, products, canEdit, canPublish } = data;
+  const { draft, versions, products, canEdit, canPublish, outdated } = data;
   const { menu } = draft;
   const publicPath = `/m/${draft.organizationSlug}/${draft.establishmentSlug}/${menu.slug}`;
   const problems = publicationProblems(draft);
@@ -83,6 +84,13 @@ export default async function MenuEditorPage({ params }: { params: Promise<{ org
             Publicar congela el borrador actual en una nueva versión. Los cambios posteriores no se verán en la página
             pública hasta volver a publicar.
           </p>
+          {outdated && (
+            <p className="notice" role="status">
+              Hay cambios sin publicar: la página pública aún muestra la versión anterior (precios, fotos, alérgenos u
+              orden). Publica el borrador para actualizarla.
+            </p>
+          )}
+          {outdated === false && <p className="muted">La versión publicada está al día con el borrador.</p>}
           {problems.length > 0 && (
             <ul className="muted">
               {problems.map((p) => (

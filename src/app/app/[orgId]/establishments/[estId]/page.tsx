@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
-import { SLOTS_PER_DAY_IN_FORM, WEEKDAY_LABELS } from "@/lib/schedule-form";
+import { MAX_SLOTS_PER_DAY, slotFieldsFor, WEEKDAY_LABELS } from "@/lib/schedule-form";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
 import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
 import { getEstablishment } from "@/server/modules/establishments/service";
-import { listMenus } from "@/server/modules/menus/menus";
+import { hasUnpublishedChanges, listMenus } from "@/server/modules/menus/menus";
 import { getSchedule } from "@/server/modules/schedules/service";
 import {
   formatMinutes,
@@ -17,12 +17,20 @@ import {
   type Slot,
 } from "@/server/modules/schedules/time";
 import { withTenant } from "@/server/tenancy/context";
-import { createMenuAction, deleteExceptionAction, saveExceptionAction, saveWeeklyHoursAction } from "./actions";
+import {
+  createMenuAction,
+  deleteExceptionAction,
+  saveExceptionAction,
+  saveWeeklyHoursAction,
+  updateEstablishmentAction,
+} from "./actions";
+
+const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
 function SlotInputs({ prefix, slots, label }: { prefix: string; slots: Slot[]; label: string }) {
   return (
     <>
-      {Array.from({ length: SLOTS_PER_DAY_IN_FORM }, (_, n) => {
+      {Array.from({ length: slotFieldsFor(slots.length) }, (_, n) => {
         const s = slots[n];
         return (
           <span key={n} className="inline-form">
@@ -68,7 +76,14 @@ export default async function EstablishmentPage({
         today,
         schedule: await getSchedule(tx, ctx, estId, { exceptionsFrom: today }),
         canEdit: ctx.permissions.has("establishments.update"),
-        menus: ctx.permissions.has("menus.read") ? await listMenus(tx, ctx, estId) : [],
+        menus: ctx.permissions.has("menus.read")
+          ? await Promise.all(
+              (await listMenus(tx, ctx, estId)).map(async (m) => ({
+                ...m,
+                outdated: await hasUnpublishedChanges(tx, ctx, m.id),
+              })),
+            )
+          : [],
         canEditMenus: ctx.permissions.has("menus.edit"),
       };
     });
@@ -100,6 +115,38 @@ export default async function EstablishmentPage({
         <Link href={`/app/${orgId}/establishments/${est.id}/floor`}>Plano de sala (zonas y mesas)</Link> ·{" "}
         <Link href={`/app/${orgId}/establishments/${est.id}/site`}>Página pública</Link>
       </p>
+      {canEdit && (
+        <details>
+          <summary>Editar datos del local</summary>
+          <ActionForm action={updateEstablishmentAction.bind(null, orgId, est.id)} submitLabel="Guardar datos">
+            <label>
+              Nombre
+              <input name="name" required maxLength={120} defaultValue={est.name} />
+            </label>
+            <label>
+              Dirección
+              <input name="address" maxLength={300} defaultValue={est.address ?? ""} />
+            </label>
+            <label>
+              Zona horaria
+              <input name="timezone" required list="timezones" defaultValue={est.timezone} />
+              <datalist id="timezones">
+                {TIMEZONES.map((z) => (
+                  <option key={z} value={z} />
+                ))}
+              </datalist>
+            </label>
+            <label>
+              Identificador (URL)
+              <input name="slug" required defaultValue={est.slug} />
+            </label>
+            <p className="muted">
+              Cambiar el identificador cambia las direcciones de la web pública, la carta y las reservas de este local.
+              Los códigos QR ya impresos siguen funcionando.
+            </p>
+          </ActionForm>
+        </details>
+      )}
       <p>
         <strong>{openNow ? "Abierto ahora" : "Cerrado ahora"}</strong>{" "}
         <span className="muted">(hora local {fmtTime.format(now)})</span>
@@ -118,6 +165,7 @@ export default async function EstablishmentPage({
                 </Link>{" "}
                 <span className="muted">
                   · {m.publishedVersionNumber ? `publicada (v${m.publishedVersionNumber})` : "sin publicar"}
+                  {m.outdated && " · cambios sin publicar"}
                 </span>
               </li>
             ))}
@@ -168,7 +216,8 @@ export default async function EstablishmentPage({
       <section>
         <h3>Horario semanal</h3>
         <p className="muted">
-          Hasta {SLOTS_PER_DAY_IN_FORM} turnos por día. Si el cierre es anterior a la apertura, el turno termina al
+          Hasta {MAX_SLOTS_PER_DAY} turnos por día: al guardar aparece un hueco más en los días que lo necesiten. Si
+          el cierre es anterior a la apertura, el turno termina al
           día siguiente (p. ej. 20:00–02:00).
         </p>
         {canEdit ? (

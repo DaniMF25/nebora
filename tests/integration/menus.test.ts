@@ -11,6 +11,7 @@ import {
   deleteSection,
   getMenuDraft,
   getPublishedMenu,
+  hasUnpublishedChanges,
   listMenus,
   listVersions,
   moveItem,
@@ -19,6 +20,7 @@ import {
   removeItem,
   renameSection,
   setItemPrice,
+  setItemRecommended,
   unpublishMenu,
   updateMenu,
 } from "@/server/modules/menus/menus";
@@ -391,5 +393,41 @@ describe("cartas: código público estable (QR)", () => {
 
     const other = await buildMenu(f, "otra-carta");
     expect(other.menu.publicCode).not.toBe(code);
+  });
+});
+
+describe("aviso de cambios sin publicar", () => {
+  it("detecta cualquier cambio visible respecto a la versión publicada", async () => {
+    const f = await setupRestaurant("outdated");
+    const m = await buildMenu(f);
+    const check = () => withTenant(f.owner, f.org, (tx, ctx) => hasUnpublishedChanges(tx, ctx, m.menu.id));
+    const publish = () => withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id));
+
+    expect(await check()).toBeNull(); // nunca publicada
+    await publish();
+    expect(await check()).toBe(false);
+
+    const changes: ((
+      tx: Parameters<Parameters<typeof withTenant>[2]>[0],
+      ctx: Parameters<Parameters<typeof withTenant>[2]>[1],
+    ) => Promise<unknown>)[] = [
+      (tx, ctx) => updateProduct(tx, ctx, m.croquetas.id, { priceCents: 900 }),
+      (tx, ctx) => updateProduct(tx, ctx, m.tarta.id, { allergens: ["milk"] }),
+      (tx, ctx) => setItemRecommended(tx, ctx, m.menu.id, m.croquetasItem, { recommended: true }),
+      (tx, ctx) => updateMenu(tx, ctx, m.menu.id, { theme: "futurista" }),
+      (tx, ctx) => moveSection(tx, ctx, m.menu.id, m.postres, "up"),
+    ];
+    for (const change of changes) {
+      await withTenant(f.owner, f.org, change);
+      expect(await check()).toBe(true);
+      await publish();
+      expect(await check()).toBe(false);
+    }
+
+    // Otra organización no puede consultarlo.
+    const other = await setupRestaurant("outdated-other");
+    await expect(
+      withTenant(other.owner, other.org, (tx, ctx) => hasUnpublishedChanges(tx, ctx, m.menu.id)),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 });
