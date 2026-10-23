@@ -2,8 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # main y las ramas de trabajo de Claude, para verificar cada entrega aunque no haya PR.
+    branches: [main, "claude/**"]
   pull_request:
+  workflow_dispatch:
+
+# Una sola ejecución por rama: un push nuevo cancela la anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
