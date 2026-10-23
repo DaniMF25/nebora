@@ -15,6 +15,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // La imagen Docker usa la salida autónoma (server.js con solo las dependencias
+  // necesarias). Se activa solo ahí porque `next start` no la admite.
+  ...(process.env.NEBORA_STANDALONE === "1" ? { output: "standalone" as const } : {}),
   // pg es un módulo de Node con dependencias opcionales nativas; no se empaqueta.
   // sharp (reprocesado de imágenes) es nativo y tampoco se empaqueta.
   serverExternalPackages: ["pg", "sharp"],

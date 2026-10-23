@@ -58,3 +58,8 @@ El estado verificado del proyecto está en `project/STATUS.md`.
 El proyecto está en construcción: consulta `project/STATUS.md` para saber qué está implementado y probado. No es una certificación de seguridad ni está listo para producción. No contiene credenciales ni infraestructura desplegada.
 
 No subas nunca `.env` con secretos reales. Usa `.env.example` como plantilla y un gestor de secretos para entornos desplegados.
+
+## Despliegue
+
+Imágenes Docker (`Dockerfile`: destinos `runtime` y `tools`), comprobación de salud en `/api/health` y manual de operación en `docs/DEPLOYMENT.md`. Todavía no hay ningún entorno desplegado.
+

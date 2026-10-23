@@ -20,7 +20,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Implementar auditoría mínima.
 - [x] Probar acceso cruzado entre organizaciones (servicios, RLS y E2E).
 
-**Puerta de salida:** las pruebas negativas de aislamiento pasan y el proyecto compila. — Superada el 2026-10-22 (CI de GitHub aún no ejecutado).
+**Puerta de salida:** las pruebas negativas de aislamiento pasan y el proyecto compila. — Superada el 2026-10-22; CI de GitHub en verde desde el 2026-10-23.
 
 ## Fase 2 — Interfaz y configuración
 - [ ] Layout responsive y navegación.
@@ -73,6 +73,9 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [ ] Mantener desactivadas funciones no configuradas.
 
 ## Fase 8 — Preparación para producción
+- [x] CI en GitHub (lint, tipos, unitarias, integración, E2E y construcción de imágenes) ejecutándose en cada push.
+- [x] Imágenes Docker (web sin privilegios y herramientas), comprobación de salud y manual de despliegue (`docs/DEPLOYMENT.md`, D-023); ensayo local en contenedores superado.
+- [ ] Elegir hosting, PostgreSQL gestionado, dominio y almacenamiento de fotos.
 - [ ] Revisar OWASP ASVS aplicable.
 - [ ] Ejecutar análisis de dependencias y secretos.
 - [ ] Pruebas de permisos, aislamiento y concurrencia.

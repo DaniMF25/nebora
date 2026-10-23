@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
+**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-23 — carta completa y reservas integradas en la web del local.
+**Última actualización:** 2026-10-23 — preparación del despliegue (CI en GitHub, imágenes Docker, salud y manual).
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -27,7 +27,8 @@
 - [x] Reservas online (migración 0011): página pública `/r/<org>/<local>` activable por local con reglas (comensales, duración, intervalo, antelación, días vista, confirmación automática); horas disponibles reales; asignación automática de mesa resistente a peticiones simultáneas; límites por cliente, local y contacto; campo trampa; idempotencia; consentimiento registrado; acceso público solo mediante funciones que no exponen datos de clientes.
 - [x] Privacidad de clientes (migración 0012): plazo de conservación configurable con anonimización (botón «Aplicar ahora» y script `pnpm privacy:retention` para programar), búsqueda por contacto, exportación JSON y borrado por anonimización (bloqueado con reservas futuras activas), solo owner/admin y auditado sin guardar el contacto. Página `/app/<org>/privacy`.
 - [x] Web pública del local (migración 0013): página `/<org>/<local>` editable en `/app/<org>/establishments/<id>/site` (estilo, eslogan, titular, texto, foto principal, teléfono, WhatsApp, Instagram, 3 destacados, carta destacada, publicar/despublicar); temas Futurista, Clásico y Mediterráneo inspirados en los diseños de referencia (y Moderno neutro); carta destacada con pestañas por categoría y carrusel; contacto y horario reales; navegación inferior en móvil. Si la web está publicada, la carta completa `/m/...` y la reserva `/r/...` se muestran dentro de ella con el mismo estilo; si no, con el diseño anterior (la carta con su tema). La carta sin web también muestra fotos y recomendados. Fotos de platos (subida con validación y reprocesado a WebP sin metadatos) y marca «recomendado» en el editor de cartas; las fotos solo son públicas si las usa contenido publicado. Slugs de organización reservados.
-- [x] Cabeceras de seguridad básicas y workflow de CI (`.github/workflows/ci.yml`, aún no ejecutado en GitHub).
+- [x] Cabeceras de seguridad básicas y CI en GitHub (`.github/workflows/ci.yml`), que se ejecuta en `main`, en las ramas `claude/**` y en los PR; primera ejecución en verde el 2026-10-23.
+- [x] Preparación del despliegue: `Dockerfile` con imagen web (salida autónoma de Next, usuario sin privilegios, `HEALTHCHECK`) e imagen de herramientas (migraciones y retención), `/api/health` (200/503 sin detalles), tiempo máximo de conexión a la BD, manual `docs/DEPLOYMENT.md`. Ensayo local en contenedores: migraciones desde cero, roles sin privilegios, salud y recorrido completo en navegador sin errores.
 
 ## No implementado todavía
 - [ ] Envío de invitaciones por correo (hoy el enlace lo entrega quien invita; D-010).
@@ -42,7 +43,7 @@
 - [ ] Dashboard, personal, informes.
 - [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
 - [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
-- [ ] Infraestructura y despliegue.
+- [ ] Despliegue real: hosting, PostgreSQL gestionado, dominio/TLS, almacenamiento de fotos, monitorización y alertas, simulacro de restauración (ver `docs/DEPLOYMENT.md`).
 
 ## Pruebas (última ejecución: 2026-10-23, PostgreSQL 16.15 local)
 | Comando | Resultado |
@@ -52,8 +53,9 @@
 | `pnpm test` | PASÓ — 12 archivos, 51 pruebas |
 | `pnpm test:integration` | PASÓ — 15 archivos, 169 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 18 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
-| CI en GitHub Actions | NO EJECUTADO todavía |
+| `pnpm test:e2e` | PASÓ — 19 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| CI en GitHub Actions | PASÓ — ejecución 1 (lint, tipos, unitarias, integración, E2E) en `claude/festive-rubin-bxwmo0`; el trabajo de construcción de imágenes se añade en este cambio |
+| `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
 Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente.
 
@@ -61,14 +63,15 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-A decidir entre: (a) dashboard con métricas reales (reservas y comensales del día, stock bajo mínimo, pedidos pendientes, escandallos incompletos); (b) completar inventario (traspasos y recuentos); (c) preparar el despliegue (CI en GitHub, hosting, almacenamiento de imágenes, copias de seguridad, programación de tareas); (d) editar los datos del local (nombre, dirección) desde la interfaz.
+Decidir el hosting (ver opciones en el informe al usuario) y, con esa decisión, configurar el entorno de pruebas (staging), el almacenamiento de fotos y la monitorización. Alternativas sin despliegue: dashboard con métricas reales, traspasos y recuentos de inventario, o edición de los datos del local.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
 - El bloqueo de login por correo permite bloquear temporalmente a un usuario legítimo; falta límite por IP.
 - La cookie caduca a los 30 días desde el login aunque la sesión se renueve en BD.
 - Tablas de identidad (`users`, `sessions`) sin RLS: solo accesibles desde el módulo de autenticación.
-- Copias de seguridad y restauración no definidas.
+- Copias de seguridad definidas en `docs/DEPLOYMENT.md` pero sin simulacro de restauración real.
+- La compilación depende de Google Fonts (las fuentes se descargan al compilar); si no hay acceso, la compilación falla.
 - El token de invitación viaja en la URL (historial del navegador, logs de proxies); mitigado con un solo uso, caducidad y vínculo al correo.
 - Cambiar el identificador de una carta publicada cambia su URL directa `/m/...` (los QR no se ven afectados).
 - La página pública no tiene limitación de peticiones ni caché.

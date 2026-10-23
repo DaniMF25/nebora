@@ -9,7 +9,8 @@ let pool: pg.Pool | undefined;
 /** Pool del rol de aplicación `nebora_app` (sujeto a RLS). */
 export function getPool(): pg.Pool {
   if (!pool) {
-    pool = new pg.Pool({ connectionString: getEnv().DATABASE_URL, max: 10 });
+    // Sin conexión en 5 s, la petición falla en lugar de quedarse colgada.
+    pool = new pg.Pool({ connectionString: getEnv().DATABASE_URL, max: 10, connectionTimeoutMillis: 5000 });
     // Un error de un cliente inactivo no debe tumbar el proceso.
     pool.on("error", (err) => {
       console.error("[db] error en conexión inactiva", { message: err.message });

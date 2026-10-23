@@ -1,0 +1,19 @@
+# Nunca enviar secretos ni artefactos locales al contexto de construcción.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+.git/
+node_modules/
+.next/
+test-results/
+playwright-report/
+coverage/
+*.log
+*.tsbuildinfo
+backups/
+*.dump
+*.backup

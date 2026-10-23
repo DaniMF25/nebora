@@ -245,3 +245,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Consecuencia:** el tema elegido para una carta solo se aplica cuando el local no tiene web publicada.
 
+## D-023 — Empaquetado y operación independientes del proveedor
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:**
+- Contenedores Docker en lugar de una plataforma concreta, para no atar el producto a un proveedor antes de elegirlo. Dos destinos: `runtime` (salida autónoma de Next, `node server.js`, usuario `node`, `HEALTHCHECK`) y `tools` (código fuente y dependencias completas para `db:migrate` y `privacy:retention`; pnpm incluido y sin red al ejecutar). La salida autónoma se activa solo al construir la imagen (`NEBORA_STANDALONE=1`) porque `next start`, usado en E2E, no la admite.
+- Separación de credenciales: la web solo recibe `DATABASE_URL` (rol `nebora_app`); `DATABASE_ADMIN_URL` solo la imagen de herramientas. La migración 0001 crea `nebora_app` sin inicio de sesión; habilitarlo es un paso manual del operador.
+- `/api/health` comprueba la BD con un límite de 3 s y responde solo `ok`/`unavailable`. El pool corta los intentos de conexión a los 5 s.
+- La CI se ejecuta también en las ramas `claude/**` (cada entrega queda verificada sin abrir PR) y construye ambas imágenes.
+- Un certificado raíz opcional para proxies con inspección TLS se pasa como *build secret*; no queda en la imagen.
+
+**Pendiente:** elección de hosting y servicios gestionados, que decide el usuario.
+
