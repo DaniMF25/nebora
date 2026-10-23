@@ -96,6 +96,7 @@ export default async function EstablishmentPage({
         {est.address && <> · {est.address}</>}
       </p>
       <p>
+        <Link href={`/app/${orgId}/establishments/${est.id}/reservations`}>Reservas</Link> ·{" "}
         <Link href={`/app/${orgId}/establishments/${est.id}/floor`}>Plano de sala (zonas y mesas)</Link>
       </p>
       <p>

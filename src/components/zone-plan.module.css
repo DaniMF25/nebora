@@ -61,3 +61,23 @@
   min-height: 1.5rem;
   margin: 0.25rem 0 0;
 }
+
+.occupied {
+  background: color-mix(in srgb, var(--danger) 22%, var(--bg));
+  border-color: var(--danger);
+}
+
+.free {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+  border-style: dashed;
+}
+
+.occupied .capacity,
+.free .capacity {
+  padding: 0 0.2rem;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  white-space: nowrap;
+}

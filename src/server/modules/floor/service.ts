@@ -124,6 +124,9 @@ function mapFloorError(err: unknown): never {
   if (isUniqueViolation(err, "zones_establishment_name_unique")) {
     throw new ConflictError("Ya existe una zona con ese nombre");
   }
+  if (e.code === "23503" && e.constraint === "reservation_tables_table_fk") {
+    throw new ConflictError("La mesa tiene reservas: desactívala en lugar de eliminarla");
+  }
   if (e.code === "23503" && (e.constraint === "dining_tables_zone_fk" || e.constraint === "zones_establishment_fk")) {
     throw new ConflictError("No se puede eliminar: tiene elementos asociados");
   }

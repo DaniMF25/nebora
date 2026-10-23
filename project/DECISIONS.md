@@ -75,7 +75,7 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Decisión:** pnpm 10 (`packageManager` en `package.json`), con scripts de instalación permitidos solo para `esbuild`.
 
 ## D-009 — Estrategias de concurrencia para reservas e inventario
-**Fecha:** 2026-10-22. **Estado:** inventario implementado (ver D-014); reservas propuesta.
+**Fecha:** 2026-10-22. **Estado:** implementada (inventario D-014; reservas D-018).
 
 **Decisión propuesta:** reservas con restricción de exclusión `btree_gist` sobre `(table_id, tstzrange)`; inventario con movimientos de solo inserción, clave de idempotencia única por organización y saldo actualizado en la misma transacción. Detalle en `docs/ARCHITECTURE.md`.
 
@@ -178,3 +178,18 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Permisos `tables.read` (todos) y `tables.manage` (owner, admin, manager).
 
 **Pendiente:** combinaciones de mesas para grupos, elementos decorativos del plano (barra, paredes), estado de ocupación (llegará con las reservas).
+
+## D-018 — Reservas con exclusión por mesa en la base de datos
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:**
+- `reservations` (hora de inicio/fin en `timestamptz`, comensales, estado, datos mínimos del cliente) y `reservation_tables` (mesas asignadas). Restricción `EXCLUDE USING gist (table_id WITH =, during WITH &&) WHERE (active)` con intervalos semiabiertos: dos reservas activas no pueden solaparse en una mesa, aunque lleguen a la vez; las consecutivas sí se permiten.
+- `during` y `active` de cada asignación los escriben triggers (SECURITY DEFINER) a partir de la reserva, al insertar y cuando cambian sus horas o estado; la aplicación no tiene UPDATE sobre ellos, así que no pueden desincronizarse.
+- FKs compuestas `(organization_id, establishment_id, …)`: una reserva solo puede usar mesas de su establecimiento.
+- Estados: pendiente → confirmada → en mesa → finalizada; cancelada y no presentada como finales. Solo pendiente, confirmada y en mesa ocupan mesa. Finalizar antes de hora acorta la reserva y libera la mesa.
+- La fecha y hora se introducen en hora local del establecimiento y se convierten con su zona horaria (D-011). Toda la reserva debe caber en un periodo de apertura (incluidos turnos que pasan de medianoche y excepciones por fecha).
+- Comensales ≤ suma de capacidades máximas de las mesas asignadas (permite combinar mesas). Se puede crear sin mesa (queda para asignar).
+- Las reservas no se borran (sin DELETE para la aplicación): se cancelan. La auditoría no incluye datos personales.
+- El personal gestiona reservas (`reservations.manage`).
+
+**Pendiente:** reservas públicas desde la web (con límite de peticiones e idempotencia), lista de espera, avisos al cliente (requiere correo/SMS), política de retención de datos de clientes, sugerencia automática de combinaciones de mesas.

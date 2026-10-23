@@ -74,3 +74,6 @@ dl.kpis div { border: 1px solid var(--border); border-radius: 8px; padding: 0.6r
 dl.kpis dt { color: var(--muted); font-size: 0.85rem; }
 dl.kpis dd { margin: 0; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 section.zone { border-top: 1px solid var(--border); padding-top: 1rem; }
+.badge { display: inline-block; padding: 0 0.5rem; border-radius: 999px; border: 1px solid var(--border); font-size: 0.85rem; }
+li.status-cancelled, li.status-no_show, li.status-completed { opacity: 0.6; }
+li.status-seated .badge { border-color: var(--accent); color: var(--accent); font-weight: 600; }

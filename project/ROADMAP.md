@@ -51,11 +51,11 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Zonas y plano (cuadrícula editable arrastrando o con teclado).
 - [x] Mesas y capacidades (sin solapes garantizado en BD).
 - [x] Horarios y excepciones (hechos en Fase 2; ver D-011).
-- [ ] Calendario.
-- [ ] Reservas públicas y privadas.
-- [ ] Asignaciones y prevención de solapamientos.
+- [x] Calendario (vista por día con navegación y ocupación a una hora sobre el plano).
+- [ ] Reservas públicas y privadas — internas hechas; públicas pendientes.
+- [x] Asignaciones y prevención de solapamientos (exclusión en BD, combinación de mesas).
 - [ ] Lista de espera.
-- [ ] Pruebas de concurrencia.
+- [x] Pruebas de concurrencia.
 
 ## Fase 6 — Personal, clientes e informes
 - [ ] Gestión de miembros y turnos.

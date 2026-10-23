@@ -1,0 +1,66 @@
+"use server";
+
+import type { FormState } from "@/lib/form-state";
+import { formString, runTenantAction } from "@/server/actions/run";
+import { createReservation, setReservationStatus, updateReservation } from "@/server/modules/reservations/service";
+
+const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/reservations`;
+
+function num(fd: FormData, key: string): number {
+  const v = Number(formString(fd, key));
+  return Number.isFinite(v) ? v : Number.NaN;
+}
+
+function reservationInput(fd: FormData) {
+  return {
+    date: formString(fd, "date"),
+    time: formString(fd, "time"),
+    durationMinutes: num(fd, "durationMinutes"),
+    partySize: num(fd, "partySize"),
+    customerName: formString(fd, "customerName"),
+    customerPhone: formString(fd, "customerPhone"),
+    customerEmail: formString(fd, "customerEmail"),
+    notes: formString(fd, "notes"),
+    tableIds: fd.getAll("tableIds").filter((v): v is string => typeof v === "string"),
+  };
+}
+
+export async function createReservationAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) =>
+      createReservation(tx, ctx, estId, {
+        ...reservationInput(fd),
+        status: formString(fd, "status") || "confirmed",
+        idempotencyKey: formString(fd, "idempotencyKey"),
+      }),
+    "Reserva creada",
+  );
+}
+
+export async function updateReservationAction(
+  orgId: string,
+  estId: string,
+  reservationId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => updateReservation(tx, ctx, reservationId, reservationInput(fd)),
+    "Reserva modificada",
+  );
+}
+
+export async function setStatusAction(
+  orgId: string,
+  estId: string,
+  reservationId: string,
+  status: string,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => setReservationStatus(tx, ctx, reservationId, status));
+}

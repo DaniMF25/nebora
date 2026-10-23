@@ -28,6 +28,8 @@ export const PERMISSIONS = [
   "purchasing.receive",
   "tables.read",
   "tables.manage",
+  "reservations.read",
+  "reservations.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -51,6 +53,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "purchasing.receive",
     "tables.read",
     "tables.manage",
+    "reservations.read",
+    "reservations.manage",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -63,6 +67,9 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "purchasing.read",
     "purchasing.receive",
     "tables.read",
+    // El personal de sala toma y gestiona reservas.
+    "reservations.read",
+    "reservations.manage",
   ],
 };
 
