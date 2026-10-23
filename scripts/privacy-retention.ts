@@ -30,7 +30,7 @@ try {
     }
   }
   const purged = await client.query<{ n: number }>("SELECT app.purge_rate_limits(48) AS n");
-  console.log(`Reservas anonimizadas: ${total}. Registros de límite de peticiones eliminados: ${purged.rows[0]!.n}.`);
+  console.log(`Registros de clientes anonimizados (reservas y lista de espera): ${total}. Registros de límite de peticiones eliminados: ${purged.rows[0]!.n}.`);
 } finally {
   await client.end();
 }

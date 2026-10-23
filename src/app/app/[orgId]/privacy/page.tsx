@@ -23,13 +23,14 @@ export default async function PrivacyPage({ params }: { params: Promise<{ orgId:
       <h2>Privacidad de clientes</h2>
       <p className="muted">
         Herramientas para gestionar los datos personales de clientes (nombre, teléfono, correo y comentarios de las
-        reservas). No sustituyen el asesoramiento sobre protección de datos.
+        reservas y de la lista de espera). No sustituyen el asesoramiento sobre protección de datos.
       </p>
 
       <section>
         <h3>Plazo de conservación</h3>
         <p>
-          Los datos personales se anonimizan <strong>{settings.customerRetentionDays} días</strong> después de cada reserva.
+          Los datos personales se anonimizan <strong>{settings.customerRetentionDays} días</strong> después de cada reserva
+          (en la lista de espera, después del día solicitado).
           Se conservan la fecha, los comensales y las mesas para estadísticas.
         </p>
         <ActionForm action={updatePrivacySettingsAction.bind(null, orgId)} submitLabel="Guardar plazo" className="inline-form">

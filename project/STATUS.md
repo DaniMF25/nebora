@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
+**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-23 — límites por IP en login y registro.
+**Última actualización:** 2026-10-23 — lista de espera y formularios que conservan lo escrito ante un error.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -37,7 +37,7 @@
 - [ ] CSP completa con nonces para scripts.
 - [ ] Cartas: traducciones. Almacenamiento de imágenes fuera de la BD y limpieza de huérfanas. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
 - [ ] Inventario: subrecetas, devoluciones a proveedor, envío de pedidos por correo.
-- [ ] Lista de espera, avisos al cliente (correo/SMS), cancelación por el cliente.
+- [ ] Alta en lista de espera desde la web pública, avisos al cliente (correo/SMS), cancelación por el cliente.
 - [ ] Programar `pnpm privacy:retention` a diario en el despliegue (sin ello la anonimización no es automática).
 - [ ] Personal, informes.
 - [x] Edición de los datos del local desde la interfaz (nombre, dirección, zona horaria, identificador) con aviso de que cambia las URL públicas (los QR siguen funcionando).
@@ -48,6 +48,8 @@
 - [x] Traspasos entre almacenes (migración 0014): salida y entrada en la misma transacción, la BD exige ambas patas al confirmar; idempotentes; sin stock negativo también con peticiones simultáneas; no se anulan pata a pata (se compensan con otro traspaso).
 - [x] Recuentos físicos (migración 0014): uno abierto por almacén; recuento «ciego» (no muestra el stock del sistema mientras está abierto); 0 es un valor válido; lo aplica un responsable (`inventory.manage`) y la BD calcula cada diferencia con el saldo bloqueado en ese instante; resultado con contado, en sistema y ajuste; cancelable; la aplicación no puede marcarlo aplicado sin ajustes ni tocar líneas cerradas. Página `/app/<org>/inventory/counts/<id>`.
 - [x] Límites por IP: login (50 intentos cada 15 min, además de 5 fallos por correo) y registro (50 por hora), con huella de la IP (nunca en claro) en la misma tabla que la reserva online.
+- [x] Lista de espera (migración 0015): entradas por local y día con franja, comensales y contacto (obligatorio); indica la primera hora con mesa libre en la franja; conversión atómica en reserva confirmada (mesa más ajustada) o cancelación; aviso al cliente manual (enlaces de llamada/correo). Incluida en retención, búsqueda, exportación y borrado de datos de clientes.
+- [x] Formularios: si el servidor rechaza los datos ya no se pierde lo escrito (antes React vaciaba el formulario); solo se limpia al ir bien.
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -59,9 +61,9 @@
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
 | `pnpm test` | PASÓ — 13 archivos, 55 pruebas |
-| `pnpm test:integration` | PASÓ — 17 archivos, 187 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:integration` | PASÓ — 18 archivos, 193 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 22 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 23 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | PASÓ — ejecución 2 en `claude/festive-rubin-bxwmo0` (551657a): lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
@@ -71,7 +73,7 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Lista de espera de reservas (cuando no hay mesa: apuntarse, avisar al liberar y convertir en reserva). Después: subrecetas; cancelación por el propio cliente con su código.
+A decidir con el usuario. Candidatas: alta en lista de espera desde la web pública; cancelación de la reserva por el propio cliente con su código; subrecetas; Fase 6 (personal y turnos, informes); revisión OWASP ASVS.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).

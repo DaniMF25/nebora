@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useRef, type FormEvent, type ReactNode } from "react";
 import type { FormState } from "@/lib/form-state";
 
 interface Props {
@@ -10,12 +10,31 @@ interface Props {
   className?: string;
 }
 
-/** Formulario que muestra los errores devueltos por una Server Action. */
+/**
+ * Formulario que muestra los errores devueltos por una Server Action.
+ *
+ * React restablece el formulario tras cualquier envío, también cuando el
+ * servidor lo rechaza, y el usuario perdería lo escrito. Con JavaScript se
+ * envía a mano (sin ese restablecimiento) y solo se limpia si la acción va
+ * bien. Sin JavaScript sigue funcionando con el envío nativo.
+ */
 export function ActionForm({ action, submitLabel, children, className = "form" }: Props) {
   const [state, formAction, pending] = useActionState(action, {} as FormState);
+  const formRef = useRef<HTMLFormElement>(null);
   const fieldErrors = Object.entries(state.fieldErrors ?? {});
+
+  useEffect(() => {
+    if (state.ok) formRef.current?.reset();
+  }, [state]);
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    startTransition(() => formAction(data));
+  }
+
   return (
-    <form action={formAction} className={className} noValidate>
+    <form ref={formRef} action={formAction} onSubmit={onSubmit} className={className} noValidate>
       {children}
       {state.error && (
         <div role="alert" className="alert">

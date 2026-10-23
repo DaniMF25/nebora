@@ -58,7 +58,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Calendario (vista por día con navegación y ocupación a una hora sobre el plano).
 - [x] Reservas públicas y privadas (online con asignación automática de mesa, límites de peticiones e idempotencia).
 - [x] Asignaciones y prevención de solapamientos (exclusión en BD, combinación de mesas).
-- [ ] Lista de espera.
+- [x] Lista de espera (interna; D-026). Alta desde la web pública pendiente.
 - [x] Pruebas de concurrencia.
 
 ## Fase 6 — Personal, clientes e informes

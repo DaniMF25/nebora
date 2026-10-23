@@ -276,3 +276,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Límite:** el recuento ajusta solo lo contado; los artículos no contados no se tocan (no se asume 0).
 
+## D-026 — Lista de espera sin avisos automáticos
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:**
+- `waitlist_entries` por local y día, con franja horaria (hora local), comensales y contacto obligatorio (teléfono o correo, también por CHECK). Estados: en espera, convertida (enlazada a la reserva, FK compuesta que incluye el local) y cancelada.
+- El panel calcula, para cada entrada en espera, la primera hora de su franja (cada 15 min) con una mesa libre para el grupo durante la duración configurada del local. Es orientativo: al convertir se vuelve a comprobar y la exclusión de la BD garantiza que no haya dos reservas en la misma mesa.
+- Convertir crea una reserva confirmada en la mesa más ajustada y enlaza la entrada en la misma transacción; si ya no hay mesa, no cambia nada.
+- **Sin avisos automáticos**: no hay proveedor de SMS ni correo. El personal contacta al cliente (enlaces de llamada y correo) y convierte la entrada. Cuando haya proveedor, se añadirá el aviso.
+- Privacidad: las entradas entran en la retención (contada desde el día solicitado; si seguían en espera se cancelan al anonimizar), la búsqueda, la exportación y el borrado. `app.anonymize_expired_reservations` devuelve ahora el total de registros anonimizados (reservas y lista de espera).
+- Permisos: ver con `reservations.read`; apuntar, convertir y cancelar con `reservations.manage` (incluye al personal).
+
+**Pendiente:** alta desde la web pública (necesitará consentimiento y límites de peticiones como la reserva online).
+

@@ -20,7 +20,16 @@ import { withTenant } from "@/server/tenancy/context";
 import { getOrganization } from "@/server/modules/organizations/service";
 import { getReservationSettings } from "@/server/modules/reservations/settings";
 import { getEnv } from "@/server/config/env";
-import { createReservationAction, setStatusAction, updateReservationAction, updateSettingsAction } from "./actions";
+import { listWaitlist } from "@/server/modules/waitlist/service";
+import {
+  addWaitlistAction,
+  cancelWaitlistAction,
+  convertWaitlistAction,
+  createReservationAction,
+  setStatusAction,
+  updateReservationAction,
+  updateSettingsAction,
+} from "./actions";
 
 const STATUS_LABELS: Record<ReservationStatus, string> = {
   pending: "Pendiente",
@@ -114,9 +123,11 @@ export default async function ReservationsPage({
           else throw err;
         }
       }
+      const settings = await getReservationSettings(tx, ctx, estId);
       return {
         establishment,
         tz,
+        waitlist: await listWaitlist(tx, ctx, estId, date, { durationMinutes: settings.durationMinutes }),
         today,
         date,
         at,
@@ -127,7 +138,7 @@ export default async function ReservationsPage({
         searchError,
         canManage: ctx.permissions.has("reservations.manage"),
         canConfigure: ctx.permissions.has("establishments.update"),
-        settings: await getReservationSettings(tx, ctx, estId),
+        settings,
         orgSlug: (await getOrganization(tx, ctx)).slug,
         activeTables: plan.zones.flatMap((z) => z.tables.filter((t) => t.active).map((t) => ({ ...t, zoneName: z.name }))),
       };
@@ -137,7 +148,8 @@ export default async function ReservationsPage({
     throw err;
   }
   const { establishment, tz, today, date, at, reservations, plan, occupied, search, searchError, canManage, activeTables } = data;
-  const { settings, canConfigure, orgSlug } = data;
+  const { settings, canConfigure, orgSlug, waitlist } = data;
+  const waiting = waitlist.filter((w) => w.status === "waiting");
   const publicPath = `/r/${orgSlug}/${establishment.slug}`;
   const baseUrl = getEnv().APP_BASE_URL;
   const base = `/app/${orgId}/establishments/${estId}/reservations`;
@@ -279,6 +291,100 @@ export default async function ReservationsPage({
               />
             </div>
           ))
+        )}
+      </section>
+
+      <section>
+        <h3>Lista de espera ({waiting.length})</h3>
+        <p className="muted">
+          Clientes que quieren mesa este día si se libera. Se indica cuándo hay hueco ({settings.durationMinutes} min);
+          avísales tú (no se envían mensajes automáticos) y conviértelo en reserva.
+        </p>
+        {waitlist.length === 0 ? (
+          <p className="muted">Nadie en lista de espera para este día.</p>
+        ) : (
+          <ul className="cards">
+            {waitlist.map((w) => (
+              <li key={w.id} className={w.status === "waiting" ? "" : "status-cancelled"}>
+                <strong>{w.customerName}</strong> · {w.partySize} {w.partySize === 1 ? "persona" : "personas"} · entre{" "}
+                {w.windowStart} y {w.windowEnd}
+                {w.status === "converted" && <span className="badge"> Convertida en reserva</span>}
+                {w.status === "cancelled" && <span className="badge"> Cancelada</span>}
+                <div className="muted">
+                  {w.customerPhone && <a href={`tel:${w.customerPhone.replace(/[^0-9+]/g, "")}`}>{w.customerPhone}</a>}
+                  {w.customerPhone && w.customerEmail && " · "}
+                  {w.customerEmail && <a href={`mailto:${w.customerEmail}`}>{w.customerEmail}</a>}
+                  {w.notes && ` · ${w.notes}`}
+                </div>
+                {w.status === "waiting" && (
+                  <p>
+                    {w.availableAt ? (
+                      <strong>Hay mesa a las {w.availableAt}</strong>
+                    ) : (
+                      <span className="muted">Sin mesa libre en su franja por ahora</span>
+                    )}
+                  </p>
+                )}
+                {canManage && w.status === "waiting" && (
+                  <div className="inline-form">
+                    {w.availableAt && (
+                      <ActionForm
+                        action={convertWaitlistAction.bind(null, orgId, estId, w.id, w.availableAt, settings.durationMinutes)}
+                        submitLabel={`Reservar a ${w.customerName} a las ${w.availableAt}`}
+                        className="inline-form"
+                      />
+                    )}
+                    <ActionForm
+                      action={cancelWaitlistAction.bind(null, orgId, estId, w.id)}
+                      submitLabel={`Quitar a ${w.customerName} de la lista`}
+                      className="inline-form"
+                    />
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        {canManage && (
+          <details>
+            <summary>Apuntar en lista de espera</summary>
+            <ActionForm action={addWaitlistAction.bind(null, orgId, estId)} submitLabel="Añadir a la lista de espera">
+              <input type="hidden" name="date" value={date} readOnly />
+              <div className="inline-form">
+                <label>
+                  Desde
+                  <input type="time" name="from" required defaultValue="20:30" />
+                </label>
+                <label>
+                  Hasta
+                  <input type="time" name="to" required defaultValue="22:30" />
+                </label>
+                <label>
+                  Personas
+                  <input type="number" name="partySize" min={1} max={100} defaultValue={2} />
+                </label>
+              </div>
+              <label>
+                Nombre de quien espera
+                <input name="customerName" required maxLength={120} autoComplete="off" />
+              </label>
+              <div className="inline-form">
+                <label>
+                  Teléfono de contacto
+                  <input name="customerPhone" type="tel" maxLength={40} autoComplete="off" />
+                </label>
+                <label>
+                  Correo de contacto
+                  <input name="customerEmail" type="email" maxLength={254} autoComplete="off" />
+                </label>
+              </div>
+              <label>
+                Nota de la espera (opcional)
+                <input name="notes" maxLength={300} />
+              </label>
+              <p className="muted">Indica al menos un teléfono o un correo para poder avisar.</p>
+            </ActionForm>
+          </details>
         )}
       </section>
 
