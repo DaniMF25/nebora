@@ -59,6 +59,19 @@ El proyecto está en construcción: consulta `project/STATUS.md` para saber qué
 
 No subas nunca `.env` con secretos reales. Usa `.env.example` como plantilla y un gestor de secretos para entornos desplegados.
 
+## Probar en tu ordenador (gratis, sin instalar nada más que Docker)
+
+1. Instala [Docker Desktop](https://www.docker.com/products/docker-desktop/) (gratuito para uso personal; en Windows te pedirá activar WSL 2) y ábrelo.
+2. Descarga el código: [ZIP de la rama de trabajo](https://github.com/DaniMF25/nebora/archive/refs/heads/claude/festive-rubin-bxwmo0.zip) y descomprímelo.
+3. Abre una terminal en esa carpeta (en Windows: clic derecho dentro de la carpeta → «Abrir en Terminal») y ejecuta:
+   ```sh
+   docker compose up --build
+   ```
+   La primera vez tarda unos minutos. Cuando veas `Ready`, abre http://localhost:3000/register y crea tu cuenta.
+4. Para pararlo: `Ctrl+C` (o `docker compose down`). Los datos se conservan para la próxima vez; `docker compose down -v` los borra.
+
+Es solo para pruebas: contraseñas de ejemplo, registro abierto y accesible únicamente desde tu ordenador. La web pública de un local se ve en `http://localhost:3000/<organización>/<local>`.
+
 ## Despliegue
 
 Imágenes Docker (`Dockerfile`: destinos `runtime` y `tools`), comprobación de salud en `/api/health` y manual de operación en `docs/DEPLOYMENT.md`. Todavía no hay ningún entorno desplegado.

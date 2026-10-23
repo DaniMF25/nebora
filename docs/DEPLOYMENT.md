@@ -96,6 +96,10 @@ Sin esta tarea **no hay anonimización automática** (D-020).
 
 `fly.toml` describe un entorno de pruebas en Madrid: imagen `runtime`, comprobación de salud, apagado sin tráfico, `CLIENT_IP_HEADER=fly-client-ip` y registro abierto solo para crear la primera cuenta. Aún no se ha desplegado: crear la app y la base de datos en Fly tiene coste y requiere la autorización del titular de la cuenta.
 
+## En local con Docker Compose
+
+`docker compose up --build` levanta PostgreSQL (sin publicar fuera de la red de Docker), prepara la base de datos con `db:provision` y arranca la web en `http://localhost:3000` (solo accesible desde el propio equipo). Contraseñas de ejemplo sustituibles con un `.env` (`POSTGRES_PASSWORD`, `NEBORA_ADMIN_DB_PASSWORD`, `NEBORA_APP_DB_PASSWORD`, ≥ 24 caracteres las dos últimas). Verificado (2026-10-23): arranque desde cero, recorrido completo en navegador, y tras `down`/`up` los datos se conservan y no hay migraciones pendientes.
+
 ## Demo temporal en una máquina Linux (p. ej. un Sprite de Fly.io)
 
 `scripts/demo-sprite.sh` deja Nébora funcionando en el puerto 8080 de una máquina Ubuntu/Debian limpia: instala PostgreSQL y Node 22 (binario oficial de nodejs.org verificado con SHA-256) si faltan, descarga la rama, crea los roles sin privilegios con contraseñas aleatorias (guardadas solo en `~/.nebora-demo/secrets`, permisos 600), aplica migraciones, compila y arranca. Es idempotente: volver a ejecutarlo actualiza el código y reinicia.

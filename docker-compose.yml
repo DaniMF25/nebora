@@ -1,0 +1,66 @@
+# Nébora en tu propio ordenador, para probar sin coste:
+#
+#   docker compose up --build
+#
+# y abre http://localhost:3000 (la primera vez tarda unos minutos en compilar).
+# Los datos se guardan en el volumen `nebora-data` y sobreviven a reinicios;
+# `docker compose down -v` los borra.
+#
+# SOLO PARA PRUEBAS LOCALES: contraseñas de ejemplo, registro abierto y la web
+# solo es accesible desde este ordenador (127.0.0.1). La base de datos no se
+# publica fuera de la red interna de Docker.
+
+name: nebora
+
+x-db-passwords: &db-passwords
+  # Puedes cambiarlas creando un archivo .env junto a este (ver docs/DEPLOYMENT.md).
+  NEBORA_ADMIN_DB_PASSWORD: ${NEBORA_ADMIN_DB_PASSWORD:-local-admin-cambia-esta-clave-0001}
+  NEBORA_APP_DB_PASSWORD: ${NEBORA_APP_DB_PASSWORD:-local-app-cambia-esta-clave-00002}
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-postgres-cambia-esta-clave}
+    volumes:
+      - nebora-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  # Prepara la base de datos (roles sin privilegios y migraciones) y termina.
+  provision:
+    build:
+      context: .
+      target: tools
+    image: nebora-tools
+    command: ["pnpm", "db:provision"]
+    environment:
+      <<: *db-passwords
+      DATABASE_SUPERUSER_URL: postgres://postgres:${POSTGRES_PASSWORD:-local-postgres-cambia-esta-clave}@db:5432/postgres
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: .
+      target: runtime
+    image: nebora-web
+    environment:
+      DATABASE_URL: postgres://nebora_app:${NEBORA_APP_DB_PASSWORD:-local-app-cambia-esta-clave-00002}@db:5432/nebora
+      APP_BASE_URL: http://localhost:3000
+      AUTH_ALLOW_SIGNUP: "true"
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      provision:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  nebora-data:
