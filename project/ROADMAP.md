@@ -52,7 +52,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Mesas y capacidades (sin solapes garantizado en BD).
 - [x] Horarios y excepciones (hechos en Fase 2; ver D-011).
 - [x] Calendario (vista por día con navegación y ocupación a una hora sobre el plano).
-- [ ] Reservas públicas y privadas — internas hechas; públicas pendientes.
+- [x] Reservas públicas y privadas (online con asignación automática de mesa, límites de peticiones e idempotencia).
 - [x] Asignaciones y prevención de solapamientos (exclusión en BD, combinación de mesas).
 - [ ] Lista de espera.
 - [x] Pruebas de concurrencia.

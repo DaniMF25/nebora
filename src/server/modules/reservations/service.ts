@@ -38,6 +38,7 @@ export interface Reservation {
   customerPhone: string | null;
   customerEmail: string | null;
   notes: string | null;
+  source: "staff" | "public";
   tables: ReservationTableRef[];
 }
 
@@ -90,7 +91,7 @@ export const availabilitySchema = z.object(slotSchema).strict();
 const RESERVATION_SQL = `
   SELECT r.id, r.establishment_id AS "establishmentId", r.starts_at AS "startsAt", r.ends_at AS "endsAt",
          r.party_size AS "partySize", r.status, r.customer_name AS "customerName",
-         r.customer_phone AS "customerPhone", r.customer_email AS "customerEmail", r.notes,
+         r.customer_phone AS "customerPhone", r.customer_email AS "customerEmail", r.notes, r.source,
          COALESCE((SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'maxCapacity', t.max_capacity) ORDER BY t.name)
                      FROM reservation_tables rt
                      JOIN dining_tables t ON t.organization_id = rt.organization_id AND t.id = rt.table_id

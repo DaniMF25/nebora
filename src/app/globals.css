@@ -77,3 +77,8 @@ section.zone { border-top: 1px solid var(--border); padding-top: 1rem; }
 .badge { display: inline-block; padding: 0 0.5rem; border-radius: 999px; border: 1px solid var(--border); font-size: 0.85rem; }
 li.status-cancelled, li.status-no_show, li.status-completed { opacity: 0.6; }
 li.status-seated .badge { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+fieldset.slots { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+fieldset.slots legend { font-weight: 500; margin-bottom: 0.25rem; }
+label.slot { display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid var(--border); border-radius: 6px; padding: 0.35rem 0.6rem; font-weight: 400; }
+label.slot:has(input:checked) { border-color: var(--accent); outline: 2px solid var(--accent); }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

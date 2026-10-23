@@ -17,7 +17,10 @@ import {
 } from "@/server/modules/reservations/service";
 import { addDays, isValidLocalDate, localDateOf, localToUtc, parseTime } from "@/server/modules/schedules/time";
 import { withTenant } from "@/server/tenancy/context";
-import { createReservationAction, setStatusAction, updateReservationAction } from "./actions";
+import { getOrganization } from "@/server/modules/organizations/service";
+import { getReservationSettings } from "@/server/modules/reservations/settings";
+import { getEnv } from "@/server/config/env";
+import { createReservationAction, setStatusAction, updateReservationAction, updateSettingsAction } from "./actions";
 
 const STATUS_LABELS: Record<ReservationStatus, string> = {
   pending: "Pendiente",
@@ -123,6 +126,9 @@ export default async function ReservationsPage({
         search,
         searchError,
         canManage: ctx.permissions.has("reservations.manage"),
+        canConfigure: ctx.permissions.has("establishments.update"),
+        settings: await getReservationSettings(tx, ctx, estId),
+        orgSlug: (await getOrganization(tx, ctx)).slug,
         activeTables: plan.zones.flatMap((z) => z.tables.filter((t) => t.active).map((t) => ({ ...t, zoneName: z.name }))),
       };
     });
@@ -131,6 +137,9 @@ export default async function ReservationsPage({
     throw err;
   }
   const { establishment, tz, today, date, at, reservations, plan, occupied, search, searchError, canManage, activeTables } = data;
+  const { settings, canConfigure, orgSlug } = data;
+  const publicPath = `/r/${orgSlug}/${establishment.slug}`;
+  const baseUrl = getEnv().APP_BASE_URL;
   const base = `/app/${orgId}/establishments/${estId}/reservations`;
   const time = new Intl.DateTimeFormat("es-ES", { timeZone: tz, hour: "2-digit", minute: "2-digit" });
   const hhmm = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -174,6 +183,7 @@ export default async function ReservationsPage({
                 · {r.customerName} · {r.partySize} pers. ·{" "}
                 {r.tables.length ? `Mesa ${r.tables.map((t) => t.name).join(" + ")}` : <em>sin mesa</em>} ·{" "}
                 <span className="badge">{STATUS_LABELS[r.status]}</span>
+                {r.source === "public" && <span className="badge"> Web</span>}
                 {(r.customerPhone || r.notes) && (
                   <div className="muted">{[r.customerPhone, r.notes].filter(Boolean).join(" · ")}</div>
                 )}
@@ -328,6 +338,72 @@ export default async function ReservationsPage({
               </label>
             </ActionForm>
           )}
+        </section>
+      )}
+      {canConfigure && (
+        <section>
+          <h3>Reservas online</h3>
+          <p>
+            {settings.publicEnabled ? (
+              <>
+                <strong>Activadas.</strong> Página pública:{" "}
+                <a href={publicPath} target="_blank" rel="noopener">
+                  {baseUrl ? `${baseUrl}${publicPath}` : publicPath}
+                </a>
+              </>
+            ) : (
+              <strong>Desactivadas.</strong>
+            )}
+          </p>
+          <details>
+            <summary>Configurar reservas online</summary>
+            <ActionForm action={updateSettingsAction.bind(null, orgId, estId)} submitLabel="Guardar configuración">
+              <label className="inline-form">
+                <input type="checkbox" name="publicEnabled" defaultChecked={settings.publicEnabled} /> Aceptar reservas desde
+                la web
+              </label>
+              <div className="inline-form">
+                <label>
+                  Comensales mínimos
+                  <input type="number" name="minParty" min={1} max={50} defaultValue={settings.minParty} />
+                </label>
+                <label>
+                  Comensales máximos
+                  <input type="number" name="maxParty" min={1} max={50} defaultValue={settings.maxParty} />
+                </label>
+                <label>
+                  Duración (min)
+                  <input type="number" name="durationMinutes" min={30} max={300} step={15} defaultValue={settings.durationMinutes} />
+                </label>
+              </div>
+              <div className="inline-form">
+                <label>
+                  Intervalo entre horas
+                  <select name="slotIntervalMinutes" defaultValue={settings.slotIntervalMinutes}>
+                    <option value={15}>15 min</option>
+                    <option value={30}>30 min</option>
+                    <option value={60}>60 min</option>
+                  </select>
+                </label>
+                <label>
+                  Antelación mínima (horas)
+                  <input type="number" name="minNoticeHours" min={0} max={168} step={0.5} defaultValue={settings.minNoticeMinutes / 60} />
+                </label>
+                <label>
+                  Días vista
+                  <input type="number" name="maxDaysAhead" min={1} max={365} defaultValue={settings.maxDaysAhead} />
+                </label>
+              </div>
+              <label className="inline-form">
+                <input type="checkbox" name="autoConfirm" defaultChecked={settings.autoConfirm} /> Confirmar automáticamente
+                (si no, quedan pendientes de revisión)
+              </label>
+              <p className="muted">
+                Las mesas se asignan automáticamente entre las activas (la más ajustada al grupo). No se envían avisos al
+                cliente: no hay proveedor de correo o SMS configurado.
+              </p>
+            </ActionForm>
+          </details>
         </section>
       )}
     </>

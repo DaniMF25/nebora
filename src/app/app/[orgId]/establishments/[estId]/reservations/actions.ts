@@ -3,6 +3,7 @@
 import type { FormState } from "@/lib/form-state";
 import { formString, runTenantAction } from "@/server/actions/run";
 import { createReservation, setReservationStatus, updateReservation } from "@/server/modules/reservations/service";
+import { updateReservationSettings } from "@/server/modules/reservations/settings";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/reservations`;
 
@@ -63,4 +64,23 @@ export async function setStatusAction(
   _fd: FormData,
 ): Promise<FormState> {
   return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => setReservationStatus(tx, ctx, reservationId, status));
+}
+
+export async function updateSettingsAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) =>
+      updateReservationSettings(tx, ctx, estId, {
+        publicEnabled: fd.get("publicEnabled") === "on",
+        minParty: num(fd, "minParty"),
+        maxParty: num(fd, "maxParty"),
+        durationMinutes: num(fd, "durationMinutes"),
+        slotIntervalMinutes: num(fd, "slotIntervalMinutes"),
+        minNoticeMinutes: Math.round(num(fd, "minNoticeHours") * 60),
+        maxDaysAhead: num(fd, "maxDaysAhead"),
+        autoConfirm: fd.get("autoConfirm") === "on",
+      }),
+    "Configuración guardada",
+  );
 }

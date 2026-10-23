@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 avanzada (zonas, mesas y reservas internas). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
+**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios hechos); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub aún sin ejecutar.
 
-**Última actualización:** 2026-10-23 — reservas internas.
+**Última actualización:** 2026-10-23 — reservas online.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -24,6 +24,7 @@
 - [x] Compras (migración 0008): proveedores; pedidos con estados y numeración correlativa; recepciones parciales/totales que generan entradas de stock en la misma transacción, idempotentes, sin superar lo pedido y que actualizan el coste de referencia; el personal recibe sin ver precios. Páginas `/app/<org>/purchasing`.
 - [x] Plano de sala (migración 0009): zonas por establecimiento con plano en cuadrícula; mesas con forma, tamaño y capacidad; sin solapes ni mesas fuera del plano garantizado en BD (también con movimientos simultáneos); edición arrastrando o con teclado. Página `/app/<org>/establishments/<id>/floor`.
 - [x] Reservas internas (migración 0010): alta en hora local con búsqueda de mesas libres, combinación de mesas, validación de horario de apertura y capacidad, estados (pendiente, confirmada, en mesa, finalizada, cancelada, no presentada), modificación, idempotencia y vista del día con ocupación sobre el plano; sin solapes por mesa garantizado en BD con peticiones simultáneas. Página `/app/<org>/establishments/<id>/reservations`.
+- [x] Reservas online (migración 0011): página pública `/r/<org>/<local>` activable por local con reglas (comensales, duración, intervalo, antelación, días vista, confirmación automática); horas disponibles reales; asignación automática de mesa resistente a peticiones simultáneas; límites por cliente, local y contacto; campo trampa; idempotencia; consentimiento registrado; acceso público solo mediante funciones que no exponen datos de clientes.
 - [x] Cabeceras de seguridad básicas y workflow de CI (`.github/workflows/ci.yml`, aún no ejecutado en GitHub).
 
 ## No implementado todavía
@@ -34,7 +35,7 @@
 - [ ] CSP completa con nonces para scripts.
 - [ ] Cartas: traducciones e imágenes. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
 - [ ] Inventario: traspasos entre almacenes, recuentos físicos, subrecetas, devoluciones a proveedor, envío de pedidos por correo.
-- [ ] Reservas públicas desde la web, lista de espera, avisos al cliente, retención de datos de clientes.
+- [ ] Lista de espera, avisos al cliente (correo/SMS), cancelación por el cliente, retención y derechos RGPD sobre datos de clientes.
 - [ ] Dashboard, personal, informes.
 - [ ] Edición de datos del establecimiento desde la interfaz (el servicio existe).
 - [ ] El formulario de horario ofrece 2 turnos por día (el servidor admite 6); guardar desde la interfaz sustituye todos.
@@ -45,10 +46,10 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test` | PASÓ — 10 archivos, 42 pruebas |
-| `pnpm test:integration` | PASÓ — 12 archivos, 133 pruebas (BD efímera migrada desde cero) |
+| `pnpm test` | PASÓ — 11 archivos, 47 pruebas |
+| `pnpm test:integration` | PASÓ — 13 archivos, 145 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 14 pruebas (2 ejecuciones consecutivas) en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 15 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | NO EJECUTADO todavía |
 
 Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión).
@@ -57,7 +58,7 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-A decidir con el propietario del producto entre: (a) reservas públicas desde la web del restaurante (formulario público con límite de peticiones, idempotencia y asignación automática de mesa); (b) dashboard con métricas reales (reservas y comensales del día, stock bajo mínimo, pedidos pendientes, escandallos incompletos); (c) completar inventario (traspasos y recuentos).
+Antes de seguir ampliando funciones públicas: política de datos de clientes (retención configurable con anonimización automática de reservas antiguas, y exportación/borrado a petición). Después: dashboard con métricas reales o completar inventario (traspasos y recuentos).
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -71,4 +72,5 @@ A decidir con el propietario del producto entre: (a) reservas públicas desde la
 - La política de stock no negativo puede no encajar con cocinas que registran consumos antes que entradas; revisar con usuarios.
 - Declarar alérgenos en un producto no cambia la carta pública hasta volver a publicarla; conviene avisar de cartas publicadas desactualizadas.
 - Datos personales de clientes en reservas sin política de retención ni exportación/borrado a petición (RGPD) todavía.
+- Reservas online: el límite por cliente depende de `X-Forwarded-For`; en producción el proxy debe sobrescribirla. El texto de consentimiento es genérico y debe revisarlo el responsable del tratamiento.
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.

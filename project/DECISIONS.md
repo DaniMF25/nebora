@@ -193,3 +193,18 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - El personal gestiona reservas (`reservations.manage`).
 
 **Pendiente:** reservas públicas desde la web (con límite de peticiones e idempotencia), lista de espera, avisos al cliente (requiere correo/SMS), política de retención de datos de clientes, sugerencia automática de combinaciones de mesas.
+
+## D-019 — Reservas públicas mediante funciones estrechas
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Contexto:** primera escritura anónima del sistema. La ruta pública no tiene usuario ni organización en el contexto, así que RLS no le da acceso a ninguna tabla privada.
+
+**Decisión:**
+- La web pública solo usa funciones `SECURITY DEFINER` que funcionan únicamente si el local activó la reserva online y devuelven lo mínimo: horario, capacidades de mesa e intervalos ocupados por mesa (sin ningún dato de clientes).
+- `app.public_book` aplica en BD las reglas del local (activado, rango de comensales, duración exacta, antelación mínima y días vista), crea la reserva con `source = 'public'`, código de 10 caracteres y fecha de consentimiento, y asigna mesa probando candidatas en orden dentro de subtransacciones: si otra petición simultánea ocupó una mesa (violación de exclusión) pasa a la siguiente; sin mesa, aborta todo. El servidor comprueba antes que la hora está entre las disponibles (horario de apertura con zona horaria y cambios de hora, D-011).
+- Asignación automática: la mesa activa más ajustada al grupo (primero las que cumplen el mínimo de la mesa). Sin combinaciones de mesas online.
+- Abuso: límites por cliente (10/hora, por hash de la IP de `X-Forwarded-For`), por local (200/hora) y por contacto (5/día, hash de correo o teléfono), en una tabla sin acceso directo para la aplicación; campo trampa; idempotencia por clave del formulario (los reenvíos devuelven la reserva creada).
+- Datos mínimos del cliente: nombre y teléfono o correo (al menos uno) y comentario. Casilla de consentimiento obligatoria; se guarda la fecha. Sin avisos al cliente (no hay proveedor de correo/SMS).
+- Configuración por local en `reservation_settings`, editable con `establishments.update`.
+
+**Riesgos:** `X-Forwarded-For` es falsificable si el proxy de producción no la sobrescribe; el texto de consentimiento es genérico y debe revisarlo el responsable del tratamiento; falta política de retención de datos de clientes.
