@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 test("QR: enlace permanente que sobrevive al cambio de identificador y descarga protegida", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -20,6 +20,7 @@ test("QR: enlace permanente que sobrevive al cambio de identificador y descarga 
 
   await page.goto(orgPath);
   await page.getByRole("link", { name: "Local QR" }).click();
+  await openTab(page, /^Cartas/);
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta QR");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");
@@ -30,9 +31,10 @@ test("QR: enlace permanente que sobrevive al cambio de identificador y descarga 
   await page.getByRole("button", { name: "Añadir a Sopas" }).click();
   await expect(page.getByRole("button", { name: "Quitar Gazpacho" })).toBeVisible();
 
+  await openTab(page, "Publicación y QR");
   const shortUrl = (await page.locator(".qr code").textContent())!;
   expect(shortUrl).toMatch(/^http:\/\/localhost:\d+\/q\/[0-9a-f]{12}$/);
-  const editorUrl = page.url();
+  const editorUrl = page.url().split("?")[0]!;
   const qrUrl = `${editorUrl}/qr?format=svg`;
 
   // Sin publicar: el enlace corto no muestra nada.
@@ -47,6 +49,7 @@ test("QR: enlace permanente que sobrevive al cambio de identificador y descarga 
   await expect(visitor.getByText("Gazpacho")).toBeVisible();
 
   // Cambiar el identificador no rompe el QR.
+  await openTab(page, "Ajustes");
   await page.getByLabel("Identificador (URL)").fill("carta-nueva");
   await page.getByRole("button", { name: "Guardar ajustes" }).click();
   await expect(page.getByText("Guardado")).toBeVisible();
@@ -62,6 +65,7 @@ test("QR: enlace permanente que sobrevive al cambio de identificador y descarga 
   const png = await page.request.get(`${editorUrl}/qr?format=png&download=1`);
   expect(png.headers()["content-type"]).toBe("image/png");
   expect(png.headers()["content-disposition"]).toContain('filename="qr-carta-nueva.png"');
+  await openTab(page, "Publicación y QR");
   await expect(page.getByRole("img", { name: "Código QR de Carta QR" })).toBeVisible();
 
   expect((await visitor.request.get(qrUrl)).status()).toBe(401);

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 test("editar los datos del local y guardar más de dos turnos sin perderlos", async ({ page }) => {
   await register(page, "Datos Local");
@@ -10,23 +10,22 @@ test("editar los datos del local y guardar más de dos turnos sin perderlos", as
   await page.getByRole("link", { name: "Local Viejo" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
 
-  await page.getByText("Editar datos del local").click();
+  await openTab(page, "Datos del local");
   await page.getByLabel("Nombre", { exact: true }).fill("Local Nuevo");
   await page.getByLabel("Dirección").fill("Calle Mayor 1, Madrid");
   await page.getByLabel("Zona horaria").fill("Atlantic/Canary");
   await page.getByRole("button", { name: "Guardar datos" }).click();
   await expect(page.getByRole("heading", { level: 2, name: "Local Nuevo" })).toBeVisible();
-  await expect(page.getByText("Zona horaria: Atlantic/Canary · Calle Mayor 1, Madrid")).toBeVisible();
+  await expect(page.getByText(/Atlantic\/Canary · Calle Mayor 1, Madrid/)).toBeVisible();
 
   // Zona horaria inexistente: error del servidor, sin cambios.
   await page.reload();
-  await page.getByText("Editar datos del local").click();
   await page.getByLabel("Zona horaria").fill("Marte/Olympus");
   await page.getByRole("button", { name: "Guardar datos" }).click();
   await expect(page.getByText("Zona horaria no válida")).toBeVisible();
 
   // Tres turnos el lunes: el tercer hueco aparece tras guardar dos y no se pierde al volver a guardar.
-  await page.reload();
+  await openTab(page, "Horario");
   const turno = (n: number, kind: "apertura" | "cierre") => page.getByLabel(`Lunes, turno ${n}, ${kind}`);
   await turno(1, "apertura").fill("09:00");
   await turno(1, "cierre").fill("11:00");

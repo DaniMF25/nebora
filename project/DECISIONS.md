@@ -301,3 +301,14 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - «Diseño de tu web»: tarjetas por estilo con miniatura construida con los datos reales; elegir estilo es una acción propia (`setSiteTheme`) que no toca el contenido. La vista previa vive fuera de `/app` (`/preview/site/...`) para verse a pantalla completa, pero exige sesión y pertenencia, y sirve la foto principal por la ruta privada.
 - `ActionForm` envía con JavaScript sin el restablecimiento automático de React: con error se conserva lo escrito; con éxito se limpia.
 
+## D-028 — Apartados con URL propia en páginas largas
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Contexto:** con el rediseño, las páginas del local, del editor de carta, del inventario y de la web pública acumulaban muchas tarjetas seguidas y obligaban a desplazarse mucho.
+
+**Decisión:**
+- Pestañas como enlaces (`PageTabs`) con el apartado en `?tab=`; el primero es el predeterminado y no lleva parámetro. El servidor valida el valor (`pickTab`, cualquier valor desconocido cae en el primero) y solo pinta ese apartado (las consultas de la página se mantienen como estaban; optimizarlas por apartado queda pendiente si hiciera falta). Sin estado en el cliente: funcionan sin JavaScript, conservan el apartado al recargar y tras una acción de servidor, y se pueden enlazar (p. ej. el recuento vuelve a `?tab=recuentos`).
+- Lo que afecta a toda la página queda fuera de las pestañas: estado de la carta y sus enlaces, estado de apertura del local, estado de la web.
+- «Datos del local» solo aparece para quien puede editar; la autorización sigue en las acciones del servidor.
+
+**Alternativas descartadas:** pestañas en el cliente (perderían el apartado al recargar tras guardar y no serían enlazables); dividir en rutas separadas (más archivos y navegación duplicada sin ventaja).

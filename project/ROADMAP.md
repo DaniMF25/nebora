@@ -28,6 +28,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Configuración de horarios y zona horaria (horario semanal, turnos nocturnos, excepciones, cálculo con DST).
 - [x] Edición de los datos del establecimiento desde la interfaz.
 - [x] Dashboard con datos reales y estados vacíos (D-024).
+- [x] Páginas largas organizadas en apartados con enlace propio: local, editor de carta, inventario y web pública (D-028).
 
 ## Fase 3 — Cartas digitales
 - [x] Categorías y productos (catálogo por organización, categorías por carta, precio específico por carta).

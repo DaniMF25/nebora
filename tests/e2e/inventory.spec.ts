@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 test("inventario: entradas, consumos, stock insuficiente, anulación y aislamiento", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -13,6 +13,7 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
 
   await page.getByRole("link", { name: "Inventario" }).click();
   await expect(page.getByText("Necesitas al menos un almacén y un ingrediente")).toBeVisible();
+  await openTab(page, "Ingredientes y almacenes");
   await page.getByText("Nuevo almacén").click();
   await page.getByLabel("Nombre del almacén").fill("Cámara");
   await page.getByRole("button", { name: "Crear almacén" }).click();
@@ -23,6 +24,7 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Harina" })).toBeVisible();
 
+  await openTab(page, "Stock");
   const movementForm = page.locator("section", { has: page.getByRole("heading", { name: "Registrar movimiento" }) });
   async function registerMovement(kind: string, quantity: string, unit: string) {
     await movementForm.getByLabel("Tipo").selectOption(kind);
@@ -47,11 +49,13 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
   await expect(stockTable.getByRole("row", { name: /Harina/ })).toContainText("500 g");
 
   // Anular el consumo devuelve el stock con un movimiento compensatorio.
+  await openTab(page, "Movimientos");
   const consumptionRow = page.getByRole("row", { name: /Consumo/ });
   await consumptionRow.getByRole("button", { name: "Anular" }).click();
   await expect(page.getByRole("row", { name: /Corrección/ })).toBeVisible();
-  await expect(stockTable.getByRole("row", { name: /Harina/ })).toContainText("2 kg");
   await expect(page.getByRole("row", { name: /Consumo/ })).toContainText("(anulado)");
+  await openTab(page, "Stock");
+  await expect(stockTable.getByRole("row", { name: /Harina/ })).toContainText("2 kg");
   const inventoryUrl = page.url();
 
   const otherCtx = await browser.newContext();

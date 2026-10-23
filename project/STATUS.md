@@ -2,7 +2,7 @@
 
 **Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-23 — rediseño visual del panel y pantalla de diseño de la web.
+**Última actualización:** 2026-10-23 — apartados (pestañas) en las páginas largas del panel.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -52,6 +52,7 @@
 - [x] Formularios: si el servidor rechaza los datos ya no se pierde lo escrito (antes React vaciaba el formulario); solo se limpia al ir bien.
 - [x] Rediseño del panel: barra lateral oscura con grupos e iconos (Inicio; Gestión; cada local con Resumen, Reservas, Sala y Web pública; Organización), usuario y salida abajo, menú desplegable en móvil; contenido en tarjetas, Inter + Fraunces alojadas por la app, acento violeta; inicio de sesión y registro en tarjeta. Sin apartados ficticios.
 - [x] Pantalla «Diseño de tu web»: estilos como tarjetas con miniatura (textos y foto reales), descripción, colores, «Actual», «Usar…» (cambia solo el estilo) y «Vista previa» a pantalla completa (`/preview/site/<org>/<local>?theme=`), también sin publicar y solo para miembros.
+- [x] Apartados en páginas largas (D-028): local (Resumen con accesos y próximos 7 días · Cartas · Horario · Datos del local), editor de carta (Contenido · Publicación y QR · Ajustes, con aviso de cambios sin publicar en los otros apartados), inventario (Stock · Movimientos · Recuentos · Ingredientes y almacenes) y web pública (Estilo · Contenido · Foto principal). Cada apartado tiene su URL (`?tab=`), funciona sin JavaScript y se puede enlazar.
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -66,7 +67,7 @@
 | `pnpm test:integration` | PASÓ — 18 archivos, 194 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
 | `pnpm test:e2e` | PASÓ — 23 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
-| CI en GitHub Actions | PASÓ — ejecución 2 en `claude/festive-rubin-bxwmo0` (551657a): lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
+| CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
 Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente; con el formulario de horario de 2 huecos fijos, falló la prueba E2E de turnos; sin el bloqueo del recuento en `app.apply_stock_count`, falló la prueba de aplicaciones simultáneas (una primera versión de esa prueba no detectaba el fallo y se rehízo con orden forzado).

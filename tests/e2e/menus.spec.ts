@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 async function createProduct(page: Page, name: string, price: string, allergens: string[] = []) {
   const form = page.locator("section", { has: page.getByRole("heading", { name: "Nuevo producto" }) });
@@ -26,13 +26,14 @@ test("crear, publicar y versionar una carta; los borradores no son públicos", a
 
   await page.goto(orgPath);
   await page.getByRole("link", { name: "Local Puerto" }).click();
+  await openTab(page, /^Cartas/);
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta de verano");
   await page.getByLabel("Identificador de la carta (URL)").fill("verano");
   await page.getByLabel("Tema").selectOption("mediterraneo");
   await page.getByRole("button", { name: "Crear carta" }).click();
   await expect(page.getByRole("heading", { name: "Carta de verano" })).toBeVisible();
-  await expect(page.getByText("Sin publicar")).toBeVisible();
+  await expect(page.getByText("Sin publicar", { exact: true })).toBeVisible();
 
   for (const name of ["Entrantes", "Arroces"]) {
     await page.getByPlaceholder("Nueva categoría").fill(name);
@@ -47,6 +48,7 @@ test("crear, publicar y versionar una carta; los borradores no son públicos", a
   await page.getByRole("button", { name: "Añadir a Arroces" }).click();
   await expect(page.getByText("precio de catálogo 16,00 €")).toBeVisible();
 
+  await openTab(page, "Publicación y QR");
   await page.getByRole("button", { name: "Publicar borrador" }).click();
   await expect(page.getByText("Publicada la versión 1")).toBeVisible();
   const publicHref = await page.getByRole("link", { name: "Ver página pública" }).getAttribute("href");
@@ -62,12 +64,15 @@ test("crear, publicar y versionar una carta; los borradores no son públicos", a
   await expect(visitor.getByText("Moluscos")).toBeVisible();
 
   // Cambios en el borrador no aparecen hasta volver a publicar.
+  await openTab(page, "Contenido");
   await page.getByPlaceholder("Nueva categoría").fill("Postres secretos");
   await page.getByRole("button", { name: "Añadir categoría" }).click();
   await expect(page.getByRole("heading", { name: "Postres secretos" })).toBeVisible();
   await visitor.reload();
   await expect(visitor.getByText("Postres secretos")).toHaveCount(0);
-  // Y el borrador incompleto no se puede publicar.
+  // Y el borrador incompleto no se puede publicar (con aviso de cambios pendientes en la cabecera).
+  await expect(page.getByRole("link", { name: "Ir a publicación" })).toBeVisible();
+  await openTab(page, "Publicación y QR");
   await page.getByRole("button", { name: "Publicar borrador" }).click();
   await expect(page.locator(".alert").getByText("No se puede publicar la carta")).toBeVisible();
 
@@ -91,7 +96,7 @@ test("crear, publicar y versionar una carta; los borradores no son públicos", a
   // Despublicar retira la página pública.
   await page.goBack();
   await page.getByRole("button", { name: "Despublicar" }).click();
-  await expect(page.getByText("Sin publicar")).toBeVisible();
+  await expect(page.getByText("Sin publicar", { exact: true })).toBeVisible();
   const gone = await visitor.goto(publicHref!);
   expect(gone?.status()).toBe(404);
 

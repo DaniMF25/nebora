@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 test("configurar horario semanal y una excepción; otro restaurante no puede verlo", async ({ browser }) => {
   const ctxA = await browser.newContext();
@@ -13,6 +13,7 @@ test("configurar horario semanal y una excepción; otro restaurante no puede ver
   await expect(page.getByRole("heading", { name: "Local Centro" })).toBeVisible();
   await expect(page.getByText("Sin horario de apertura configurado")).toBeVisible();
 
+  await openTab(page, "Horario");
   for (let day = 1; day <= 7; day++) {
     const label = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"][day - 1];
     await page.getByLabel(`${label}, turno 1, apertura`).fill("13:00");
@@ -24,8 +25,10 @@ test("configurar horario semanal y una excepción; otro restaurante no puede ver
   await expect(page.getByText("Horario guardado")).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Sábado, turno 2, cierre")).toHaveValue("02:00");
+  await openTab(page, "Resumen");
   await expect(page.getByRole("heading", { name: "Próximos 7 días" })).toBeVisible();
   await expect(page.getByText("Sin horario de apertura configurado")).toHaveCount(0);
+  await openTab(page, "Horario");
 
   // Un turno solapado se rechaza con un mensaje claro.
   await page.getByLabel("Lunes, turno 2, apertura").fill("15:00");

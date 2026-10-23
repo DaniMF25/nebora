@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 const DATE = "2030-06-14"; // viernes futuro: evita depender de la hora actual
 
@@ -13,6 +13,7 @@ test("reservas: buscar mesas libres, reservar, ocupación en el plano, cancelar 
   await page.waitForURL(/\/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
 
+  await openTab(page, "Horario");
   // Horario: mediodía y noche todos los días.
   for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) {
     await page.getByLabel(`${day}, turno 1, apertura`).fill("13:00");

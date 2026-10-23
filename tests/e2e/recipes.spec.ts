@@ -11,7 +11,7 @@ test("receta y escandallo: coste, alérgenos no declarados y elaboración que de
   await expect(page.getByRole("link", { name: "Local Receta" })).toBeVisible();
 
   // Inventario: almacén e ingredientes con coste y alérgenos.
-  await page.goto(`${orgPath}/inventory`);
+  await page.goto(`${orgPath}/inventory?tab=articulos`);
   await page.getByText("Nuevo almacén").click();
   await page.getByLabel("Nombre del almacén").fill("Cocina");
   await page.getByRole("button", { name: "Crear almacén" }).click();
@@ -20,7 +20,7 @@ test("receta y escandallo: coste, alérgenos no declarados y elaboración que de
     ["Arroz", "2,40", null],
     ["Gambas", "18", "Crustáceos"],
   ] as const) {
-    await page.goto(`${orgPath}/inventory`);
+    await page.goto(`${orgPath}/inventory?tab=articulos`);
     await page.getByText("Nuevo ingrediente").click();
     await page.getByLabel("Nombre del ingrediente").fill(name);
     await page.getByRole("button", { name: "Crear ingrediente" }).click();
@@ -31,6 +31,7 @@ test("receta y escandallo: coste, alérgenos no declarados y elaboración que de
     await edit.getByRole("button", { name: "Guardar" }).click();
     await expect(edit.getByText("Guardado")).toBeVisible();
   }
+  await page.goto(`${orgPath}/inventory`);
   const movement = page.locator("section", { has: page.getByRole("heading", { name: "Registrar movimiento" }) });
   for (const name of ["Arroz", "Gambas"]) {
     const opt = await movement.getByLabel("Ingrediente").locator("option", { hasText: name }).getAttribute("value");

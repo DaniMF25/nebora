@@ -10,7 +10,7 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
   await expect(page.getByRole("link", { name: "Local Compras" })).toBeVisible();
 
-  await page.goto(`${orgPath}/inventory`);
+  await page.goto(`${orgPath}/inventory?tab=articulos`);
   await page.getByText("Nuevo almacén").click();
   await page.getByLabel("Nombre del almacén").fill("Despensa");
   await page.getByRole("button", { name: "Crear almacén" }).click();
@@ -66,6 +66,8 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await page.goto(`${orgPath}/inventory`);
   const stock = page.locator("section", { has: page.getByRole("heading", { name: "Stock" }) });
   await expect(stock.getByRole("row", { name: /Arroz/ })).toContainText("25 kg");
+  await page.goto(`${orgPath}/inventory?tab=articulos`);
   await expect(page.getByText("coste 2,15 € /kg")).toBeVisible();
+  await page.goto(`${orgPath}/inventory?tab=movimientos`);
   await expect(page.getByRole("row", { name: /Recepción del pedido 1/ }).first()).toBeVisible();
 });

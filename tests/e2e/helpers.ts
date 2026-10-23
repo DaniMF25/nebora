@@ -26,3 +26,11 @@ export async function createOrganization(page: Page, name: string): Promise<stri
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
   return page.url();
 }
+
+/** Abre una pestaña de la página actual del panel (enlaces `?tab=`). */
+export async function openTab(page: Page, name: string | RegExp): Promise<void> {
+  await page.getByRole("navigation", { name: "Apartados de la página" }).getByRole("link", { name }).click();
+  await expect(
+    page.getByRole("navigation", { name: "Apartados de la página" }).getByRole("link", { name }),
+  ).toHaveAttribute("aria-current", "page");
+}

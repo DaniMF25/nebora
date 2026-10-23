@@ -229,3 +229,17 @@ main.auth button[type="submit"] { width: 100%; }
 .page-head h2 { margin-bottom: 0.35rem; }
 .info-box { flex: 0 1 22rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.85rem 1rem; display: grid; gap: 0.3rem; font-size: 0.9rem; }
 .info-box p { margin: 0; }
+
+/* Pestañas de página (enlaces con ?tab=). */
+.page-tabs { display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); margin: 0.5rem 0 1.25rem; }
+.page-tabs a { flex: none; padding: 0.65rem 1rem; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 0.95rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.page-tabs a:hover { color: var(--fg); }
+.page-tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--accent); }
+.page-tabs + section, .page-tabs + .bare { margin-top: 0; }
+/* Accesos rápidos en tarjeta. */
+.quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.quick-links a { display: grid; gap: 0.2rem; height: 100%; padding: 1rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); text-decoration: none; box-shadow: var(--shadow); transition: border-color 0.15s; }
+.quick-links a:hover { border-color: var(--accent); }
+.quick-links strong { font-size: 1rem; }
+.quick-links span { color: var(--muted); font-size: 0.88rem; }
+.status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0 0 0.5rem; }

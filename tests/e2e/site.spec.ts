@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { register, suffix } from "./helpers";
+import { openTab, register, suffix } from "./helpers";
 
 async function jpeg(color: string): Promise<Buffer> {
   return sharp({
@@ -47,6 +47,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByRole("link", { name: "Altamar" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
+  await openTab(page, /^Cartas/);
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");
@@ -61,12 +62,15 @@ test("página pública del local con foto, carta destacada y despublicación", a
       name: "Quitar recomendado de Pulpo a la brasa",
     }),
   ).toBeVisible();
+  await openTab(page, "Publicación y QR");
   await page.getByRole("button", { name: "Publicar borrador" }).click();
   await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
 
   // Perfil público
   await page.goto(estUrl);
   await page.getByRole("link", { name: "Página pública" }).click();
+  await expect(page.getByRole("heading", { name: "Diseño de tu web" })).toBeVisible();
+  await openTab(page, "Foto principal");
   await page.locator('input[name="image"]').setInputFiles({
     name: "sala.jpg",
     mimeType: "image/jpeg",
@@ -74,6 +78,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
   });
   await page.getByRole("button", { name: "Subir foto principal" }).click();
   await expect(page.getByRole("img", { name: "Foto principal" })).toBeVisible();
+  await openTab(page, "Contenido");
   await page.getByLabel("Eslogan (junto al nombre)").fill("Cocina mediterránea");
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Sabores del mar");
   await page.getByLabel("Carta destacada").selectOption({ label: "Carta" });
@@ -85,12 +90,15 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await expect(page.getByText("Página guardada")).toBeVisible();
 
   // Estilos en tarjetas: el actual marcado, cambiar sin tocar el contenido y vista previa de otro.
+  await openTab(page, "Estilo");
   const card = (name: string) => page.getByRole("article", { name: `Estilo ${name}` });
   await expect(card("Mediterráneo").getByText("Actual")).toBeVisible();
   await card("Futurista").getByRole("button", { name: "Usar Futurista" }).click();
   await expect(card("Futurista").getByText("Actual")).toBeVisible();
   await expect(card("Mediterráneo").getByRole("button", { name: "Usar Mediterráneo" })).toBeVisible();
+  await openTab(page, "Contenido");
   await expect(page.getByLabel("Titular (obligatorio para publicar)")).toHaveValue("Sabores del mar");
+  await openTab(page, "Estilo");
   const previewHref = (await card("Clásico").getByRole("link", { name: /Vista previa/ }).getAttribute("href"))!;
   expect(previewHref).toMatch(/\/preview\/site\/.+\?theme=clasico$/);
   const previewPage = await page.context().newPage();
@@ -129,10 +137,12 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await expect(visitor).toHaveURL(new RegExp(`/${orgSlug}/altamar$`));
 
   // Despublicar: la página y la foto principal dejan de estar disponibles
+  await openTab(page, "Contenido");
   await page.getByLabel("Publicar la página").uncheck();
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
   expect((await visitor.request.get(siteUrl)).status()).toBe(404);
+  await openTab(page, "Foto principal");
   const heroSrc = (await page.getByRole("img", { name: "Foto principal" }).getAttribute("src"))!;
   const heroId = heroSrc.split("/").at(-1)!;
   expect((await visitor.request.get(`/media/${heroId}`)).status()).toBe(404);

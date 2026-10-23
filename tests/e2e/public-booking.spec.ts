@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, suffix } from "./helpers";
 
 function localDate(daysAhead: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date(Date.now() + daysAhead * 86_400_000));
@@ -15,6 +15,7 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   await page.waitForURL(/\/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
 
+  await openTab(page, "Horario");
   for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) {
     await page.getByLabel(`${day}, turno 1, apertura`).fill("13:00");
     await page.getByLabel(`${day}, turno 1, cierre`).fill("16:00");
