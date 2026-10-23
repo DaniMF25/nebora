@@ -23,11 +23,11 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 **Puerta de salida:** las pruebas negativas de aislamiento pasan y el proyecto compila. — Superada el 2026-10-22; CI de GitHub en verde desde el 2026-10-23.
 
 ## Fase 2 — Interfaz y configuración
-- [ ] Layout responsive y navegación.
-- [ ] Selector de organización/establecimiento.
+- [x] Layout responsive y navegación (pestañas con sección actual, sin desbordes a 390 px).
+- [x] Selector de organización (cambio en la cabecera) y de establecimiento (tarjetas de la portada).
 - [x] Configuración de horarios y zona horaria (horario semanal, turnos nocturnos, excepciones, cálculo con DST).
 - [x] Edición de los datos del establecimiento desde la interfaz.
-- [ ] Dashboard con datos reales y estados vacíos.
+- [x] Dashboard con datos reales y estados vacíos (D-024).
 
 ## Fase 3 — Cartas digitales
 - [x] Categorías y productos (catálogo por organización, categorías por carta, precio específico por carta).

@@ -257,3 +257,10 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Pendiente:** elección de hosting y servicios gestionados, que decide el usuario.
 
+## D-024 — Panel de inicio compuesto con los servicios de cada módulo
+**Fecha:** 2026-10-23. **Estado:** aceptada.
+
+**Decisión:** el resumen de la portada no tiene consultas propias: llama a los servicios de cada módulo (reservas, inventario, compras, escandallos, cartas), que ya filtran por organización y comprueban permisos. Si falta el permiso de un bloque, el bloque vale `null` y no se muestra, en lugar de fallar. Así la portada no puede enseñar más que las páginas de cada módulo. Las fechas «de hoy» se calculan en la zona horaria de cada local.
+
+**Coste:** más consultas que una vista agregada (en especial, detectar cartas desactualizadas reconstruye la instantánea de cada carta). Se optimizará si se mide lentitud real.
+

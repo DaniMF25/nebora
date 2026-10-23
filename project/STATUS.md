@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 en curso (horarios y edición del local hechos; faltan dashboard, navegación responsive y selector); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
+**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan traspasos, recuentos y subrecetas); Fase 5 casi completa (falta lista de espera). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-23 — checkpoint; edición de datos del local, turnos sin pérdida y aviso de cartas desactualizadas.
+**Última actualización:** 2026-10-23 — panel de inicio con datos reales y navegación del panel adaptada al móvil.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -40,10 +40,12 @@
 - [ ] Inventario: traspasos entre almacenes, recuentos físicos, subrecetas, devoluciones a proveedor, envío de pedidos por correo.
 - [ ] Lista de espera, avisos al cliente (correo/SMS), cancelación por el cliente.
 - [ ] Programar `pnpm privacy:retention` a diario en el despliegue (sin ello la anonimización no es automática).
-- [ ] Dashboard, personal, informes.
+- [ ] Personal, informes.
 - [x] Edición de los datos del local desde la interfaz (nombre, dirección, zona horaria, identificador) con aviso de que cambia las URL públicas (los QR siguen funcionando).
 - [x] Horario: el formulario muestra los turnos guardados más uno libre (hasta 6); antes mostraba 2 y al guardar se perdían los demás.
 - [x] Aviso de «cambios sin publicar» en el editor de cartas y en la lista de cartas del local (compara el borrador con la versión publicada: precios, alérgenos, fotos, recomendados, tema y orden).
+- [x] Panel de inicio (`/app/<org>`): por local, abierto/cerrado y próxima apertura, reservas activas, comensales, pendientes de confirmar y próxima reserva de hoy; avisos de stock bajo mínimo, pedidos pendientes de recibir y borradores, escandallos incompletos y cartas por publicar, cada uno con enlace. Cada bloque solo aparece con su permiso. Las tarjetas de locales sustituyen a la lista anterior.
+- [x] Navegación del panel: pestañas con la sección actual marcada y desplazables en móvil, cambio de organización, controles de formulario que no desbordan. Comprobado sin desplazamiento horizontal a 390 px en las 11 páginas del panel.
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -55,9 +57,9 @@
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
 | `pnpm test` | PASÓ — 13 archivos, 55 pruebas |
-| `pnpm test:integration` | PASÓ — 15 archivos, 170 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:integration` | PASÓ — 16 archivos, 174 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 20 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 21 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | PASÓ — ejecución 2 en `claude/festive-rubin-bxwmo0` (551657a): lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
@@ -67,7 +69,7 @@ Comprobaciones de mutación (cambio temporal, revertido): al debilitar la polít
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Dashboard con métricas reales (reservas y comensales del día, stock bajo mínimo, pedidos pendientes, escandallos incompletos, cartas con cambios sin publicar) y navegación del panel adaptada al móvil. Después: traspasos y recuentos de inventario; límite de peticiones por IP en el login.
+Inventario: traspasos entre almacenes y recuentos físicos (con ajuste automático de diferencias). Después: límite de peticiones por IP en el login; lista de espera.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -84,4 +86,5 @@ Dashboard con métricas reales (reservas y comensales del día, stock bajo míni
 - La anonimización automática de datos de clientes depende de programar `pnpm privacy:retention`; los textos y plazos de privacidad deben validarlos el responsable del tratamiento y su asesoría.
 - Reservas online: el límite por cliente depende de la IP; con `CLIENT_IP_HEADER` (p. ej. Fly) se usa la cabecera de la plataforma, si no `X-Forwarded-For`, que el proxy debe sobrescribir. El texto de consentimiento es genérico y debe revisarlo el responsable del tratamiento.
 - Imágenes guardadas en PostgreSQL de forma provisional (cupo de 200 MB por organización); sin limpieza de huérfanas. La caché pública de imágenes es de 5 minutos: tras despublicar, una imagen puede seguir en cachés intermedias durante ese tiempo.
+- El panel de inicio recalcula al cargar cada carta para detectar cambios sin publicar; con muchas cartas puede ser lento (medir antes de optimizar).
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.
