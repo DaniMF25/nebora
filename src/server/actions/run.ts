@@ -22,7 +22,8 @@ export async function runTenantAction(
   } catch (err) {
     return toFormState(err);
   }
-  revalidatePath(revalidate);
+  // "layout": también las subpáginas (p. ej. el inventario de cada local y el del grupo).
+  revalidatePath(revalidate, "layout");
   return successMessage ? { ok: true, message: successMessage } : { ok: true };
 }
 

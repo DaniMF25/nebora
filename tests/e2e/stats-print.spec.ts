@@ -34,7 +34,7 @@ test("estadísticas: cuenta visitas reales a la web, la carta y el QR, y no las 
   await page.getByRole("link", { name: "Puerto" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
-  await openTab(page, /^Cartas/);
+  await page.getByRole("link", { name: "Gestionar cartas" }).click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta de mediodía");
   await page.getByLabel("Identificador de la carta (URL)").fill("mediodia");

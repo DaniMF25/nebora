@@ -13,7 +13,7 @@ import {
 import { recordAudit } from "@/server/audit/audit";
 import { isUniqueViolation, type Tx } from "@/server/db/pool";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
-import { insertMovement } from "@/server/modules/inventory/service";
+import { establishmentFilter, insertMovement } from "@/server/modules/inventory/service";
 import { nameSchema } from "@/server/modules/shared-schemas";
 import { isValidLocalDate } from "@/server/modules/schedules/time";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
@@ -36,6 +36,7 @@ export interface OrderSummary {
   number: number;
   supplierName: string;
   warehouseName: string;
+  establishmentId: string;
   establishmentName: string;
   status: OrderStatus;
   expectedDate: string | null;
@@ -195,7 +196,8 @@ export async function setSupplierActive(tx: Tx, ctx: TenantContext, id: string, 
 const LINE_TOTAL_SQL = `(l.quantity_ordered * l.unit_price_cents / CASE i.base_unit WHEN 'unit' THEN 1 ELSE 1000 END)`;
 
 const ORDER_SUMMARY_SQL = `
-  SELECT o.id, o.number, s.name AS "supplierName", w.name AS "warehouseName", e.name AS "establishmentName",
+  SELECT o.id, o.number, s.name AS "supplierName", w.name AS "warehouseName", e.id AS "establishmentId",
+         e.name AS "establishmentName",
          o.status, to_char(o.expected_date, 'YYYY-MM-DD') AS "expectedDate", o.created_at AS "createdAt",
          (SELECT round(sum(${LINE_TOTAL_SQL}), 4)::text
             FROM purchase_order_lines l JOIN ingredients i ON i.organization_id = l.organization_id AND i.id = l.ingredient_id
@@ -206,11 +208,12 @@ const ORDER_SUMMARY_SQL = `
     JOIN warehouses w ON w.organization_id = o.organization_id AND w.id = o.warehouse_id
     JOIN establishments e ON e.organization_id = w.organization_id AND e.id = w.establishment_id`;
 
-export async function listOrders(tx: Tx, ctx: TenantContext): Promise<OrderSummary[]> {
+export async function listOrders(tx: Tx, ctx: TenantContext, establishmentId?: string): Promise<OrderSummary[]> {
   requirePermission(ctx, "purchasing.read");
   const { rows } = await tx.query<OrderSummary>(
-    `${ORDER_SUMMARY_SQL} WHERE o.organization_id = $1 ORDER BY o.number DESC LIMIT 100`,
-    [ctx.organizationId],
+    `${ORDER_SUMMARY_SQL} WHERE o.organization_id = $1 AND ($2::uuid IS NULL OR e.id = $2)
+      ORDER BY o.number DESC LIMIT 100`,
+    [ctx.organizationId, establishmentFilter(establishmentId)],
   );
   const costs = ctx.permissions.has("costs.read");
   return rows.map((r) => ({ ...r, totalCents: costs ? r.totalCents : null }));

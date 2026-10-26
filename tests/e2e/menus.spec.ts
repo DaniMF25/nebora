@@ -26,7 +26,7 @@ test("crear, publicar y versionar una carta; los borradores no son públicos", a
 
   await page.goto(orgPath);
   await page.getByRole("link", { name: "Local Puerto" }).click();
-  await openTab(page, /^Cartas/);
+  await page.getByRole("link", { name: "Gestionar cartas" }).click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta de verano");
   await page.getByLabel("Identificador de la carta (URL)").fill("verano");

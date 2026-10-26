@@ -2,7 +2,7 @@
 
 **Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-26 — estadísticas de visitas y carta para imprimir.
+**Última actualización:** 2026-10-26 — navegación por local (cartas, inventario y compras de cada local) y catálogo común.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -55,6 +55,7 @@
 - [x] Apartados en páginas largas (D-028): local (Resumen con accesos y próximos 7 días · Cartas · Horario · Datos del local), editor de carta (Contenido · Publicación y QR · Ajustes, con aviso de cambios sin publicar en los otros apartados), inventario (Stock · Movimientos · Recuentos · Ingredientes y almacenes) y web pública (Estilo · Contenido · Foto principal). Cada apartado tiene su URL (`?tab=`), funciona sin JavaScript y se puede enlazar.
 - [x] Estadísticas por local (migración 0016, D-029): visitas a la web, a las cartas y escaneos de QR por día en los últimos 7, 30 o 90 días, gráfico y tabla por días, visitas por carta y resumen de reservas del periodo (total, online, comensales, canceladas, no presentadas). Contadores diarios anónimos: sin cookies, IP ni datos del visitante; no cuentan robots, precargas ni visitas con sesión de Nébora. Permiso `stats.read` (propietario, administrador y encargado). Página `/app/<org>/establishments/<id>/stats`.
 - [x] Carta para imprimir: `/print/menu/<org>/<carta>` desde «Publicación y QR», versión publicada (por defecto) o borrador, con o sin descripciones, alérgenos y QR, a una o dos columnas; A4 con «Imprimir o guardar como PDF» del navegador, sin dependencias nuevas.
+- [x] Navegación por local (D-030): en la barra lateral, bloque del local con Resumen, Cartas, Reservas, Sala, Inventario, Compras, Web pública y Estadísticas, con selector si hay varios locales (recuerda el último visitado). Inventario (`/establishments/<id>/inventory`: stock, movimientos, recuentos y almacenes del local) y compras (`/establishments/<id>/purchasing`) filtrados en el servidor; los traspasos pueden ir a cualquier almacén del grupo. «Catálogo» común: Productos, Ingredientes (`/ingredients`) y Proveedores (`/suppliers`). Con varios locales, «Inventario del grupo» y «Compras del grupo»; con uno solo, esas vistas llevan al local.
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -66,9 +67,9 @@
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
 | `pnpm test` | PASÓ — 14 archivos, 60 pruebas |
-| `pnpm test:integration` | PASÓ — 19 archivos, 203 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:integration` | PASÓ — 20 archivos, 207 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 24 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 25 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 

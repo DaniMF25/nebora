@@ -15,7 +15,8 @@ import {
   updateIngredient,
 } from "@/server/modules/inventory/service";
 
-const path = (orgId: string) => `/app/${orgId}/inventory`;
+// Inventario del grupo y de cada local: se revalida toda la organización.
+const path = (orgId: string) => `/app/${orgId}`;
 
 export async function recordMovementAction(orgId: string, _p: FormState, fd: FormData): Promise<FormState> {
   const kind = formString(fd, "kind");

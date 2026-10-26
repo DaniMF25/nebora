@@ -79,7 +79,7 @@ export default async function MenuEditorPage({
   return (
     <>
       <p>
-        <Link href={`/app/${orgId}/establishments/${menu.establishmentId}`}>← {draft.establishmentName}</Link>
+        <Link href={`/app/${orgId}/establishments/${menu.establishmentId}/menus`}>← Cartas de {draft.establishmentName}</Link>
       </p>
       <h2>{menu.name}</h2>
       <p>

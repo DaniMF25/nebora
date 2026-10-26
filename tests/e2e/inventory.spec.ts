@@ -11,18 +11,23 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
   await expect(page.getByRole("link", { name: "Local Stock" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Inventario" }).click();
+  // Los ingredientes son un catálogo común; el stock va por local.
+  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
+  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
   await expect(page.getByText("Necesitas al menos un almacén y un ingrediente")).toBeVisible();
-  await openTab(page, "Ingredientes y almacenes");
-  await page.getByText("Nuevo almacén").click();
-  await page.getByLabel("Nombre del almacén").fill("Cámara");
-  await page.getByRole("button", { name: "Crear almacén" }).click();
-  await expect(page.getByText("Local Stock · Cámara")).toBeVisible();
+  await nav.getByRole("link", { name: "Ingredientes" }).click();
   await page.getByText("Nuevo ingrediente").click();
   await page.getByLabel("Nombre del ingrediente").fill("Harina");
   await page.getByLabel("Nivel mínimo en unidad base (opcional)").fill("1000");
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Harina" })).toBeVisible();
+  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Inventario" })).toBeVisible();
+  await openTab(page, "Almacenes");
+  await page.getByText("Nuevo almacén").click();
+  await page.getByLabel("Nombre del almacén").fill("Cámara");
+  await page.getByRole("button", { name: "Crear almacén" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: /^Cámara$/ })).toBeVisible();
 
   await openTab(page, "Stock");
   const movementForm = page.locator("section", { has: page.getByRole("heading", { name: "Registrar movimiento" }) });

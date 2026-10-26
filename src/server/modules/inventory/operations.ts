@@ -6,7 +6,7 @@ import { isUniqueViolation, type Tx } from "@/server/db/pool";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
-import { insertMovement } from "./service";
+import { establishmentFilter, insertMovement } from "./service";
 
 // Traspasos entre almacenes y recuentos físicos (migración 0014, D-025).
 
@@ -65,7 +65,9 @@ export const transferSchema = z
 export interface Transfer {
   id: string;
   fromWarehouseName: string;
+  fromEstablishmentName: string;
   toWarehouseName: string;
+  toEstablishmentName: string;
   ingredientName: string;
   baseUnit: BaseUnit;
   quantity: string;
@@ -153,21 +155,30 @@ export async function transferStock(
   return { transferId, replayed: false };
 }
 
-export async function listTransfers(tx: Tx, ctx: TenantContext, limit = 20): Promise<Transfer[]> {
+/** Traspasos recientes; con establecimiento, los que salen de él o llegan a él. */
+export async function listTransfers(
+  tx: Tx,
+  ctx: TenantContext,
+  limit = 20,
+  establishmentId?: string,
+): Promise<Transfer[]> {
   requirePermission(ctx, "inventory.read");
   const { rows } = await tx.query<Transfer>(
-    `SELECT t.id, f.name AS "fromWarehouseName", d.name AS "toWarehouseName", i.name AS "ingredientName",
+    `SELECT t.id, f.name AS "fromWarehouseName", fe.name AS "fromEstablishmentName",
+            d.name AS "toWarehouseName", de.name AS "toEstablishmentName", i.name AS "ingredientName",
             i.base_unit AS "baseUnit", t.quantity::text AS quantity, t.note, u.display_name AS "createdByName",
             t.created_at AS "createdAt"
        FROM stock_transfers t
        JOIN warehouses f ON f.organization_id = t.organization_id AND f.id = t.from_warehouse_id
        JOIN warehouses d ON d.organization_id = t.organization_id AND d.id = t.to_warehouse_id
+       JOIN establishments fe ON fe.organization_id = f.organization_id AND fe.id = f.establishment_id
+       JOIN establishments de ON de.organization_id = d.organization_id AND de.id = d.establishment_id
        JOIN ingredients i ON i.organization_id = t.organization_id AND i.id = t.ingredient_id
        LEFT JOIN users u ON u.id = t.created_by_user_id
-      WHERE t.organization_id = $1
+      WHERE t.organization_id = $1 AND ($3::uuid IS NULL OR f.establishment_id = $3 OR d.establishment_id = $3)
       ORDER BY t.created_at DESC, t.id
       LIMIT $2`,
-    [ctx.organizationId, Math.min(Math.max(limit, 1), 100)],
+    [ctx.organizationId, Math.min(Math.max(limit, 1), 100), establishmentFilter(establishmentId)],
   );
   return rows;
 }
@@ -182,6 +193,7 @@ export interface CountSummary {
   id: string;
   warehouseId: string;
   warehouseName: string;
+  establishmentId: string;
   establishmentName: string;
   status: CountStatus;
   note: string | null;
@@ -210,7 +222,8 @@ export interface CountDetail extends CountSummary {
 }
 
 const COUNT_SELECT = `
-  SELECT c.id, c.warehouse_id AS "warehouseId", w.name AS "warehouseName", e.name AS "establishmentName",
+  SELECT c.id, c.warehouse_id AS "warehouseId", w.name AS "warehouseName", e.id AS "establishmentId",
+         e.name AS "establishmentName",
          c.status, c.note, (SELECT count(*)::int FROM stock_count_lines l WHERE l.count_id = c.id) AS "lineCount",
          u.display_name AS "createdByName", c.created_at AS "createdAt", c.closed_at AS "closedAt"
     FROM stock_counts c
@@ -218,11 +231,17 @@ const COUNT_SELECT = `
     JOIN establishments e ON e.organization_id = w.organization_id AND e.id = w.establishment_id
     LEFT JOIN users u ON u.id = c.created_by_user_id`;
 
-export async function listCounts(tx: Tx, ctx: TenantContext, limit = 20): Promise<CountSummary[]> {
+export async function listCounts(
+  tx: Tx,
+  ctx: TenantContext,
+  limit = 20,
+  establishmentId?: string,
+): Promise<CountSummary[]> {
   requirePermission(ctx, "inventory.read");
   const { rows } = await tx.query<CountSummary>(
-    `${COUNT_SELECT} WHERE c.organization_id = $1 ORDER BY (c.status = 'open') DESC, c.created_at DESC LIMIT $2`,
-    [ctx.organizationId, Math.min(Math.max(limit, 1), 100)],
+    `${COUNT_SELECT} WHERE c.organization_id = $1 AND ($3::uuid IS NULL OR e.id = $3)
+      ORDER BY (c.status = 'open') DESC, c.created_at DESC LIMIT $2`,
+    [ctx.organizationId, Math.min(Math.max(limit, 1), 100), establishmentFilter(establishmentId)],
   );
   return rows;
 }

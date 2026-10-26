@@ -273,3 +273,14 @@ label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-weigh
   .print-screen { padding: 0; min-height: 0; }
   .print-toolbar { display: none; }
 }
+/* Selector de local en la barra lateral. */
+.side-local { margin: 0 0 0.35rem; }
+.side-local summary { display: grid; gap: 0.1rem; padding: 0.35rem 0.75rem; border-radius: 9px; cursor: pointer; list-style: none; position: relative; }
+.side-local summary::-webkit-details-marker { display: none; }
+.side-local summary::after { content: "▾"; position: absolute; right: 0.75rem; bottom: 0.4rem; color: var(--sidebar-muted); font-size: 0.8rem; }
+.side-local[open] summary::after { content: "▴"; }
+.side-local summary:hover { background: rgba(255, 255, 255, 0.05); }
+.side-local summary .side-group { margin: 0; padding: 0; }
+.side-local summary strong { color: #fff; font-size: 0.95rem; font-weight: 600; padding-right: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-local ul { margin: 0.25rem 0 0.5rem; padding: 0.25rem; background: rgba(255, 255, 255, 0.04); border-radius: 9px; }
+.side-local ul a { font-size: 0.88rem; padding: 0.4rem 0.65rem; }

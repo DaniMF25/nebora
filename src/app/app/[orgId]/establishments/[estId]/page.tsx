@@ -5,7 +5,6 @@ import { PageTabs, pickTab } from "@/components/panel/page-tabs";
 import { MAX_SLOTS_PER_DAY, slotFieldsFor, WEEKDAY_LABELS } from "@/lib/schedule-form";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
-import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
 import { getEstablishment } from "@/server/modules/establishments/service";
 import { hasUnpublishedChanges, listMenus } from "@/server/modules/menus/menus";
 import { getSchedule } from "@/server/modules/schedules/service";
@@ -19,7 +18,6 @@ import {
 } from "@/server/modules/schedules/time";
 import { withTenant } from "@/server/tenancy/context";
 import {
-  createMenuAction,
   deleteExceptionAction,
   saveExceptionAction,
   saveWeeklyHoursAction,
@@ -59,7 +57,7 @@ function describeSlots(slots: Slot[]): string {
   return slots.map((s) => `${formatMinutes(s.opensMinute)}–${slotClosingTime(s)}`).join(", ");
 }
 
-const TABS = ["resumen", "cartas", "horario", "datos"] as const;
+const TABS = ["resumen", "horario", "datos"] as const;
 
 export default async function EstablishmentPage({
   params,
@@ -90,7 +88,8 @@ export default async function EstablishmentPage({
               })),
             )
           : [],
-        canEditMenus: ctx.permissions.has("menus.edit"),
+        canInventory: ctx.permissions.has("inventory.read"),
+        canPurchasing: ctx.permissions.has("purchasing.read"),
       };
     });
   } catch (err) {
@@ -98,7 +97,7 @@ export default async function EstablishmentPage({
     throw err;
   }
 
-  const { establishment: est, schedule, today, canEdit, menus, canEditMenus } = data;
+  const { establishment: est, schedule, today, canEdit, menus, canInventory, canPurchasing } = data;
   const tz = est.timezone;
   const now = new Date();
   const openNow = isOpenAt(schedule, tz, now);
@@ -116,7 +115,6 @@ export default async function EstablishmentPage({
   const base = `/app/${orgId}/establishments/${est.id}`;
   const tabs = [
     { id: "resumen", label: "Resumen" },
-    { id: "cartas", label: `Cartas (${menus.length})` },
     { id: "horario", label: "Horario" },
     ...(canEdit ? [{ id: "datos", label: "Datos del local" }] : []),
   ];
@@ -159,7 +157,7 @@ export default async function EstablishmentPage({
                 </Link>
               </li>
               <li>
-                <Link href={`${base}?tab=cartas`} aria-label="Gestionar cartas">
+                <Link href={`${base}/menus`} aria-label="Gestionar cartas">
                   <strong>Cartas</strong>
                   <span>
                     {menus.length === 0
@@ -169,6 +167,22 @@ export default async function EstablishmentPage({
                   </span>
                 </Link>
               </li>
+              {canInventory && (
+                <li>
+                  <Link href={`${base}/inventory`} aria-label="Inventario del local">
+                    <strong>Inventario</strong>
+                    <span>Stock, movimientos y recuentos de sus almacenes</span>
+                  </Link>
+                </li>
+              )}
+              {canPurchasing && (
+                <li>
+                  <Link href={`${base}/purchasing`} aria-label="Compras del local">
+                    <strong>Compras</strong>
+                    <span>Pedidos a proveedores y recepciones</span>
+                  </Link>
+                </li>
+              )}
             </ul>
           </section>
           <section>
@@ -186,54 +200,6 @@ export default async function EstablishmentPage({
             )}
           </section>
         </>
-      )}
-
-      {tab === "cartas" && (
-        <section>
-          <h3>Cartas</h3>
-          {menus.length === 0 ? (
-            <p className="muted">Este establecimiento aún no tiene cartas.</p>
-          ) : (
-            <ul className="cards">
-              {menus.map((m) => (
-                <li key={m.id}>
-                  <Link href={`/app/${orgId}/menus/${m.id}`}>
-                    <strong>{m.name}</strong>
-                  </Link>{" "}
-                  <span className="muted">
-                    · {m.publishedVersionNumber ? `publicada (v${m.publishedVersionNumber})` : "sin publicar"}
-                    {m.outdated && " · cambios sin publicar"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {canEditMenus && (
-            <details>
-              <summary>Nueva carta</summary>
-              <ActionForm action={createMenuAction.bind(null, orgId, est.id)} submitLabel="Crear carta">
-                <label>
-                  Nombre de la carta
-                  <input name="name" required maxLength={120} placeholder="Carta principal" />
-                </label>
-                <label>
-                  Identificador de la carta (URL)
-                  <input name="slug" required placeholder="carta" />
-                </label>
-                <label>
-                  Tema
-                  <select name="theme" defaultValue="moderno">
-                    {MENU_THEMES.map((t) => (
-                      <option key={t} value={t}>
-                        {MENU_THEME_LABELS[t]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </ActionForm>
-            </details>
-          )}
-        </section>
       )}
 
       {tab === "horario" && (

@@ -39,6 +39,7 @@ export interface Warehouse {
 export interface StockLine {
   warehouseId: string;
   warehouseName: string;
+  establishmentName: string;
   ingredientId: string;
   ingredientName: string;
   baseUnit: BaseUnit;
@@ -54,6 +55,7 @@ export interface Movement {
   id: string;
   warehouseId: string;
   warehouseName: string;
+  establishmentName: string;
   ingredientId: string;
   ingredientName: string;
   baseUnit: BaseUnit;
@@ -196,13 +198,23 @@ export async function updateIngredient(tx: Tx, ctx: TenantContext, id: string, i
   await recordAudit(tx, ctx, { action: "ingredient.updated", entityType: "ingredient", entityId: id, metadata: { fields: cols } });
 }
 
-export async function listWarehouses(tx: Tx, ctx: TenantContext): Promise<Warehouse[]> {
+/**
+ * Filtro opcional por establecimiento de los listados de inventario y compras.
+ * Sin él se listan todos los locales visibles para el usuario.
+ */
+export function establishmentFilter(establishmentId: string | undefined): string | null {
+  if (establishmentId === undefined) return null;
+  if (!isUuid(establishmentId)) throw new NotFoundError();
+  return establishmentId;
+}
+
+export async function listWarehouses(tx: Tx, ctx: TenantContext, establishmentId?: string): Promise<Warehouse[]> {
   requirePermission(ctx, "inventory.read");
   const { rows } = await tx.query<Warehouse>(
     `SELECT w.id, w.establishment_id AS "establishmentId", e.name AS "establishmentName", w.name
        FROM warehouses w JOIN establishments e ON e.organization_id = w.organization_id AND e.id = w.establishment_id
-      WHERE w.organization_id = $1 ORDER BY e.name, w.name`,
-    [ctx.organizationId],
+      WHERE w.organization_id = $1 AND ($2::uuid IS NULL OR w.establishment_id = $2) ORDER BY e.name, w.name`,
+    [ctx.organizationId, establishmentFilter(establishmentId)],
   );
   return rows;
 }
@@ -240,25 +252,28 @@ export async function createWarehouse(
 // Stock y movimientos
 // ---------------------------------------------------------------------------
 
-export async function listStock(tx: Tx, ctx: TenantContext): Promise<StockLine[]> {
+export async function listStock(tx: Tx, ctx: TenantContext, establishmentId?: string): Promise<StockLine[]> {
   requirePermission(ctx, "inventory.read");
   const { rows } = await tx.query<StockLine>(
-    `SELECT l.warehouse_id AS "warehouseId", w.name AS "warehouseName", l.ingredient_id AS "ingredientId",
+    `SELECT l.warehouse_id AS "warehouseId", w.name AS "warehouseName", e.name AS "establishmentName",
+            l.ingredient_id AS "ingredientId",
             i.name AS "ingredientName", i.base_unit AS "baseUnit", l.quantity::text AS quantity,
             i.reorder_level::text AS "reorderLevel",
             (i.reorder_level IS NOT NULL AND l.quantity < i.reorder_level) AS "belowReorder"
        FROM stock_levels l
        JOIN warehouses w ON w.organization_id = l.organization_id AND w.id = l.warehouse_id
+       JOIN establishments e ON e.organization_id = w.organization_id AND e.id = w.establishment_id
        JOIN ingredients i ON i.organization_id = l.organization_id AND i.id = l.ingredient_id
-      WHERE l.organization_id = $1
-      ORDER BY w.name, i.name`,
-    [ctx.organizationId],
+      WHERE l.organization_id = $1 AND ($2::uuid IS NULL OR w.establishment_id = $2)
+      ORDER BY e.name, w.name, i.name`,
+    [ctx.organizationId, establishmentFilter(establishmentId)],
   );
   return rows;
 }
 
 const MOVEMENT_SELECT = `
-  SELECT m.id, m.warehouse_id AS "warehouseId", w.name AS "warehouseName", m.ingredient_id AS "ingredientId",
+  SELECT m.id, m.warehouse_id AS "warehouseId", w.name AS "warehouseName", e.name AS "establishmentName",
+         m.ingredient_id AS "ingredientId",
          i.name AS "ingredientName", i.base_unit AS "baseUnit", m.kind, m.quantity_delta::text AS "quantityDelta",
          m.note, m.corrects_movement_id AS "correctsMovementId",
          (SELECT c.id FROM stock_movements c WHERE c.organization_id = m.organization_id AND c.corrects_movement_id = m.id)
@@ -266,14 +281,21 @@ const MOVEMENT_SELECT = `
          u.display_name AS "createdByName", m.created_at AS "createdAt"
     FROM stock_movements m
     JOIN warehouses w ON w.organization_id = m.organization_id AND w.id = m.warehouse_id
+    JOIN establishments e ON e.organization_id = w.organization_id AND e.id = w.establishment_id
     JOIN ingredients i ON i.organization_id = m.organization_id AND i.id = m.ingredient_id
     LEFT JOIN users u ON u.id = m.created_by_user_id`;
 
-export async function listMovements(tx: Tx, ctx: TenantContext, limit = 50): Promise<Movement[]> {
+export async function listMovements(
+  tx: Tx,
+  ctx: TenantContext,
+  limit = 50,
+  establishmentId?: string,
+): Promise<Movement[]> {
   requirePermission(ctx, "inventory.read");
   const { rows } = await tx.query<Movement>(
-    `${MOVEMENT_SELECT} WHERE m.organization_id = $1 ORDER BY m.created_at DESC, m.id LIMIT $2`,
-    [ctx.organizationId, Math.min(Math.max(limit, 1), 200)],
+    `${MOVEMENT_SELECT} WHERE m.organization_id = $1 AND ($3::uuid IS NULL OR w.establishment_id = $3)
+      ORDER BY m.created_at DESC, m.id LIMIT $2`,
+    [ctx.organizationId, Math.min(Math.max(limit, 1), 200), establishmentFilter(establishmentId)],
   );
   return rows;
 }

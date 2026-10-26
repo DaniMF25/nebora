@@ -71,7 +71,9 @@ export default async function OrderPage({ params }: { params: Promise<{ orgId: s
   return (
     <>
       <p>
-        <Link href={`/app/${orgId}/purchasing`}>← Compras</Link>
+        <Link href={`/app/${orgId}/establishments/${order.establishmentId}/purchasing`}>
+          ← Compras de {order.establishmentName}
+        </Link>
       </p>
       <h2>
         Pedido {order.number} · {order.supplierName}

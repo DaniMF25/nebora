@@ -1,8 +1,9 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PanelIcon } from "@/components/panel/icons";
 import { PanelShell } from "@/components/panel/shell";
-import { SidebarNav, type NavGroup } from "@/components/panel/sidebar-nav";
+import { SidebarNav, type LocalNav, type NavGroup } from "@/components/panel/sidebar-nav";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
 import { listEstablishments } from "@/server/modules/establishments/service";
@@ -36,8 +37,13 @@ export default async function OrganizationLayout({
       org: await getOrganization(tx, ctx),
       role: ctx.role,
       establishments: await listEstablishments(tx, ctx),
-      canPrivacy: ctx.permissions.has("privacy.manage"),
-      canStats: ctx.permissions.has("stats.read"),
+      can: {
+        privacy: ctx.permissions.has("privacy.manage"),
+        stats: ctx.permissions.has("stats.read"),
+        menus: ctx.permissions.has("menus.read"),
+        inventory: ctx.permissions.has("inventory.read"),
+        purchasing: ctx.permissions.has("purchasing.read"),
+      },
       // Solo organizaciones en las que el usuario es miembro activo.
       hasOthers: (await listMyOrganizations(tx, ctx)).some((o) => o.id !== orgId),
     }));
@@ -45,40 +51,59 @@ export default async function OrganizationLayout({
     if (err instanceof NotFoundError) notFound();
     throw err;
   }
-  const { org, role, establishments, canPrivacy, canStats, hasOthers } = data;
+  const { org, role, establishments, can, hasOthers } = data;
   const base = `/app/${orgId}`;
 
+  // Catálogo común (productos, ingredientes, proveedores), operativa de cada
+  // local (selector si hay varios) y, con varios locales, vistas del grupo.
   const groups: NavGroup[] = [
     { title: "", items: [{ href: base, label: "Inicio", icon: "home", exact: true }] },
     {
-      title: "Gestión",
+      title: "Catálogo",
       items: [
         { href: `${base}/products`, label: "Productos", icon: "products" },
-        { href: `${base}/inventory`, label: "Inventario", icon: "inventory" },
-        { href: `${base}/purchasing`, label: "Compras", icon: "purchasing" },
+        ...(can.inventory ? [{ href: `${base}/ingredients`, label: "Ingredientes", icon: "inventory" as const }] : []),
+        ...(can.purchasing ? [{ href: `${base}/suppliers`, label: "Proveedores", icon: "team" as const }] : []),
       ],
     },
-    ...establishments.map((e) => {
-      const est = `${base}/establishments/${e.id}`;
-      return {
-        title: e.name,
-        items: [
-          { href: est, label: "Resumen", icon: "store" as const, exact: true },
-          { href: `${est}/reservations`, label: "Reservas", icon: "calendar" as const },
-          { href: `${est}/floor`, label: "Sala", icon: "floor" as const },
-          { href: `${est}/site`, label: "Web pública", icon: "globe" as const },
-          ...(canStats ? [{ href: `${est}/stats`, label: "Estadísticas", icon: "summary" as const }] : []),
-        ],
-      };
-    }),
+    ...(establishments.length > 1 && (can.inventory || can.purchasing)
+      ? [
+          {
+            title: "Todo el grupo",
+            items: [
+              ...(can.inventory ? [{ href: `${base}/inventory`, label: "Inventario del grupo", icon: "inventory" as const }] : []),
+              ...(can.purchasing ? [{ href: `${base}/purchasing`, label: "Compras del grupo", icon: "purchasing" as const }] : []),
+            ],
+          },
+        ]
+      : []),
     {
       title: "Organización",
       items: [
         { href: `${base}/members`, label: "Miembros", icon: "team" },
-        ...(canPrivacy ? [{ href: `${base}/privacy`, label: "Privacidad", icon: "shield" as const }] : []),
+        ...(can.privacy ? [{ href: `${base}/privacy`, label: "Privacidad", icon: "shield" as const }] : []),
       ],
     },
   ];
+  const lastLocal = (await cookies()).get("nebora_last_est")?.value ?? null;
+  const local: LocalNav | null =
+    establishments.length === 0
+      ? null
+      : {
+          base,
+          establishments: establishments.map((e) => ({ id: e.id, name: e.name })),
+          initialId: establishments.some((e) => e.id === lastLocal) ? lastLocal : null,
+          items: [
+            { path: "", label: "Resumen", icon: "store", exact: true },
+            ...(can.menus ? [{ path: "/menus", label: "Cartas", icon: "products" as const }] : []),
+            { path: "/reservations", label: "Reservas", icon: "calendar" },
+            { path: "/floor", label: "Sala", icon: "floor" },
+            ...(can.inventory ? [{ path: "/inventory", label: "Inventario", icon: "inventory" as const }] : []),
+            ...(can.purchasing ? [{ path: "/purchasing", label: "Compras", icon: "purchasing" as const }] : []),
+            { path: "/site", label: "Web pública", icon: "globe" },
+            ...(can.stats ? [{ path: "/stats", label: "Estadísticas", icon: "summary" as const }] : []),
+          ],
+        };
 
   const brand = (
     <Link href={base} className="brand-link">
@@ -97,7 +122,7 @@ export default async function OrganizationLayout({
       brand={brand}
       sidebar={
         <>
-          <SidebarNav label="Secciones de la organización" groups={groups} />
+          <SidebarNav label="Secciones de la organización" groups={groups} local={local} localAfter={1} />
           <div className="side-footer">
             {hasOthers && (
               <Link href="/app" className="side-switch">

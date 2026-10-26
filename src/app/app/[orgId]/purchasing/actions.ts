@@ -9,11 +9,13 @@ import { createOrder, createSupplier, setSupplierActive } from "@/server/modules
 import { withTenant } from "@/server/tenancy/context";
 
 const path = (orgId: string) => `/app/${orgId}/purchasing`;
+// Proveedores (catálogo) y listados de compras del grupo y de cada local: se revalida toda la organización.
+const revalidateAll = (orgId: string) => `/app/${orgId}`;
 
 export async function createSupplierAction(orgId: string, _p: FormState, fd: FormData): Promise<FormState> {
   return runTenantAction(
     orgId,
-    path(orgId),
+    revalidateAll(orgId),
     (tx, ctx) =>
       createSupplier(tx, ctx, {
         name: formString(fd, "name"),
@@ -33,7 +35,7 @@ export async function setSupplierActiveAction(
   _p: FormState,
   _fd: FormData,
 ): Promise<FormState> {
-  return runTenantAction(orgId, path(orgId), (tx, ctx) => setSupplierActive(tx, ctx, supplierId, active));
+  return runTenantAction(orgId, revalidateAll(orgId), (tx, ctx) => setSupplierActive(tx, ctx, supplierId, active));
 }
 
 export async function createOrderAction(orgId: string, _p: FormState, fd: FormData): Promise<FormState> {

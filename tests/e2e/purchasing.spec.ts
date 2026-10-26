@@ -10,24 +10,30 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
   await expect(page.getByRole("link", { name: "Local Compras" })).toBeVisible();
 
-  await page.goto(`${orgPath}/inventory?tab=articulos`);
+  // Con un solo local, el inventario del grupo lleva al del local.
+  await page.goto(`${orgPath}/inventory?tab=almacenes`);
+  await expect(page).toHaveURL(/establishments\/[0-9a-f-]+\/inventory\?tab=almacenes$/);
   await page.getByText("Nuevo almacén").click();
   await page.getByLabel("Nombre del almacén").fill("Despensa");
   await page.getByRole("button", { name: "Crear almacén" }).click();
-  await expect(page.getByText("Local Compras · Despensa")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: /^Despensa$/ })).toBeVisible();
+  await page.goto(`${orgPath}/ingredients`);
   await page.getByText("Nuevo ingrediente").click();
   await page.getByLabel("Nombre del ingrediente").fill("Arroz");
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Arroz" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Compras", exact: true }).click();
+  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
+  await nav.getByRole("link", { name: "Compras", exact: true }).click();
   await expect(page.getByText("necesitas un proveedor activo")).toBeVisible();
+  await page.getByRole("link", { name: "Crear un proveedor" }).click();
   await page.getByText("Nuevo proveedor").click();
   await page.getByLabel("Nombre del proveedor").fill("Distribuciones Levante");
   await page.getByLabel("Correo (opcional)").fill("pedidos@levante.example");
   await page.getByRole("button", { name: "Crear proveedor" }).click();
   await expect(page.getByRole("button", { name: "Archivar Distribuciones Levante" })).toBeVisible();
 
+  await nav.getByRole("link", { name: "Compras", exact: true }).click();
   await page.getByText("Nuevo pedido").click();
   await page.getByRole("button", { name: "Crear pedido" }).click();
   await expect(page.getByRole("heading", { name: "Pedido 1 · Distribuciones Levante" })).toBeVisible();
@@ -66,7 +72,7 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await page.goto(`${orgPath}/inventory`);
   const stock = page.locator("section", { has: page.getByRole("heading", { name: "Stock" }) });
   await expect(stock.getByRole("row", { name: /Arroz/ })).toContainText("25 kg");
-  await page.goto(`${orgPath}/inventory?tab=articulos`);
+  await page.goto(`${orgPath}/ingredients`);
   await expect(page.getByText("coste 2,15 € /kg")).toBeVisible();
   await page.goto(`${orgPath}/inventory?tab=movimientos`);
   await expect(page.getByRole("row", { name: /Recepción del pedido 1/ }).first()).toBeVisible();

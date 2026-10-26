@@ -46,7 +46,9 @@ export default async function CountPage({ params }: { params: Promise<{ orgId: s
   return (
     <>
       <p>
-        <Link href={`/app/${orgId}/inventory?tab=recuentos`}>← Inventario</Link>
+        <Link href={`/app/${orgId}/establishments/${count.establishmentId}/inventory?tab=recuentos`}>
+          ← Inventario de {count.establishmentName}
+        </Link>
       </p>
       <h2>
         Recuento de {count.establishmentName} · {count.warehouseName}

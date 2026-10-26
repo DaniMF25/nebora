@@ -177,5 +177,5 @@ export async function deleteMenuAction(
     deleteMenu(tx, ctx, menuId),
   );
   if (!state.ok) return state;
-  redirect(`/app/${orgId}/establishments/${establishmentId}`);
+  redirect(`/app/${orgId}/establishments/${establishmentId}/menus`);
 }

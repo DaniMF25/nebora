@@ -29,6 +29,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Edición de los datos del establecimiento desde la interfaz.
 - [x] Dashboard con datos reales y estados vacíos (D-024).
 - [x] Páginas largas organizadas en apartados con enlace propio: local, editor de carta, inventario y web pública (D-028).
+- [x] Navegación por local: cartas, inventario y compras dentro de cada local, selector de local; catálogo común (productos, ingredientes, proveedores) y vistas del grupo (D-030).
 
 ## Fase 3 — Cartas digitales
 - [x] Categorías y productos (catálogo por organización, categorías por carta, precio específico por carta).

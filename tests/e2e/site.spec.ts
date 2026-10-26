@@ -47,7 +47,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByRole("link", { name: "Altamar" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
-  await openTab(page, /^Cartas/);
+  await page.getByRole("link", { name: "Gestionar cartas" }).click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");

@@ -188,7 +188,7 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         {canEdit &&
           (ingredients.length === 0 ? (
             <p className="muted">
-              No hay ingredientes. <Link href={`/app/${orgId}/inventory`}>Créalos en Inventario</Link>.
+              No hay ingredientes. <Link href={`/app/${orgId}/ingredients`}>Créalos en el catálogo de ingredientes</Link>.
             </p>
           ) : (
             <ActionForm action={setRecipeLineAction.bind(null, orgId, productId)} submitLabel="Añadir o actualizar">

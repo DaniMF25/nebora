@@ -326,3 +326,17 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - «Ventas» del plan de la competencia queda fuera: no hay TPV ni cobros en esta versión.
 
 **Alternativas descartadas:** analítica de terceros (envía datos de los visitantes fuera y exige consentimiento); visitantes únicos con huella de IP (dato personal seudonimizado, con conservación y consentimiento); limitar por IP (mismo problema). Consecuencia: recuentos orientativos que se pueden inflar.
+
+## D-030 — Operativa por local y catálogo común
+**Fecha:** 2026-10-26. **Estado:** aceptada.
+
+**Contexto:** con varios locales, inventario y compras mezclaban todos los almacenes en una página, aunque los datos ya iban por local (almacén → local, pedido → almacén, carta → local).
+
+**Decisión:**
+- Lo diario va dentro de cada local: cartas, inventario (stock, movimientos, recuentos, almacenes) y compras. Los listados se filtran en el servidor por establecimiento (`listStock`, `listMovements`, `listTransfers`, `listCounts`, `listWarehouses`, `listOrders`); un traspaso aparece en los dos locales que toca.
+- Productos (con recetas y escandallos), ingredientes y proveedores siguen siendo comunes a la organización: evitan duplicar datos, mantienen el coste coherente y permiten traspasos entre locales. Qué platos ofrece cada local lo deciden sus cartas.
+- Vistas del grupo («Inventario del grupo», «Compras del grupo») solo con más de un local; con uno, redirigen al local.
+- La barra lateral muestra un local a la vez con selector; el último visitado se recuerda en una cookie de navegación (no da acceso a nada: cada página comprueba permisos en el servidor).
+- Las acciones de inventario y compras revalidan toda la organización (`revalidatePath(..., "layout")`) para refrescar a la vez la vista del local y la del grupo.
+
+**Pendiente (D-031):** restringir miembros a locales concretos, aplicado en el servidor y en RLS.

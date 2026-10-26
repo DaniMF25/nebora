@@ -9,23 +9,25 @@ test("traspaso entre almacenes y recuento físico con ajuste de diferencias", as
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
   await expect(page.getByRole("link", { name: "Local Recuento" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Inventario" }).click();
-  await openTab(page, "Ingredientes y almacenes");
-  for (const name of ["Central", "Barra"]) {
-    await page.getByText("Nuevo almacén").click();
-    await page.getByLabel("Nombre del almacén").fill(name);
-    await page.getByRole("button", { name: "Crear almacén" }).click();
-    await expect(page.getByRole("listitem").filter({ hasText: `Local Recuento · ${name}` })).toBeVisible();
-    await page.reload();
-  }
+  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
+  await nav.getByRole("link", { name: "Ingredientes" }).click();
   await page.getByText("Nuevo ingrediente").click();
   await page.getByLabel("Nombre del ingrediente").fill("Harina");
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Harina" })).toBeVisible();
+  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await openTab(page, "Almacenes");
+  for (const name of ["Central", "Barra"]) {
+    await page.getByText("Nuevo almacén").click();
+    await page.getByLabel("Nombre del almacén").fill(name);
+    await page.getByRole("button", { name: "Crear almacén" }).click();
+    await expect(page.getByRole("listitem").filter({ hasText: new RegExp(`^${name}$`) })).toBeVisible();
+    await page.reload();
+  }
 
   await openTab(page, "Stock");
   const movementForm = page.locator("section", { has: page.getByRole("heading", { name: "Registrar movimiento" }) });
-  await movementForm.getByLabel("Almacén").selectOption({ label: "Local Recuento · Central" });
+  await movementForm.getByLabel("Almacén").selectOption({ label: "Central" });
   await movementForm.getByLabel("Cantidad").fill("10");
   await movementForm.getByRole("button", { name: "Registrar movimiento" }).click();
   await expect(movementForm.getByText("Movimiento registrado")).toBeVisible();
@@ -54,7 +56,7 @@ test("traspaso entre almacenes y recuento físico con ajuste de diferencias", as
   // Recuento de la central: hay 6 kg en sistema, se cuentan 5,5 kg.
   await openTab(page, "Recuentos");
   const countForm = page.locator("section", { has: page.getByRole("heading", { name: "Recuentos físicos" }) });
-  await countForm.getByLabel("Almacén a contar").selectOption({ label: "Local Recuento · Central" });
+  await countForm.getByLabel("Almacén a contar").selectOption({ label: "Central" });
   await countForm.getByRole("button", { name: "Empezar recuento" }).click();
   await page.waitForURL(/inventory\/counts\/[0-9a-f-]+$/);
   await expect(page.getByText(/^Abierto/)).toBeVisible();
@@ -69,7 +71,7 @@ test("traspaso entre almacenes y recuento físico con ajuste de diferencias", as
   await expect(result).toContainText("6 kg");
   await expect(result).toContainText("−500 g");
 
-  await page.getByRole("link", { name: "← Inventario" }).click();
+  await page.getByRole("link", { name: "← Inventario de Local Recuento" }).click();
   await expect(page.getByRole("link", { name: /Recuento de Local Recuento/ })).toBeVisible();
   await openTab(page, "Stock");
   await expect(stock.getByRole("row", { name: /Central.*Harina/ })).toContainText("5,5 kg");
