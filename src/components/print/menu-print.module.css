@@ -1,0 +1,157 @@
+/* Carta para imprimir: A4, tinta negra, sin fondos (ahorra tóner). */
+.page {
+  max-width: 210mm;
+  margin: 0 auto 2rem;
+  padding: 16mm 14mm;
+  background: #fff;
+  color: #111;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 9mm;
+}
+
+.establishment {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.menuName {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.rule {
+  width: 3.5rem;
+  margin: 1rem auto 0;
+  border: 0;
+  border-top: 1px solid #999;
+}
+
+.sections {
+  display: grid;
+  gap: 7mm 12mm;
+}
+
+.twoColumns {
+  display: block;
+  columns: 2;
+  column-gap: 12mm;
+}
+
+/* Sin el margen global de <section>: las columnas empiezan a la misma altura. */
+.section {
+  margin: 0;
+}
+
+.twoColumns .section {
+  break-inside: avoid-column;
+  margin-bottom: 7mm;
+}
+
+.section h2 {
+  margin: 0 0 3mm;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  break-after: avoid;
+}
+
+.items {
+  display: grid;
+  gap: 2.6mm;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  break-inside: avoid;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.98rem;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.leader {
+  flex: 1;
+  border-bottom: 1px dotted #888;
+  transform: translateY(-0.25em);
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.description {
+  margin: 0.1rem 0 0;
+  font-size: 0.84rem;
+  color: #444;
+}
+
+.allergens {
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: #555;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8mm;
+  margin-top: 10mm;
+  padding-top: 5mm;
+  border-top: 1px solid #ccc;
+  font-size: 0.75rem;
+  color: #444;
+  break-inside: avoid;
+}
+
+.footer p {
+  margin: 0;
+  max-width: 34rem;
+}
+
+.qr {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  text-align: right;
+}
+
+.qr img {
+  width: 24mm;
+  height: 24mm;
+}
+
+@media print {
+  .page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}

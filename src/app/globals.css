@@ -243,3 +243,33 @@ main.auth button[type="submit"] { width: 100%; }
 .quick-links strong { font-size: 1rem; }
 .quick-links span { color: var(--muted); font-size: 0.88rem; }
 .status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0 0 0.5rem; }
+/* Estadísticas: periodo, gráfico de barras y filas con cabecera. */
+.segmented { display: inline-flex; gap: 0.25rem; padding: 0.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; }
+.segmented a { padding: 0.35rem 0.85rem; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+.segmented a[aria-current="page"] { background: var(--accent); color: #fff; }
+.views-chart { display: block; width: 100%; height: auto; margin: 0.25rem 0 0.75rem; }
+.views-chart .grid { stroke: var(--border); stroke-width: 1; }
+.views-chart .axis { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.views-chart .bar { fill: var(--accent); }
+.views-chart .hit { fill: transparent; }
+.views-chart g:hover .bar { opacity: 0.8; }
+tbody th { text-transform: none; letter-spacing: 0; font-size: inherit; font-weight: 500; color: var(--fg); border-bottom: 1px solid var(--border); }
+tbody th .badge { margin-left: 0.5rem; }
+td { font-variant-numeric: tabular-nums; }
+.fine-print { font-size: 0.82rem; margin-top: 0.75rem; }
+/* Carta para imprimir: barra de opciones en pantalla, oculta al imprimir. */
+label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 400; }
+.print-screen { min-height: 100vh; padding: 1.25rem 1rem 2rem; background: var(--bg); }
+.print-toolbar { max-width: 210mm; margin: 0 auto 1.25rem; display: grid; gap: 0.75rem; }
+.print-toolbar > p { margin: 0; }
+.print-options { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem 1.75rem; padding: 1rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.print-options fieldset { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+.print-options legend { font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; }
+.print-options fieldset p { margin: 0; }
+.print-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: auto; }
+@media print {
+  @page { size: A4; margin: 14mm; }
+  html, body, .print-screen { background: #fff; }
+  .print-screen { padding: 0; min-height: 0; }
+  .print-toolbar { display: none; }
+}

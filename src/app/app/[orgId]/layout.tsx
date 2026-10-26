@@ -37,6 +37,7 @@ export default async function OrganizationLayout({
       role: ctx.role,
       establishments: await listEstablishments(tx, ctx),
       canPrivacy: ctx.permissions.has("privacy.manage"),
+      canStats: ctx.permissions.has("stats.read"),
       // Solo organizaciones en las que el usuario es miembro activo.
       hasOthers: (await listMyOrganizations(tx, ctx)).some((o) => o.id !== orgId),
     }));
@@ -44,7 +45,7 @@ export default async function OrganizationLayout({
     if (err instanceof NotFoundError) notFound();
     throw err;
   }
-  const { org, role, establishments, canPrivacy, hasOthers } = data;
+  const { org, role, establishments, canPrivacy, canStats, hasOthers } = data;
   const base = `/app/${orgId}`;
 
   const groups: NavGroup[] = [
@@ -66,6 +67,7 @@ export default async function OrganizationLayout({
           { href: `${est}/reservations`, label: "Reservas", icon: "calendar" as const },
           { href: `${est}/floor`, label: "Sala", icon: "floor" as const },
           { href: `${est}/site`, label: "Web pública", icon: "globe" as const },
+          ...(canStats ? [{ href: `${est}/stats`, label: "Estadísticas", icon: "summary" as const }] : []),
         ],
       };
     }),

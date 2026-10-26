@@ -11,6 +11,7 @@ import {
   deleteSection,
   getMenuDraft,
   getPublishedMenu,
+  getPublishedSnapshot,
   hasUnpublishedChanges,
   listMenus,
   listVersions,
@@ -428,6 +429,26 @@ describe("aviso de cambios sin publicar", () => {
     const other = await setupRestaurant("outdated-other");
     await expect(
       withTenant(other.owner, other.org, (tx, ctx) => hasUnpublishedChanges(tx, ctx, m.menu.id)),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("carta para imprimir: versión publicada", () => {
+  it("devuelve la versión publicada (no el borrador) y solo a la propia organización", async () => {
+    const a = await setupRestaurant("print-a");
+    const b = await setupRestaurant("print-b");
+    const { menu } = await buildMenu(a);
+    const read = (f: Fixture) => withTenant(f.owner, f.org, (tx, ctx) => getPublishedSnapshot(tx, ctx, menu.id));
+    expect(await read(a)).toBeNull();
+    await withTenant(a.owner, a.org, (tx, ctx) => publishMenu(tx, ctx, menu.id));
+    await withTenant(a.owner, a.org, (tx, ctx) => updateMenu(tx, ctx, menu.id, { name: "Nombre en borrador" }));
+    const published = await read(a);
+    expect(published).toMatchObject({ versionNumber: 1, snapshot: { menuName: "Carta principal" } });
+    expect(published!.snapshot.sections.map((s) => s.name)).toEqual(["Entrantes", "Postres"]);
+    await expect(withTenant(a.owner, b.org, (tx, ctx) => getPublishedSnapshot(tx, ctx, menu.id))).rejects.toThrow();
+    await expect(read(b)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(
+      withTenant(a.owner, a.org, (tx, ctx) => getPublishedSnapshot(tx, ctx, "no-es-uuid")),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

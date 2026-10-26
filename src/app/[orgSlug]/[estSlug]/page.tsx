@@ -6,6 +6,8 @@ import { SiteHome } from "@/components/site/site-home";
 import { publicMediaUrl } from "@/lib/site";
 import { getPublishedMenu } from "@/server/modules/menus/menus";
 import { getPublicSite } from "@/server/modules/site/service";
+import { recordSiteView } from "@/server/modules/stats/service";
+import { trackView } from "@/server/modules/stats/track";
 
 type Params = Promise<{ orgSlug: string; estSlug: string }>;
 
@@ -31,6 +33,7 @@ export default async function PublicSitePage({ params }: { params: Params }) {
   const { orgSlug, estSlug } = await params;
   const data = await load(orgSlug, estSlug);
   if (!data) notFound();
+  await trackView(() => recordSiteView(orgSlug, estSlug));
   const { site, menu } = data;
   const chrome = siteChrome(site, orgSlug, estSlug);
   // featuredMenuSlug solo existe si la carta está publicada; `menu` lo confirma.

@@ -32,6 +32,8 @@ export const PERMISSIONS = [
   "reservations.manage",
   // Datos personales de clientes (retención, exportación y borrado): solo owner/admin.
   "privacy.manage",
+  // Visitas a la web, cartas y QR, y resumen de reservas.
+  "stats.read",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -57,6 +59,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "tables.manage",
     "reservations.read",
     "reservations.manage",
+    "stats.read",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.

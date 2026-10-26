@@ -312,3 +312,17 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - «Datos del local» solo aparece para quien puede editar; la autorización sigue en las acciones del servidor.
 
 **Alternativas descartadas:** pestañas en el cliente (perderían el apartado al recargar tras guardar y no serían enlazables); dividir en rutas separadas (más archivos y navegación duplicada sin ventaja).
+
+## D-029 — Estadísticas de visitas sin datos personales
+**Fecha:** 2026-10-26. **Estado:** aceptada.
+
+**Contexto:** el plan Pro de la competencia ofrece estadísticas de visitas. Queremos medir visitas a la web, a las cartas y escaneos de QR sin cookies ni datos personales (sin banner de consentimiento ni plazos de conservación).
+
+**Decisión:**
+- Tabla `page_view_daily` con un contador por local, carta, tipo (`site`, `menu`, `qr`) y día local. No se guarda nada del visitante. La aplicación solo tiene SELECT (con RLS); se escribe únicamente mediante funciones `SECURITY DEFINER` (`app.record_site_view`, `app.record_menu_view`, `app.record_qr_scan`) que resuelven el destino por identificadores públicos y solo cuentan contenido publicado.
+- El registro se hace con `after()` tras enviar la respuesta y no puede romper la página pública. No cuentan: precargas (`next-router-prefetch`, `purpose`/`sec-purpose`), agentes de robots y herramientas, peticiones sin User-Agent ni las que llevan la cookie de sesión de Nébora (el propio restaurante).
+- Un escaneo de QR cuenta como escaneo y como visita a la carta (el QR redirige a ella): el gráfico muestra web + cartas y el QR aparte, sin sumarlo dos veces.
+- Permiso nuevo `stats.read` para propietario, administrador y encargado; el resumen de reservas solo aparece con `reservations.read`.
+- «Ventas» del plan de la competencia queda fuera: no hay TPV ni cobros en esta versión.
+
+**Alternativas descartadas:** analítica de terceros (envía datos de los visitantes fuera y exige consentimiento); visitantes únicos con huella de IP (dato personal seudonimizado, con conservación y consentimiento); limitar por IP (mismo problema). Consecuencia: recuentos orientativos que se pueden inflar.

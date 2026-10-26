@@ -7,6 +7,8 @@ import { SiteMenu } from "@/components/site/site-menu";
 import { SiteShell } from "@/components/site/site-shell";
 import { getPublishedMenu } from "@/server/modules/menus/menus";
 import { getPublicSite } from "@/server/modules/site/service";
+import { recordMenuView } from "@/server/modules/stats/service";
+import { trackView } from "@/server/modules/stats/track";
 
 type Params = Promise<{ orgSlug: string; estSlug: string; menuSlug: string }>;
 
@@ -24,6 +26,7 @@ export default async function PublicMenuPage({ params }: { params: Params }) {
   const { orgSlug, estSlug, menuSlug } = await params;
   const menu = await load(orgSlug, estSlug, menuSlug);
   if (!menu) notFound();
+  await trackView(() => recordMenuView(orgSlug, estSlug, menuSlug));
   // Si el local tiene su web publicada, la carta se integra en ella con el
   // estilo de la web; si no, se muestra sola con el tema de la versión.
   const site = await getPublicSite(orgSlug, estSlug);

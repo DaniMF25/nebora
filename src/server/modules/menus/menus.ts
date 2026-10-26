@@ -593,6 +593,26 @@ export async function listVersions(tx: Tx, ctx: TenantContext, menuId: string): 
   return rows;
 }
 
+/** Instantánea de la versión publicada de la carta, o null si no está publicada. */
+export async function getPublishedSnapshot(
+  tx: Tx,
+  ctx: TenantContext,
+  menuId: string,
+): Promise<{ versionNumber: number; snapshot: MenuSnapshot } | null> {
+  requirePermission(ctx, "menus.read");
+  if (!isUuid(menuId)) throw new NotFoundError();
+  const { rows } = await tx.query<{ versionNumber: number | null; snapshot: MenuSnapshot | null }>(
+    `SELECT v.version_number AS "versionNumber", v.snapshot
+       FROM menus m
+       LEFT JOIN menu_versions v ON v.organization_id = m.organization_id AND v.id = m.published_version_id
+      WHERE m.organization_id = $1 AND m.id = $2`,
+    [ctx.organizationId, menuId],
+  );
+  const r = rows[0];
+  if (!r) throw new NotFoundError();
+  return r.versionNumber !== null && r.snapshot ? { versionNumber: r.versionNumber, snapshot: r.snapshot } : null;
+}
+
 // ---------------------------------------------------------------------------
 // Lectura pública (sin sesión)
 // ---------------------------------------------------------------------------

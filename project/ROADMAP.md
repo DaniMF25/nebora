@@ -38,7 +38,8 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Versiones (historial, reactivar, despublicar).
 - [x] Página pública (solo versión publicada).
 - [x] QR SVG/PNG con enlace corto estable (D-013).
-- [ ] Idiomas y alérgenos — alérgenos UE hechos; idiomas pendientes.
+- [ ] Idiomas y alérgenos — alérgenos UE hechos; idiomas pendientes (siguiente tarea).
+- [x] Carta en papel: página para imprimir o guardar como PDF (publicada o borrador, alérgenos, descripciones, QR, 1 o 2 columnas).
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 - [x] Fotos de platos y marca «recomendado» (migración 0013, D-021).
 - [x] Web pública del local `/<org>/<local>` con los temas Futurista, Clásico y Mediterráneo (portada, carta destacada con pestañas y carrusel, destacados, contacto y horario reales, navegación inferior en móvil).
@@ -65,7 +66,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 ## Fase 6 — Personal, clientes e informes
 - [ ] Gestión de miembros y turnos.
 - [ ] CRM opcional con minimización de datos.
-- [ ] Informes operativos.
+- [ ] Informes operativos — hecho: estadísticas de visitas (web, cartas, QR) y resumen de reservas por local (D-029); pendientes informes de inventario y compras.
 - [ ] Exportaciones seguras.
 
 ## Fase 7 — Suscripciones e integraciones

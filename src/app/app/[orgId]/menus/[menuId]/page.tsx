@@ -339,6 +339,16 @@ export default async function MenuEditorPage({
             )}
           </section>
           <section>
+            <h3>Carta en papel</h3>
+            <p className="muted">
+              Versión para imprimir o guardar como PDF, con precios, alérgenos y el QR de la carta online. Puedes elegir
+              la versión publicada o el borrador.
+            </p>
+            <p>
+              <Link href={`/print/menu/${orgId}/${menu.id}`}>Preparar carta para imprimir</Link>
+            </p>
+          </section>
+          <section>
             <h3>Versiones publicadas</h3>
             {versions.length === 0 ? (
               <p className="muted">Todavía no se ha publicado ninguna versión.</p>

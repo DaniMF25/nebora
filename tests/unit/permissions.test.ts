@@ -38,6 +38,11 @@ describe("matriz de permisos", () => {
     expect(roleHasPermission("staff", "privacy.manage")).toBe(false);
   });
 
+  it("el personal no ve estadísticas; el encargado sí", () => {
+    expect(roleHasPermission("manager", "stats.read")).toBe(true);
+    expect(roleHasPermission("staff", "stats.read")).toBe(false);
+  });
+
   it("cada rol solo otorga permisos conocidos", () => {
     for (const r of ROLES) for (const p of permissionsFor(r)) expect(PERMISSIONS).toContain(p);
   });
