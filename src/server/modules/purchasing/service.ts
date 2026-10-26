@@ -161,7 +161,7 @@ export async function listSuppliers(tx: Tx, ctx: TenantContext): Promise<Supplie
 }
 
 export async function createSupplier(tx: Tx, ctx: TenantContext, input: unknown): Promise<Supplier> {
-  requirePermission(ctx, "purchasing.manage");
+  requirePermission(ctx, "catalog.manage");
   const d = parseInput(supplierSchema, input);
   try {
     const { rows } = await tx.query<Supplier>(
@@ -178,7 +178,7 @@ export async function createSupplier(tx: Tx, ctx: TenantContext, input: unknown)
 }
 
 export async function setSupplierActive(tx: Tx, ctx: TenantContext, id: string, active: boolean): Promise<void> {
-  requirePermission(ctx, "purchasing.manage");
+  requirePermission(ctx, "catalog.manage");
   if (!isUuid(id)) throw new NotFoundError();
   const res = await tx.query("UPDATE suppliers SET active = $3 WHERE organization_id = $1 AND id = $2", [
     ctx.organizationId,

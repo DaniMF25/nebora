@@ -6,7 +6,7 @@ import { hashPassword } from "@/server/auth/password";
 import type { AuthUser } from "@/server/auth/service";
 import { generateToken, hashToken, isWellFormedToken } from "@/server/auth/tokens";
 import { isUniqueViolation, withTransaction, type Tx } from "@/server/db/pool";
-import { ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { requirePermission, withUser, type TenantContext } from "@/server/tenancy/context";
 import { isRole, ROLES, type Role } from "@/server/tenancy/permissions";
 import { isUuid, parseInput } from "@/server/validation";
@@ -23,6 +23,9 @@ export interface Member {
   role: Role;
   status: "active" | "suspended";
   createdAt: Date;
+  /** Acceso a todos los locales o solo a `establishmentIds`. */
+  allEstablishments: boolean;
+  establishmentIds: string[];
 }
 
 export interface InvitationView {
@@ -32,11 +35,45 @@ export interface InvitationView {
   createdAt: Date;
   expiresAt: Date;
   status: "pending" | "expired";
+  /** null = todos los locales. */
+  establishmentIds: string[] | null;
 }
 
+const establishmentIdsSchema = z.array(z.string().uuid("Local no válido")).max(200);
+
 export const createInvitationSchema = z
-  .object({ email: emailSchema, role: z.enum(INVITABLE_ROLES) })
+  .object({
+    email: emailSchema,
+    role: z.enum(INVITABLE_ROLES),
+    /** Ausente o null: todos los locales. Solo encargados y personal pueden limitarse. */
+    establishmentIds: establishmentIdsSchema.nullable().optional(),
+  })
   .strict();
+
+const setEstablishmentsSchema = z
+  .object({ allEstablishments: z.boolean(), establishmentIds: establishmentIdsSchema.default([]) })
+  .strict();
+
+/** Normaliza el ámbito pedido y comprueba que los locales son de la organización. */
+async function resolveScope(
+  tx: Tx,
+  ctx: TenantContext,
+  role: Role,
+  ids: string[] | null | undefined,
+): Promise<string[] | null> {
+  if (ids === null || ids === undefined) return null;
+  if (role === "owner" || role === "admin") {
+    throw new ValidationError("Propietarios y administradores acceden siempre a todos los locales");
+  }
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) throw new ValidationError("Elige al menos un local");
+  const { rows } = await tx.query<{ n: number }>(
+    "SELECT count(*)::int AS n FROM establishments WHERE organization_id = $1 AND id = ANY ($2::uuid[])",
+    [ctx.organizationId, unique],
+  );
+  if (rows[0]!.n !== unique.length) throw new NotFoundError("Local no encontrado");
+  return unique;
+}
 
 const changeRoleSchema = z.object({ role: z.enum(ROLES) }).strict();
 
@@ -44,7 +81,12 @@ export async function listMembers(tx: Tx, ctx: TenantContext): Promise<Member[]>
   requirePermission(ctx, "members.read");
   const { rows } = await tx.query<Member>(
     `SELECT m.id AS "membershipId", m.user_id AS "userId", u.email::text AS email,
-            u.display_name AS "displayName", m.role, m.status, m.created_at AS "createdAt"
+            u.display_name AS "displayName", m.role, m.status, m.created_at AS "createdAt",
+            m.all_establishments AS "allEstablishments",
+            coalesce((SELECT array_agg(me.establishment_id ORDER BY me.establishment_id)
+                        FROM membership_establishments me
+                       WHERE me.organization_id = m.organization_id AND me.membership_id = m.id), '{}')
+              AS "establishmentIds"
        FROM memberships m JOIN users u ON u.id = m.user_id
       WHERE m.organization_id = $1
       ORDER BY u.display_name, u.email`,
@@ -64,6 +106,7 @@ export async function createInvitation(
 ): Promise<{ invitationId: string; token: string; expiresAt: Date }> {
   requirePermission(ctx, "members.manage");
   const data = parseInput(createInvitationSchema, input);
+  const scope = await resolveScope(tx, ctx, data.role, data.establishmentIds);
 
   const existing = await tx.query(
     `SELECT 1 FROM memberships m JOIN users u ON u.id = m.user_id
@@ -81,17 +124,17 @@ export async function createInvitation(
 
   const token = generateToken();
   const { rows } = await tx.query<{ id: string; expires_at: Date }>(
-    `INSERT INTO invitations (organization_id, email, role, token_hash, invited_by_user_id, expires_at)
-     VALUES ($1, $2, $3, $4, $5, now() + make_interval(days => $6))
+    `INSERT INTO invitations (organization_id, email, role, token_hash, invited_by_user_id, expires_at, establishment_ids)
+     VALUES ($1, $2, $3, $4, $5, now() + make_interval(days => $6), $7)
      RETURNING id, expires_at`,
-    [ctx.organizationId, data.email, data.role, hashToken(token), ctx.userId, INVITATION_TTL_DAYS],
+    [ctx.organizationId, data.email, data.role, hashToken(token), ctx.userId, INVITATION_TTL_DAYS, scope],
   );
   const inv = rows[0]!;
   await recordAudit(tx, ctx, {
     action: "invitation.created",
     entityType: "invitation",
     entityId: inv.id,
-    metadata: { role: data.role },
+    metadata: { role: data.role, establishments: scope ? scope.length : "all" },
   });
   return { invitationId: inv.id, token, expiresAt: inv.expires_at };
 }
@@ -101,7 +144,8 @@ export async function listOpenInvitations(tx: Tx, ctx: TenantContext): Promise<I
   requirePermission(ctx, "members.manage");
   const { rows } = await tx.query<InvitationView>(
     `SELECT id, email::text AS email, role, created_at AS "createdAt", expires_at AS "expiresAt",
-            CASE WHEN expires_at <= now() THEN 'expired' ELSE 'pending' END AS status
+            CASE WHEN expires_at <= now() THEN 'expired' ELSE 'pending' END AS status,
+            establishment_ids AS "establishmentIds"
        FROM invitations
       WHERE organization_id = $1 AND accepted_at IS NULL AND revoked_at IS NULL
       ORDER BY created_at DESC`,
@@ -184,16 +228,65 @@ export async function changeMemberRole(
     throw new ConflictError("La organización debe conservar al menos un propietario");
   }
 
-  await tx.query("UPDATE memberships SET role = $3 WHERE organization_id = $1 AND id = $2", [
-    ctx.organizationId,
-    target.id,
-    newRole,
-  ]);
+  // Propietarios y administradores acceden siempre a todos los locales.
+  const toAll = newRole === "owner" || newRole === "admin";
+  await tx.query(
+    `UPDATE memberships SET role = $3, all_establishments = all_establishments OR $4
+      WHERE organization_id = $1 AND id = $2`,
+    [ctx.organizationId, target.id, newRole, toAll],
+  );
+  if (toAll) {
+    await tx.query("DELETE FROM membership_establishments WHERE organization_id = $1 AND membership_id = $2", [
+      ctx.organizationId,
+      target.id,
+    ]);
+  }
   await recordAudit(tx, ctx, {
     action: "membership.role_changed",
     entityType: "membership",
     entityId: target.id,
     metadata: { from: target.role, to: newRole },
+  });
+}
+
+/**
+ * Locales a los que accede un miembro: todos o una lista. Solo para encargados
+ * y personal; nadie cambia su propio acceso.
+ */
+export async function setMemberEstablishments(
+  tx: Tx,
+  ctx: TenantContext,
+  membershipId: string,
+  input: unknown,
+): Promise<void> {
+  requirePermission(ctx, "members.manage");
+  const data = parseInput(setEstablishmentsSchema, input);
+  await lockForMembershipChange(tx, ctx);
+  const target = await getTargetMembership(tx, ctx, membershipId);
+  if (target.user_id === ctx.userId) throw new ForbiddenError("No puedes cambiar tu propio acceso");
+  const scope = await resolveScope(tx, ctx, target.role, data.allEstablishments ? null : data.establishmentIds);
+
+  await tx.query("UPDATE memberships SET all_establishments = $3 WHERE organization_id = $1 AND id = $2", [
+    ctx.organizationId,
+    target.id,
+    scope === null,
+  ]);
+  await tx.query("DELETE FROM membership_establishments WHERE organization_id = $1 AND membership_id = $2", [
+    ctx.organizationId,
+    target.id,
+  ]);
+  if (scope) {
+    await tx.query(
+      `INSERT INTO membership_establishments (organization_id, membership_id, establishment_id)
+       SELECT $1, $2, unnest($3::uuid[])`,
+      [ctx.organizationId, target.id, scope],
+    );
+  }
+  await recordAudit(tx, ctx, {
+    action: "membership.establishments_changed",
+    entityType: "membership",
+    entityId: target.id,
+    metadata: { establishments: scope ? scope.length : "all" },
   });
 }
 

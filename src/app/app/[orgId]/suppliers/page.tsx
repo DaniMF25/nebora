@@ -14,7 +14,7 @@ export default async function SuppliersPage({ params }: { params: Promise<{ orgI
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       suppliers: await listSuppliers(tx, ctx),
-      canManage: ctx.permissions.has("purchasing.manage"),
+      canManage: ctx.permissions.has("catalog.manage"),
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();

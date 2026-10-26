@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
+import { EstablishmentScopeFields } from "@/components/establishment-scope-fields";
 import { InviteForm } from "@/components/invite-form";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
+import { listEstablishments } from "@/server/modules/establishments/service";
 import { listMembers, listOpenInvitations } from "@/server/modules/members/service";
 import { withTenant } from "@/server/tenancy/context";
 import { ROLES, type Role } from "@/server/tenancy/permissions";
@@ -11,6 +13,7 @@ import {
   createInvitationAction,
   removeMemberAction,
   revokeInvitationAction,
+  setEstablishmentsAction,
 } from "./actions";
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -35,6 +38,8 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
         canManage,
         members: await listMembers(tx, ctx),
         invitations: canManage ? await listOpenInvitations(tx, ctx) : [],
+        // Quien gestiona miembros es propietario o administrador: ve todos los locales.
+        establishments: (await listEstablishments(tx, ctx)).map((e) => ({ id: e.id, name: e.name })),
       };
     });
   } catch (err) {
@@ -44,6 +49,9 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
 
   // Opciones de rol que se ofrecen en la interfaz; el servidor aplica las reglas reales.
   const assignable = ROLES.filter((r) => r !== "owner" || data.actorRole === "owner");
+  const estName = new Map(data.establishments.map((e) => [e.id, e.name]));
+  const scopeLabel = (all: boolean, ids: readonly string[]) =>
+    all ? "Todos" : ids.map((id) => estName.get(id) ?? "—").join(", ") || "Ninguno";
 
   return (
     <>
@@ -56,6 +64,7 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
                 <th>Nombre</th>
                 <th>Correo</th>
                 <th>Rol</th>
+                <th>Locales</th>
                 {data.canManage && <th>Acciones</th>}
               </tr>
             </thead>
@@ -71,6 +80,7 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
                     </td>
                     <td>{m.email}</td>
                     <td>{ROLE_LABELS[m.role]}</td>
+                    <td>{scopeLabel(m.allEstablishments, m.establishmentIds)}</td>
                     {data.canManage && (
                       <td>
                         {editable ? (
@@ -91,6 +101,22 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
                                 </select>
                               </label>
                             </ActionForm>
+                            {(m.role === "manager" || m.role === "staff") && data.establishments.length > 0 && (
+                              <details>
+                                <summary>Locales de {m.displayName}</summary>
+                                <ActionForm
+                                  action={setEstablishmentsAction.bind(null, orgId, m.membershipId)}
+                                  submitLabel="Guardar locales"
+                                >
+                                  <EstablishmentScopeFields
+                                    establishments={data.establishments}
+                                    allSelected={m.allEstablishments}
+                                    selected={m.establishmentIds}
+                                    idPrefix={m.membershipId}
+                                  />
+                                </ActionForm>
+                              </details>
+                            )}
                             <ActionForm
                               action={removeMemberAction.bind(null, orgId, m.membershipId)}
                               submitLabel={`Quitar a ${m.displayName}`}
@@ -118,7 +144,7 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
               El correo no está configurado: se generará un enlace de un solo uso que debes entregar tú. Solo
               funciona para la dirección indicada.
             </p>
-            <InviteForm action={createInvitationAction.bind(null, orgId)} />
+            <InviteForm action={createInvitationAction.bind(null, orgId)} establishments={data.establishments} />
           </section>
           <section>
             <h2>Invitaciones abiertas</h2>
@@ -128,7 +154,7 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
               <ul className="cards">
                 {data.invitations.map((i) => (
                   <li key={i.id}>
-                    {i.email} · {ROLE_LABELS[i.role]} ·{" "}
+                    {i.email} · {ROLE_LABELS[i.role]} · locales: {scopeLabel(i.establishmentIds === null, i.establishmentIds ?? [])} ·{" "}
                     {i.status === "expired" ? "caducada" : `caduca el ${dateFormat.format(i.expiresAt)}`}
                     <ActionForm
                       action={revokeInvitationAction.bind(null, orgId, i.id)}

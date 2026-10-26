@@ -57,7 +57,7 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
   await tx.query("SELECT set_config('app.org_id', $1, true)", [id]);
   await recordAudit(
     tx,
-    { userId: ctx.userId, organizationId: id, role: "owner", permissions: new Set() },
+    { userId: ctx.userId, organizationId: id, role: "owner", permissions: new Set(), establishments: "all" },
     { action: "organization.created", entityType: "organization", entityId: id, metadata: { slug: data.slug } },
   );
   return id;

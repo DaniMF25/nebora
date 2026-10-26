@@ -145,7 +145,7 @@ export async function listIngredients(tx: Tx, ctx: TenantContext): Promise<Ingre
 }
 
 export async function createIngredient(tx: Tx, ctx: TenantContext, input: unknown): Promise<Ingredient> {
-  requirePermission(ctx, "inventory.manage");
+  requirePermission(ctx, "catalog.manage");
   const data = parseInput(createIngredientSchema, input);
   try {
     const { rows } = await tx.query<Ingredient>(
@@ -162,7 +162,7 @@ export async function createIngredient(tx: Tx, ctx: TenantContext, input: unknow
 }
 
 export async function updateIngredient(tx: Tx, ctx: TenantContext, id: string, input: unknown): Promise<void> {
-  requirePermission(ctx, "inventory.manage");
+  requirePermission(ctx, "catalog.manage");
   if (!isUuid(id)) throw new NotFoundError();
   const data = parseInput(updateIngredientSchema, input);
   const values: Record<string, unknown> = {};

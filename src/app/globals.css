@@ -284,3 +284,7 @@ label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-weigh
 .side-local summary strong { color: #fff; font-size: 0.95rem; font-weight: 600; padding-right: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-local ul { margin: 0.25rem 0 0.5rem; padding: 0.25rem; background: rgba(255, 255, 255, 0.04); border-radius: 9px; }
 .side-local ul a { font-size: 0.88rem; padding: 0.4rem 0.65rem; }
+/* Elección de locales de un miembro. */
+.scope-fields { display: grid; gap: 0.35rem; }
+.scope-fields legend { font-weight: 500; margin-bottom: 0.35rem; }
+.scope-list { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; padding-left: 1.5rem; }

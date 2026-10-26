@@ -2,16 +2,18 @@
 
 import { useActionState } from "react";
 import type { FormState } from "@/lib/form-state";
+import { EstablishmentScopeFields } from "./establishment-scope-fields";
 
 interface Props {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
+  establishments: { id: string; name: string }[];
 }
 
 /**
  * Formulario de invitación. El enlace solo se muestra en la respuesta a quien
  * invita: no hay proveedor de correo configurado, así que debe entregarlo él.
  */
-export function InviteForm({ action }: Props) {
+export function InviteForm({ action, establishments }: Props) {
   const [state, formAction, pending] = useActionState(action, {} as FormState);
   // Solo hay enlace tras la respuesta de la acción, ya en el cliente.
   const link = state.invitePath && typeof window !== "undefined" ? `${window.location.origin}${state.invitePath}` : "";
@@ -30,6 +32,15 @@ export function InviteForm({ action }: Props) {
           <option value="admin">Administrador</option>
         </select>
       </label>
+      {establishments.length > 0 && (
+        <EstablishmentScopeFields
+          establishments={establishments}
+          allSelected
+          selected={[]}
+          idPrefix="invite"
+          legend="Locales a los que accede (encargados y personal)"
+        />
+      )}
       {state.error && (
         <div role="alert" className="alert">
           {state.error}

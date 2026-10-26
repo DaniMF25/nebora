@@ -34,6 +34,9 @@ export const PERMISSIONS = [
   "privacy.manage",
   // Visitas a la web, cartas y QR, y resumen de reservas.
   "stats.read",
+  // Catálogo común a todos los locales: productos, recetas, ingredientes y
+  // proveedores. Solo con acceso a todos los locales (D-031).
+  "catalog.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -60,6 +63,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reservations.read",
     "reservations.manage",
     "stats.read",
+    "catalog.manage",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -82,8 +86,16 @@ export function isRole(value: unknown): value is Role {
   return typeof value === "string" && (ROLES as readonly string[]).includes(value);
 }
 
-export function permissionsFor(role: Role): ReadonlySet<Permission> {
-  return new Set(ROLE_PERMISSIONS[role]);
+/** Permisos que exigen acceso a todos los locales (afectan a toda la organización). */
+export const ORG_WIDE_PERMISSIONS: readonly Permission[] = ["catalog.manage"];
+
+/**
+ * Permisos efectivos de una membresía. Quien solo accede a algunos locales
+ * pierde los permisos que afectan a toda la organización.
+ */
+export function permissionsFor(role: Role, allEstablishments = true): ReadonlySet<Permission> {
+  const perms = ROLE_PERMISSIONS[role];
+  return new Set(allEstablishments ? perms : perms.filter((p) => !ORG_WIDE_PERMISSIONS.includes(p)));
 }
 
 export function roleHasPermission(role: Role, permission: Permission): boolean {

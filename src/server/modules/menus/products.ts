@@ -88,7 +88,7 @@ export async function getProduct(tx: Tx, ctx: TenantContext, id: string): Promis
 }
 
 export async function createProduct(tx: Tx, ctx: TenantContext, input: unknown): Promise<Product> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   const data = parseInput(createProductSchema, input);
   const { rows } = await tx.query<Product>(
     `INSERT INTO menu_products (organization_id, name, description, price_cents, allergens)
@@ -101,7 +101,7 @@ export async function createProduct(tx: Tx, ctx: TenantContext, input: unknown):
 }
 
 export async function updateProduct(tx: Tx, ctx: TenantContext, id: string, input: unknown): Promise<Product> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   if (!isUuid(id)) throw new NotFoundError();
   const data = parseInput(updateProductSchema, input);
   const fields = Object.keys(data) as (keyof typeof data)[];
@@ -124,7 +124,7 @@ export async function updateProduct(tx: Tx, ctx: TenantContext, id: string, inpu
 
 /** Solo se borran productos que no estén en ningún borrador; si no, se archivan (active = false). */
 export async function deleteProduct(tx: Tx, ctx: TenantContext, id: string): Promise<void> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   if (!isUuid(id)) throw new NotFoundError();
   const used = await tx.query("SELECT 1 FROM menu_items WHERE organization_id = $1 AND product_id = $2 LIMIT 1", [
     ctx.organizationId,
@@ -144,7 +144,7 @@ export async function deleteProduct(tx: Tx, ctx: TenantContext, id: string): Pro
  * conservan la foto de su versión hasta que se vuelvan a publicar.
  */
 export async function setProductImage(tx: Tx, ctx: TenantContext, id: string, bytes: Uint8Array | null): Promise<void> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   await getProduct(tx, ctx, id);
   const image = bytes ? await storeImage(tx, ctx, bytes) : null;
   await tx.query("UPDATE menu_products SET image_media_id = $3 WHERE organization_id = $1 AND id = $2", [

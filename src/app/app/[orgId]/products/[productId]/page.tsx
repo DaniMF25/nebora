@@ -33,7 +33,7 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         product: await getProduct(tx, ctx, productId),
         ingredients: canInventory ? (await listIngredients(tx, ctx)).filter((i) => i.active) : [],
         warehouses: canInventory ? await listWarehouses(tx, ctx) : [],
-        canEdit: ctx.permissions.has("menus.edit"),
+        canEdit: ctx.permissions.has("catalog.manage"),
         canProduce: ctx.permissions.has("inventory.move"),
       };
     });

@@ -19,7 +19,7 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       products: await listProducts(tx, ctx),
       costings: ctx.permissions.has("costs.read") ? await listProductCostings(tx, ctx) : null,
-      canEdit: ctx.permissions.has("menus.edit"),
+      canEdit: ctx.permissions.has("catalog.manage"),
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();

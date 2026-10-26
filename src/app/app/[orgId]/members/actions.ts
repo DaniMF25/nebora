@@ -9,16 +9,26 @@ import {
   createInvitation,
   removeMember,
   revokeInvitation,
+  setMemberEstablishments,
 } from "@/server/modules/members/service";
 import { withTenant } from "@/server/tenancy/context";
 
 // orgId y los ids ligados llegan del cliente; withTenant y los servicios los validan.
 
+/** Locales elegidos en el formulario: null = todos. */
+function scopeIds(formData: FormData): string[] | null {
+  if (formData.get("scope") !== "some") return null;
+  return formData.getAll("establishmentIds").filter((v): v is string => typeof v === "string");
+}
+
 export async function createInvitationAction(orgId: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   try {
     const { token } = await withTenant(user, orgId, (tx, ctx) =>
-      createInvitation(tx, ctx, formToObject(formData, ["email", "role"])),
+      createInvitation(tx, ctx, {
+        ...formToObject(formData, ["email", "role"]),
+        establishmentIds: scopeIds(formData),
+      }),
     );
     revalidatePath(`/app/${orgId}/members`);
     return { ok: true, invitePath: `/invite/${token}` };
@@ -75,4 +85,23 @@ export async function removeMemberAction(
   }
   revalidatePath(`/app/${orgId}/members`);
   return { ok: true };
+}
+
+export async function setEstablishmentsAction(
+  orgId: string,
+  membershipId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await requireUser();
+  const ids = scopeIds(formData);
+  try {
+    await withTenant(user, orgId, (tx, ctx) =>
+      setMemberEstablishments(tx, ctx, membershipId, { allEstablishments: ids === null, establishmentIds: ids ?? [] }),
+    );
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/app/${orgId}`, "layout");
+  return { ok: true, message: "Acceso actualizado" };
 }

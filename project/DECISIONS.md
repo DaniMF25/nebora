@@ -339,4 +339,19 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - La barra lateral muestra un local a la vez con selector; el último visitado se recuerda en una cookie de navegación (no da acceso a nada: cada página comprueba permisos en el servidor).
 - Las acciones de inventario y compras revalidan toda la organización (`revalidatePath(..., "layout")`) para refrescar a la vez la vista del local y la del grupo.
 
-**Pendiente (D-031):** restringir miembros a locales concretos, aplicado en el servidor y en RLS.
+**Continúa en D-031:** miembros limitados a locales concretos.
+
+## D-031 — Miembros limitados a locales concretos
+**Fecha:** 2026-10-26. **Estado:** aceptada.
+
+**Contexto:** un cliente con varios locales puede tener equipos separados. Ocultar locales en el menú no es control de acceso: hay que aplicarlo en el servidor y en la base de datos.
+
+**Decisión:**
+- `memberships.all_establishments` (por defecto true) y `membership_establishments` (lista de locales). Propietarios y administradores siempre tienen todos (CHECK); al ascender a uno de esos roles se amplía el acceso.
+- RLS: las tablas con `establishment_id` añaden `app.all_establishments_access() OR establishment_id = ANY(app.establishment_scope())`; las hijas (secciones, líneas, stock, movimientos, pedidos, recepciones, recuentos…) comprueban su padre, que también tiene RLS. Las funciones de ámbito son SECURITY DEFINER sobre el usuario y la organización del contexto y se usan como subconsultas escalares para evaluarse una vez por consulta. Un traspaso se ve desde los dos locales; registrarlo exige acceso a ambos.
+- Servidor: `withTenant` carga el ámbito en el contexto (`ctx.establishments`); los servicios ya buscan el local, el almacén o la carta antes de actuar, así que fuera del ámbito responden NotFound (sin revelar si existe).
+- El catálogo común (productos, recetas, ingredientes, proveedores) lo ve cualquier miembro, pero solo lo modifica quien accede a todos los locales: nuevo permiso `catalog.manage` (propietario, administrador y encargado), que se retira a las membresías limitadas. La recepción de pedidos sigue actualizando el coste de referencia del ingrediente, como regla de negocio.
+- Invitaciones con `establishment_ids` (NULL = todos); `app.accept_invitation` crea la membresía y su lista en la misma transacción, solo con locales que sigan existiendo en la organización.
+
+**Alternativas descartadas:** filtrar solo en la interfaz (no es seguridad); roles distintos por local (más complejo de lo que se necesita ahora; puede añadirse más adelante sobre esta tabla).
+

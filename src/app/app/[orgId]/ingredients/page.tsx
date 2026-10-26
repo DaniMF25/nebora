@@ -19,7 +19,7 @@ export default async function IngredientsPage({ params }: { params: Promise<{ or
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       ingredients: await listIngredients(tx, ctx),
-      canManage: ctx.permissions.has("inventory.manage"),
+      canManage: ctx.permissions.has("catalog.manage"),
       canSeeCosts: ctx.permissions.has("costs.read"),
     }));
   } catch (err) {

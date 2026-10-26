@@ -144,7 +144,7 @@ export async function listProductCostings(tx: Tx, ctx: TenantContext): Promise<M
 
 /** Añade un ingrediente a la receta o actualiza su cantidad por ración. */
 export async function setRecipeLine(tx: Tx, ctx: TenantContext, productId: string, input: unknown): Promise<void> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   const data = parseInput(setRecipeLineSchema, input);
   await loadProduct(tx, ctx, productId);
   if (!isUuid(data.ingredientId)) throw new NotFoundError("Ingrediente no encontrado");
@@ -169,7 +169,7 @@ export async function setRecipeLine(tx: Tx, ctx: TenantContext, productId: strin
 }
 
 export async function removeRecipeLine(tx: Tx, ctx: TenantContext, productId: string, lineId: string): Promise<void> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   if (!isUuid(productId) || !isUuid(lineId)) throw new NotFoundError();
   const res = await tx.query("DELETE FROM recipe_lines WHERE organization_id = $1 AND product_id = $2 AND id = $3", [
     ctx.organizationId,
@@ -182,7 +182,7 @@ export async function removeRecipeLine(tx: Tx, ctx: TenantContext, productId: st
 
 /** Declara en el producto los alérgenos que aportan los ingredientes de su receta. */
 export async function applyRecipeAllergens(tx: Tx, ctx: TenantContext, productId: string): Promise<Allergen[]> {
-  requirePermission(ctx, "menus.edit");
+  requirePermission(ctx, "catalog.manage");
   const recipe = await getRecipe(tx, ctx, productId);
   if (recipe.undeclaredAllergens.length === 0) return recipe.productAllergens;
   const merged = [...new Set([...recipe.productAllergens, ...recipe.undeclaredAllergens])].sort();
