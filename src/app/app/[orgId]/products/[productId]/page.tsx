@@ -2,11 +2,13 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
+import { EstablishmentScopeFields } from "@/components/establishment-scope-fields";
 import { ALLERGEN_LABELS } from "@/lib/allergens";
 import { formatCentsNumeric, formatEuros } from "@/lib/money";
 import { BASE_UNIT_LABELS, formatQuantity, INPUT_UNITS, type InputUnit } from "@/lib/quantity";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
+import { listEstablishments } from "@/server/modules/establishments/service";
 import { listIngredients, listWarehouses } from "@/server/modules/inventory/service";
 import { getProduct } from "@/server/modules/menus/products";
 import { getRecipe } from "@/server/modules/recipes/service";
@@ -17,6 +19,7 @@ import {
   produceRecipeAction,
   removeProductImageAction,
   removeRecipeLineAction,
+  setAvailabilityAction,
   setProductImageAction,
   setRecipeLineAction,
 } from "./actions";
@@ -33,6 +36,7 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         product: await getProduct(tx, ctx, productId),
         ingredients: canInventory ? (await listIngredients(tx, ctx)).filter((i) => i.active) : [],
         warehouses: canInventory ? await listWarehouses(tx, ctx) : [],
+        establishments: (await listEstablishments(tx, ctx)).map((e) => ({ id: e.id, name: e.name })),
         canEdit: ctx.permissions.has("catalog.manage"),
         canProduce: ctx.permissions.has("inventory.move"),
       };
@@ -41,7 +45,8 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { recipe, product, ingredients, warehouses, canEdit, canProduce } = data;
+  const { recipe, product, ingredients, warehouses, establishments, canEdit, canProduce } = data;
+  const estName = new Map(establishments.map((e) => [e.id, e.name]));
   const costing = recipe.costing;
 
   return (
@@ -105,6 +110,28 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
               al volver a publicarlas.
             </p>
           </>
+        )}
+      </section>
+
+      <section>
+        <h3>Locales</h3>
+        <p className="muted">
+          Disponible en:{" "}
+          {product.allEstablishments
+            ? "todos los locales"
+            : product.establishmentIds.map((id) => estName.get(id) ?? "—").join(", ")}
+          . Solo las cartas de esos locales pueden incluirlo.
+        </p>
+        {canEdit && establishments.length > 1 && (
+          <ActionForm action={setAvailabilityAction.bind(null, orgId, productId)} submitLabel="Guardar locales">
+            <EstablishmentScopeFields
+              establishments={establishments}
+              allSelected={product.allEstablishments}
+              selected={product.establishmentIds}
+              idPrefix={`product-${productId}`}
+              legend="Disponible en"
+            />
+          </ActionForm>
         )}
       </section>
 

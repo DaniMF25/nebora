@@ -53,3 +53,50 @@ test("varios locales: selector de local, inventario y compras por local, y vista
   await openTab(page, "Almacenes");
   await expect(page.getByRole("listitem").filter({ hasText: "Playa · Bodega de la playa" })).toBeVisible();
 });
+
+test("producto disponible solo en un local: solo lo ofrecen las cartas de ese local", async ({ page }) => {
+  await register(page, "Disponible");
+  const orgUrl = await createOrganization(page, "Grupo Productos");
+  for (const name of ["Centro", "Playa"]) {
+    await page.getByLabel("Nombre").fill(name);
+    await page.getByLabel("Identificador (URL)").fill(`${name.toLowerCase()}-${suffix()}`);
+    await page.getByRole("button", { name: "Crear establecimiento" }).click();
+    await expect(page.getByRole("main").getByRole("link", { name })).toBeVisible();
+  }
+  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
+  await nav.getByRole("link", { name: "Productos", exact: true }).click();
+  const form = page.locator("section", { has: page.getByRole("heading", { name: "Nuevo producto" }) });
+  await form.getByLabel("Nombre").fill("Paella de marisco");
+  await form.getByLabel("Precio (€)").fill("19");
+  await form.getByRole("button", { name: "Crear producto" }).click();
+  await page.getByRole("link", { name: "Paella de marisco", exact: true }).click();
+  await expect(page.getByText("Disponible en: todos los locales")).toBeVisible();
+  await page.getByLabel("Solo estos locales:").check();
+  await page.getByLabel("Playa", { exact: true }).check();
+  await page.getByRole("button", { name: "Guardar locales" }).click();
+  await expect(page.getByText("Locales guardados")).toBeVisible();
+  await expect(page.getByText("Disponible en: Playa")).toBeVisible();
+  await nav.getByRole("link", { name: "Productos", exact: true }).click();
+  await expect(page.getByText("solo en Playa")).toBeVisible();
+
+  for (const [local, offered] of [
+    ["Centro", false],
+    ["Playa", true],
+  ] as const) {
+    await page.goto(orgUrl);
+    await page.getByRole("main").getByRole("link", { name: local }).click();
+    await page.getByRole("link", { name: "Gestionar cartas" }).click();
+    await page.getByText("Nueva carta").click();
+    await page.getByLabel("Nombre de la carta").fill(`Carta ${local}`);
+    await page.getByLabel("Identificador de la carta (URL)").fill("carta");
+    await page.getByRole("button", { name: "Crear carta" }).click();
+    await page.getByPlaceholder("Nueva categoría").fill("Arroces");
+    await page.getByRole("button", { name: "Añadir categoría" }).click();
+    if (offered) {
+      await page.getByRole("button", { name: "Añadir a Arroces" }).click();
+      await expect(page.getByRole("button", { name: "Quitar Paella de marisco" })).toBeVisible();
+    } else {
+      await expect(page.getByText("No quedan productos disponibles en este local")).toBeVisible();
+    }
+  }
+});

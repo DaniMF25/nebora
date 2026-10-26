@@ -359,12 +359,16 @@ export async function addItem(
   const data = parseInput(addItemSchema, input);
   await lockMenu(tx, ctx, menuId);
   await requireSection(tx, ctx, menuId, sectionId);
-  const product = await tx.query<{ active: boolean }>(
-    "SELECT active FROM menu_products WHERE organization_id = $1 AND id = $2",
-    [ctx.organizationId, data.productId],
+  const product = await tx.query<{ active: boolean; available: boolean }>(
+    `SELECT p.active, app.product_available_in(p.organization_id, p.id, m.establishment_id) AS available
+       FROM menu_products p, menus m
+      WHERE p.organization_id = $1 AND p.id = $2 AND m.organization_id = $1 AND m.id = $3`,
+    [ctx.organizationId, data.productId, menuId],
   );
   if (!product.rows[0]) throw new NotFoundError("Producto no encontrado");
   if (!product.rows[0].active) throw new ValidationError("El producto está archivado");
+  // El trigger de menu_items lo garantiza también en la base de datos.
+  if (!product.rows[0].available) throw new ValidationError("Este producto no está disponible en este local");
   const { rows } = await tx.query<{ n: number; next: number }>(
     `SELECT count(*)::int AS n, COALESCE(max(position), 0) + 1 AS next
        FROM menu_items WHERE organization_id = $1 AND section_id = $2`,

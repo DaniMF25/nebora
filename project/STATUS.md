@@ -2,7 +2,7 @@
 
 **Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-26 — miembros con acceso limitado a locales concretos (servidor y RLS).
+**Última actualización:** 2026-10-26 — navegación por local, miembros limitados a locales y productos disponibles por local.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -57,6 +57,7 @@
 - [x] Carta para imprimir: `/print/menu/<org>/<carta>` desde «Publicación y QR», versión publicada (por defecto) o borrador, con o sin descripciones, alérgenos y QR, a una o dos columnas; A4 con «Imprimir o guardar como PDF» del navegador, sin dependencias nuevas.
 - [x] Navegación por local (D-030): en la barra lateral, bloque del local con Resumen, Cartas, Reservas, Sala, Inventario, Compras, Web pública y Estadísticas, con selector si hay varios locales (recuerda el último visitado). Inventario (`/establishments/<id>/inventory`: stock, movimientos, recuentos y almacenes del local) y compras (`/establishments/<id>/purchasing`) filtrados en el servidor; los traspasos pueden ir a cualquier almacén del grupo. «Catálogo» común: Productos, Ingredientes (`/ingredients`) y Proveedores (`/suppliers`). Con varios locales, «Inventario del grupo» y «Compras del grupo»; con uno solo, esas vistas llevan al local.
 - [x] Acceso por local (migración 0017, D-031): cada miembro accede a todos los locales (por defecto; siempre para propietarios y administradores) o solo a los elegidos. Se aplica en el contexto del servidor y con RLS en todas las tablas operativas de un local (horarios, cartas, almacenes, stock, movimientos, traspasos, recuentos, pedidos, recepciones, sala, reservas, lista de espera, web, estadísticas); el catálogo común sigue siendo de toda la organización y solo lo editan quienes acceden a todos los locales (permiso `catalog.manage`). Se elige al invitar (se aplica al aceptar) y se cambia en Miembros; ascender a administrador da acceso total.
+- [x] Productos disponibles por local (migración 0018, D-032): en la ficha del producto, «Disponible en» todos los locales (por defecto, también los futuros) o solo algunos; el editor de cartas solo ofrece los disponibles en su local y un trigger lo garantiza en la base de datos. No se puede retirar un producto de un local mientras esté en alguna de sus cartas. El listado de productos indica «solo en …».
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -68,9 +69,9 @@
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
 | `pnpm test` | PASÓ — 14 archivos, 61 pruebas |
-| `pnpm test:integration` | PASÓ — 21 archivos, 214 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:integration` | PASÓ — 22 archivos, 219 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 26 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 27 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 

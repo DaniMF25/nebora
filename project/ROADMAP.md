@@ -40,6 +40,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Página pública (solo versión publicada).
 - [x] QR SVG/PNG con enlace corto estable (D-013).
 - [ ] Idiomas y alérgenos — alérgenos UE hechos; idiomas pendientes (siguiente tarea).
+- [x] Productos disponibles por local: cada carta solo ofrece los productos disponibles en su local (D-032).
 - [x] Carta en papel: página para imprimir o guardar como PDF (publicada o borrador, alérgenos, descripciones, QR, 1 o 2 columnas).
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 - [x] Fotos de platos y marca «recomendado» (migración 0013, D-021).

@@ -55,14 +55,18 @@ export default async function MenuEditorPage({
 
   let data;
   try {
-    data = await withTenant(user, orgId, async (tx, ctx) => ({
-      draft: await getMenuDraft(tx, ctx, menuId),
-      versions: await listVersions(tx, ctx, menuId),
-      outdated: await hasUnpublishedChanges(tx, ctx, menuId),
-      products: await listProducts(tx, ctx, { activeOnly: true }),
-      canEdit: ctx.permissions.has("menus.edit"),
-      canPublish: ctx.permissions.has("menus.publish"),
-    }));
+    data = await withTenant(user, orgId, async (tx, ctx) => {
+      const draft = await getMenuDraft(tx, ctx, menuId);
+      return {
+        draft,
+        versions: await listVersions(tx, ctx, menuId),
+        outdated: await hasUnpublishedChanges(tx, ctx, menuId),
+        // Solo productos disponibles en el local de la carta (D-032).
+        products: await listProducts(tx, ctx, { activeOnly: true, availableIn: draft.menu.establishmentId }),
+        canEdit: ctx.permissions.has("menus.edit"),
+        canPublish: ctx.permissions.has("menus.publish"),
+      };
+    });
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
@@ -221,7 +225,7 @@ export default async function MenuEditorPage({
                   {canEdit &&
                     (available.length === 0 ? (
                       <p className="muted">
-                        No quedan productos disponibles para añadir.{" "}
+                        No quedan productos disponibles en este local para añadir.{" "}
                         <Link href={`/app/${orgId}/products`}>Gestionar productos</Link>
                       </p>
                     ) : (

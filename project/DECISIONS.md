@@ -355,3 +355,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** filtrar solo en la interfaz (no es seguridad); roles distintos por local (más complejo de lo que se necesita ahora; puede añadirse más adelante sobre esta tabla).
 
+## D-032 — Productos disponibles por local
+**Fecha:** 2026-10-26. **Estado:** aceptada.
+
+**Contexto:** con el catálogo común (D-030), un local puede tener platos que otro no sirve; el editor de cartas ofrecía todos.
+
+**Decisión:**
+- `menu_products.all_establishments` (por defecto true: también en locales futuros) y `product_establishments`. Se edita en la ficha del producto con el permiso de catálogo (`catalog.manage`).
+- El editor de cartas solo lista los productos disponibles en el local de la carta; `addItem` lo valida y un trigger `BEFORE INSERT` en `menu_items` lo garantiza en la base de datos (`product_not_available`). Un producto de otra organización lo sigue rechazando la FK compuesta.
+- No se retira un producto de un local mientras esté en una de sus cartas (borrador): se indica en qué cartas está. Las versiones publicadas no cambian.
+
+**Alternativa descartada:** catálogos separados por local (duplicaría recetas, escandallos y fotos de los platos comunes).
+

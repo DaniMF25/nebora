@@ -4,7 +4,7 @@ import { ALLERGENS, type Allergen } from "@/lib/allergens";
 import { recordAudit } from "@/server/audit/audit";
 import { storeImage } from "@/server/modules/media/service";
 import type { Tx } from "@/server/db/pool";
-import { ConflictError, NotFoundError } from "@/server/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { nameSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
@@ -20,6 +20,9 @@ export interface Product {
   active: boolean;
   /** Foto del plato (WebP reprocesado), o null. */
   imageMediaId: string | null;
+  /** Disponible en todos los locales o solo en `establishmentIds` (D-032). */
+  allEstablishments: boolean;
+  establishmentIds: string[];
 }
 
 const descriptionSchema = z
@@ -56,7 +59,10 @@ export const updateProductSchema = z
   .strict();
 
 const COLUMNS = `id, name, description, price_cents AS "priceCents", allergens, active,
-  image_media_id AS "imageMediaId"`;
+  image_media_id AS "imageMediaId", all_establishments AS "allEstablishments",
+  coalesce((SELECT array_agg(pe.establishment_id ORDER BY pe.establishment_id) FROM product_establishments pe
+             WHERE pe.organization_id = menu_products.organization_id AND pe.product_id = menu_products.id), '{}')
+    AS "establishmentIds"`;
 const COLUMN_BY_FIELD = {
   name: "name",
   description: "description",
@@ -65,15 +71,92 @@ const COLUMN_BY_FIELD = {
   active: "active",
 } as const;
 
-export async function listProducts(tx: Tx, ctx: TenantContext, options: { activeOnly?: boolean } = {}): Promise<Product[]> {
+/** Productos del catálogo; con `availableIn`, solo los disponibles en ese local. */
+export async function listProducts(
+  tx: Tx,
+  ctx: TenantContext,
+  options: { activeOnly?: boolean; availableIn?: string } = {},
+): Promise<Product[]> {
   requirePermission(ctx, "menus.read");
+  if (options.availableIn !== undefined && !isUuid(options.availableIn)) throw new NotFoundError();
   const { rows } = await tx.query<Product>(
     `SELECT ${COLUMNS} FROM menu_products
       WHERE organization_id = $1 AND ($2::boolean IS FALSE OR active)
+        AND ($3::uuid IS NULL OR all_establishments OR EXISTS (
+              SELECT 1 FROM product_establishments pe
+               WHERE pe.organization_id = menu_products.organization_id AND pe.product_id = menu_products.id
+                 AND pe.establishment_id = $3))
       ORDER BY active DESC, name`,
-    [ctx.organizationId, options.activeOnly ?? false],
+    [ctx.organizationId, options.activeOnly ?? false, options.availableIn ?? null],
   );
   return rows;
+}
+
+const availabilitySchema = z
+  .object({
+    allEstablishments: z.boolean(),
+    establishmentIds: z.array(z.string().uuid("Local no válido")).max(200).default([]),
+  })
+  .strict();
+
+/**
+ * Locales en los que se ofrece el producto. No se puede retirar de un local
+ * mientras esté en alguna de sus cartas (borrador): hay que quitarlo antes.
+ */
+export async function setProductEstablishments(tx: Tx, ctx: TenantContext, id: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "catalog.manage");
+  const data = parseInput(availabilitySchema, input);
+  await getProduct(tx, ctx, id);
+  await tx.query("SELECT 1 FROM menu_products WHERE organization_id = $1 AND id = $2 FOR UPDATE", [
+    ctx.organizationId,
+    id,
+  ]);
+  const ids = data.allEstablishments ? [] : [...new Set(data.establishmentIds)];
+  if (!data.allEstablishments) {
+    if (ids.length === 0) throw new ValidationError("Elige al menos un local");
+    const { rows } = await tx.query<{ n: number }>(
+      "SELECT count(*)::int AS n FROM establishments WHERE organization_id = $1 AND id = ANY ($2::uuid[])",
+      [ctx.organizationId, ids],
+    );
+    if (rows[0]!.n !== ids.length) throw new NotFoundError("Local no encontrado");
+    const { rows: used } = await tx.query<{ menu: string; establishment: string }>(
+      `SELECT DISTINCT m.name AS menu, e.name AS establishment
+         FROM menu_items i
+         JOIN menu_sections s ON s.organization_id = i.organization_id AND s.id = i.section_id
+         JOIN menus m ON m.organization_id = s.organization_id AND m.id = s.menu_id
+         JOIN establishments e ON e.organization_id = m.organization_id AND e.id = m.establishment_id
+        WHERE i.organization_id = $1 AND i.product_id = $2 AND NOT (m.establishment_id = ANY ($3::uuid[]))
+        ORDER BY e.name, m.name`,
+      [ctx.organizationId, id, ids],
+    );
+    if (used.length > 0) {
+      throw new ConflictError(
+        `El producto está en ${used.map((u) => `«${u.menu}» (${u.establishment})`).join(", ")}: quítalo de esas cartas antes`,
+      );
+    }
+  }
+  await tx.query("UPDATE menu_products SET all_establishments = $3 WHERE organization_id = $1 AND id = $2", [
+    ctx.organizationId,
+    id,
+    data.allEstablishments,
+  ]);
+  await tx.query("DELETE FROM product_establishments WHERE organization_id = $1 AND product_id = $2", [
+    ctx.organizationId,
+    id,
+  ]);
+  if (ids.length > 0) {
+    await tx.query(
+      `INSERT INTO product_establishments (organization_id, product_id, establishment_id)
+       SELECT $1, $2, unnest($3::uuid[])`,
+      [ctx.organizationId, id, ids],
+    );
+  }
+  await recordAudit(tx, ctx, {
+    action: "product.availability_changed",
+    entityType: "product",
+    entityId: id,
+    metadata: { establishments: data.allEstablishments ? "all" : ids.length },
+  });
 }
 
 export async function getProduct(tx: Tx, ctx: TenantContext, id: string): Promise<Product> {

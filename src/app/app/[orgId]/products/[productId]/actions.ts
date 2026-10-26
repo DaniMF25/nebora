@@ -3,7 +3,7 @@
 import type { FormState } from "@/lib/form-state";
 import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
-import { setProductImage } from "@/server/modules/menus/products";
+import { setProductEstablishments, setProductImage } from "@/server/modules/menus/products";
 import { applyRecipeAllergens, produceRecipe, removeRecipeLine, setRecipeLine } from "@/server/modules/recipes/service";
 
 const path = (orgId: string, productId: string) => `/app/${orgId}/products/${productId}`;
@@ -75,4 +75,20 @@ export async function setProductImageAction(orgId: string, productId: string, _p
 
 export async function removeProductImageAction(orgId: string, productId: string, _p: FormState, _fd: FormData): Promise<FormState> {
   return runTenantAction(orgId, path(orgId, productId), (tx, ctx) => setProductImage(tx, ctx, productId, null), "Foto quitada");
+}
+
+export async function setAvailabilityAction(
+  orgId: string,
+  productId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  const all = fd.get("scope") !== "some";
+  const ids = fd.getAll("establishmentIds").filter((v): v is string => typeof v === "string");
+  return runTenantAction(
+    orgId,
+    `/app/${orgId}`,
+    (tx, ctx) => setProductEstablishments(tx, ctx, productId, { allEstablishments: all, establishmentIds: all ? [] : ids }),
+    "Locales guardados",
+  );
 }

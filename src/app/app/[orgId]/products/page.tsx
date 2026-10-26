@@ -6,6 +6,7 @@ import { ALLERGEN_LABELS } from "@/lib/allergens";
 import { formatEuros } from "@/lib/money";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
+import { listEstablishments } from "@/server/modules/establishments/service";
 import { listProducts } from "@/server/modules/menus/products";
 import { listProductCostings } from "@/server/modules/recipes/service";
 import { withTenant } from "@/server/tenancy/context";
@@ -20,6 +21,7 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
       products: await listProducts(tx, ctx),
       costings: ctx.permissions.has("costs.read") ? await listProductCostings(tx, ctx) : null,
       canEdit: ctx.permissions.has("catalog.manage"),
+      establishmentNames: new Map((await listEstablishments(tx, ctx)).map((e) => [e.id, e.name])),
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
@@ -54,6 +56,12 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
                   </span>
                 )}
                 {!p.active && <span className="muted"> · archivado</span>}
+                {!p.allEstablishments && (
+                  <span className="muted">
+                    {" "}
+                    · solo en {p.establishmentIds.map((id) => data.establishmentNames.get(id) ?? "otro local").join(", ")}
+                  </span>
+                )}
                 {p.description && <div className="muted">{p.description}</div>}
                 {p.allergens.length > 0 && (
                   <div className="muted">Alérgenos: {p.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ")}</div>
