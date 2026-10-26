@@ -6,6 +6,7 @@ import { ConflictError, NotFoundError } from "@/server/errors";
 import { nameSchema, slugSchema, timezoneSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
+import { LANGUAGES, type Language } from "@/lib/languages";
 
 export interface Establishment {
   id: string;
@@ -14,6 +15,8 @@ export interface Establishment {
   slug: string;
   timezone: string;
   address: string | null;
+  /** Idiomas adicionales de su web y sus cartas (el español siempre está). */
+  languages: Language[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,7 +47,7 @@ export const updateEstablishmentSchema = z
   .strict();
 
 const SELECT_COLUMNS = `id, organization_id AS "organizationId", name, slug::text AS slug, timezone,
-  address, created_at AS "createdAt", updated_at AS "updatedAt"`;
+  address, languages, created_at AS "createdAt", updated_at AS "updatedAt"`;
 
 // Todas las consultas filtran explícitamente por la organización del contexto
 // (validada en servidor) además de la protección RLS.
@@ -124,4 +127,28 @@ export async function updateEstablishment(
     if (isUniqueViolation(err)) throw new ConflictError("Ya existe un establecimiento con ese identificador");
     throw err;
   }
+}
+
+const languagesSchema = z.object({ languages: z.array(z.enum(LANGUAGES)).max(LANGUAGES.length) }).strict();
+
+/**
+ * Idiomas adicionales del local. Quitar un idioma no borra sus traducciones:
+ * dejan de mostrarse y vuelven si se activa de nuevo.
+ */
+export async function setEstablishmentLanguages(tx: Tx, ctx: TenantContext, id: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  const { languages } = parseInput(languagesSchema, input);
+  await getEstablishment(tx, ctx, id);
+  const ordered = LANGUAGES.filter((l) => languages.includes(l));
+  await tx.query("UPDATE establishments SET languages = $3 WHERE organization_id = $1 AND id = $2", [
+    ctx.organizationId,
+    id,
+    ordered,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: "establishment.languages_set",
+    entityType: "establishment",
+    entityId: id,
+    metadata: { languages: ordered },
+  });
 }

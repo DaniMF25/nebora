@@ -17,10 +17,12 @@ import {
   type Slot,
 } from "@/server/modules/schedules/time";
 import { withTenant } from "@/server/tenancy/context";
+import { LANGUAGE_LABELS, LANGUAGES } from "@/lib/languages";
 import {
   deleteExceptionAction,
   saveExceptionAction,
   saveWeeklyHoursAction,
+  setLanguagesAction,
   updateEstablishmentAction,
 } from "./actions";
 
@@ -313,6 +315,30 @@ export default async function EstablishmentPage({
               Cambiar el identificador cambia las direcciones de la web pública, la carta y las reservas de este local.
               Los códigos QR ya impresos siguen funcionando.
             </p>
+          </ActionForm>
+        </section>
+      )}
+      {tab === "datos" && canEdit && (
+        <section>
+          <h3>Idiomas</h3>
+          <p className="muted">
+            La web y las cartas se escriben en español. Elige en qué otros idiomas las ofreces: tus clientes verán un
+            selector de idioma y, si su navegador está en uno de ellos, la página se abrirá en ese idioma. Las
+            traducciones se escriben en la pestaña «Traducciones» de cada carta y de la web; lo que no esté traducido
+            se muestra en español.
+          </p>
+          <ActionForm action={setLanguagesAction.bind(null, orgId, est.id)} submitLabel="Guardar idiomas">
+            <fieldset className="scope-fields">
+              <legend className="visually-hidden">Idiomas adicionales</legend>
+              <div className="scope-list">
+                {LANGUAGES.map((l) => (
+                  <label key={l} className="check">
+                    <input type="checkbox" name="languages" value={l} defaultChecked={est.languages.includes(l)} />
+                    {LANGUAGE_LABELS[l]}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
           </ActionForm>
         </section>
       )}

@@ -7,7 +7,7 @@ import { MAX_SLOTS_PER_DAY } from "@/lib/schedule-form";
 import { toFormState } from "@/server/actions/form-state";
 import { requireUser } from "@/server/auth/current-user";
 import { ValidationError } from "@/server/errors";
-import { updateEstablishment } from "@/server/modules/establishments/service";
+import { setEstablishmentLanguages, updateEstablishment } from "@/server/modules/establishments/service";
 import { createMenu } from "@/server/modules/menus/menus";
 import { deleteDateException, setDateException, setWeeklyHours } from "@/server/modules/schedules/service";
 import { withTenant } from "@/server/tenancy/context";
@@ -137,4 +137,21 @@ export async function updateEstablishmentAction(
   }
   revalidatePath(`/app/${orgId}`, "layout");
   return { ok: true, message: "Datos del local guardados" };
+}
+
+export async function setLanguagesAction(
+  orgId: string,
+  estId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await requireUser();
+  const languages = formData.getAll("languages").filter((v): v is string => typeof v === "string");
+  try {
+    await withTenant(user, orgId, (tx, ctx) => setEstablishmentLanguages(tx, ctx, estId, { languages }));
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/app/${orgId}`, "layout");
+  return { ok: true, message: "Idiomas guardados" };
 }

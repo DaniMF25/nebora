@@ -175,3 +175,25 @@
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
+
+/* Selector de idioma de la carta sin web. */
+.languages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.9rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.languages a {
+  color: var(--m-muted);
+  text-decoration: none;
+}
+
+.languages a[aria-current="true"] {
+  color: var(--m-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}

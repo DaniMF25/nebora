@@ -1,8 +1,8 @@
 # Estado actual del proyecto
 
-**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 casi completa (faltan idiomas); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
+**Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 completa (idiomas con traducción manual); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-26 — navegación por local, miembros limitados a locales y productos disponibles por local.
+**Última actualización:** 2026-10-26 — multilenguaje de cartas y web (traducción manual).
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -58,6 +58,7 @@
 - [x] Navegación por local (D-030): en la barra lateral, bloque del local con Resumen, Cartas, Reservas, Sala, Inventario, Compras, Web pública y Estadísticas, con selector si hay varios locales (recuerda el último visitado). Inventario (`/establishments/<id>/inventory`: stock, movimientos, recuentos y almacenes del local) y compras (`/establishments/<id>/purchasing`) filtrados en el servidor; los traspasos pueden ir a cualquier almacén del grupo. «Catálogo» común: Productos, Ingredientes (`/ingredients`) y Proveedores (`/suppliers`). Con varios locales, «Inventario del grupo» y «Compras del grupo»; con uno solo, esas vistas llevan al local.
 - [x] Acceso por local (migración 0017, D-031): cada miembro accede a todos los locales (por defecto; siempre para propietarios y administradores) o solo a los elegidos. Se aplica en el contexto del servidor y con RLS en todas las tablas operativas de un local (horarios, cartas, almacenes, stock, movimientos, traspasos, recuentos, pedidos, recepciones, sala, reservas, lista de espera, web, estadísticas); el catálogo común sigue siendo de toda la organización y solo lo editan quienes acceden a todos los locales (permiso `catalog.manage`). Se elige al invitar (se aplica al aceptar) y se cambia en Miembros; ascender a administrador da acceso total.
 - [x] Productos disponibles por local (migración 0018, D-032): en la ficha del producto, «Disponible en» todos los locales (por defecto, también los futuros) o solo algunos; el editor de cartas solo ofrece los disponibles en su local y un trigger lo garantiza en la base de datos. No se puede retirar un producto de un local mientras esté en alguna de sus cartas. El listado de productos indica «solo en …».
+- [x] Multilenguaje (migración 0019, D-033): cada local activa idiomas adicionales (inglés, francés, alemán, italiano, portugués, catalán) en «Datos del local». Pestaña «Traducciones» en cada carta (nombre, categorías y productos) y en la web (eslogan, antetítulo, titular, texto y destacados), con el original en español al lado y estado por campo: traducido, por revisar (el original cambió después de traducir) o sin traducir. Las traducciones de productos son del catálogo común. Las cartas llevan sus traducciones en la versión publicada; la web las aplica al guardar. Páginas públicas: idioma por `?lang=` o por el del navegador si el local lo ofrece, selector de idioma, textos fijos y alérgenos traducidos, `lang` en el HTML, y español en lo que falte. Pendiente: la página de reserva online sigue en español; traductor automático no conectado (decisión del usuario: solo manual por ahora).
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -68,20 +69,20 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test` | PASÓ — 14 archivos, 61 pruebas |
-| `pnpm test:integration` | PASÓ — 22 archivos, 219 pruebas (BD efímera migrada desde cero) |
+| `pnpm test` | PASÓ — 15 archivos, 69 pruebas |
+| `pnpm test:integration` | PASÓ — 23 archivos, 227 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 27 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 28 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
-Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente; con el formulario de horario de 2 huecos fijos, falló la prueba E2E de turnos; sin el bloqueo del recuento en `app.apply_stock_count`, falló la prueba de aplicaciones simultáneas (una primera versión de esa prueba no detectaba el fallo y se rehízo con orden forzado). Al quitar el ámbito de locales de la política de almacenes, fallaron 2 pruebas de acceso por local (servicio y RLS directo). Al quitar la exclusión de visitas con sesión de Nébora, la prueba E2E de estadísticas falló (contó 2 visitas a la web en lugar de 1).
+Comprobaciones de mutación (cambio temporal, revertido): al debilitar la política `app.can_access_org` fallaron 6 pruebas RLS; al quitar el bloqueo `FOR UPDATE` de los cambios de membresía, la prueba de concurrencia de propietarios falló en 3 de 3 ejecuciones; al quitar el bloqueo de la carta, la prueba de 6 publicaciones simultáneas falló en 3 de 3 (clave duplicada de versión); al permitir en `app.public_media` la foto de un perfil sin publicar, falló la prueba correspondiente; con el formulario de horario de 2 huecos fijos, falló la prueba E2E de turnos; sin el bloqueo del recuento en `app.apply_stock_count`, falló la prueba de aplicaciones simultáneas (una primera versión de esa prueba no detectaba el fallo y se rehízo con orden forzado). Al dejar de comparar la huella del original, falló la prueba de traducciones «por revisar». Al quitar el ámbito de locales de la política de almacenes, fallaron 2 pruebas de acceso por local (servicio y RLS directo). Al quitar la exclusión de visitas con sesión de Nébora, la prueba E2E de estadísticas falló (contó 2 visitas a la web en lugar de 1).
 
 ## Bloqueos
 Ninguno. Proveedor de correo no configurado: bloquea el envío de invitaciones, la verificación y la recuperación de contraseña.
 
 ## Siguiente tarea
-Multilenguaje de cartas y web (traducción manual por idioma, selector público), acordado con el usuario como siguiente paso para igualar el plan Pro de la competencia. Después: cartas con horario y «fuera de carta», formatos de precio por plato, galería de imágenes, logotipo y color propios. Otras candidatas: alta pública en lista de espera, cancelación por el cliente, subrecetas, personal y turnos, revisión OWASP ASVS.
+Del plan para igualar el Pro de la competencia: cartas con horario y «fuera de carta», formatos de precio por plato, galería de imágenes, logotipo y color propios. También: traducir la página de reserva online. Otras candidatas: alta pública en lista de espera, cancelación por el cliente, subrecetas, personal y turnos, revisión OWASP ASVS.
 
 ## Riesgos pendientes
 - Registro revela si un correo ya existe (mitigado al estar desactivado por defecto).
@@ -103,4 +104,5 @@ Multilenguaje de cartas y web (traducción manual por idioma, selector público)
 - Las estadísticas de visitas son orientativas: cualquiera puede inflarlas recargando o con un navegador automatizado que imite a uno normal (no hay límite por visitante, a propósito, para no guardar datos de visitantes). Visitar la web y luego la carta cuenta dos páginas.
 - La carta para imprimir depende del diálogo de impresión del navegador; el resultado puede variar ligeramente entre navegadores (probado en Chromium).
 - Acceso por local: las políticas RLS de las tablas hijas comprueban el padre con subconsultas (`… IN (SELECT id FROM tabla_padre)`); con volúmenes grandes habrá que medir su coste. Un miembro limitado sigue viendo la lista de miembros de toda la organización (nombres y correos) y el catálogo común completo.
+- Traducciones: los textos fijos públicos en inglés, francés, alemán, italiano, portugués y catalán los ha redactado el equipo de desarrollo y conviene que los revise un hablante nativo. Las traducciones desactualizadas se siguen mostrando (mejor que nada) hasta que se revisen.
 - No se ha hecho revisión de seguridad independiente; el producto no está listo para producción.

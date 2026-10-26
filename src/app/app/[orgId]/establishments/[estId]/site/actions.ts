@@ -5,6 +5,7 @@ import { MAX_HIGHLIGHTS } from "@/lib/site";
 import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
 import { setSiteHeroImage, setSiteTheme, updateSiteProfile } from "@/server/modules/site/service";
+import { saveSiteTranslations } from "@/server/modules/translations/service";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/site`;
 
@@ -78,5 +79,31 @@ export async function setThemeAction(
     path(orgId, estId),
     (tx, ctx) => setSiteTheme(tx, ctx, estId, { theme }),
     "Estilo aplicado",
+  );
+}
+
+export async function saveSiteTranslationsAction(
+  orgId: string,
+  estId: string,
+  lang: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  const highlights = Array.from({ length: MAX_HIGHLIGHTS }, (_, n) => ({
+    title: formString(fd, `h${n}title`),
+    text: formString(fd, `h${n}text`),
+  }));
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) =>
+      saveSiteTranslations(tx, ctx, estId, lang, {
+        tagline: formString(fd, "tagline"),
+        heroEyebrow: formString(fd, "heroEyebrow"),
+        heroTitle: formString(fd, "heroTitle"),
+        heroText: formString(fd, "heroText"),
+        highlights,
+      }),
+    "Traducción guardada",
   );
 }

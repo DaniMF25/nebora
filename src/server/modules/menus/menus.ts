@@ -7,6 +7,7 @@ import { getPool, isUniqueViolation, type Tx } from "@/server/db/pool";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { nameSchema, slugSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
+import { snapshotTranslations } from "@/server/modules/translations/stored";
 import { isUuid, parseInput } from "@/server/validation";
 import { priceCentsSchema } from "./products";
 
@@ -464,6 +465,16 @@ export async function removeItem(tx: Tx, ctx: TenantContext, menuId: string, ite
 export async function buildSnapshot(tx: Tx, ctx: TenantContext, menuId: string): Promise<MenuSnapshot> {
   const draft = await getMenuDraft(tx, ctx, menuId);
   const org = await tx.query<{ name: string }>("SELECT name FROM organizations WHERE id = $1", [ctx.organizationId]);
+  const t = await snapshotTranslations(
+    tx,
+    ctx,
+    menuId,
+    draft.sections.map((s) => s.id),
+    draft.sections.flatMap((s) => s.items.map((i) => i.productId)),
+  );
+  // Los campos de idioma solo aparecen si hay algo que mostrar: así una carta
+  // sin traducciones conserva la misma instantánea que antes (D-033).
+  const has = (o: object | undefined) => o !== undefined && Object.keys(o).length > 0;
   return {
     schemaVersion: 1,
     theme: draft.menu.theme,
@@ -471,8 +482,11 @@ export async function buildSnapshot(tx: Tx, ctx: TenantContext, menuId: string):
     establishmentName: draft.establishmentName,
     menuName: draft.menu.name,
     currency: "EUR",
+    ...(t.languages.length > 0 ? { languages: t.languages } : {}),
+    ...(has(t.menu) ? { menuNameI18n: t.menu } : {}),
     sections: draft.sections.map((s) => ({
       name: s.name,
+      ...(has(t.sections.get(s.id)) ? { i18n: t.sections.get(s.id) } : {}),
       items: s.items.map((i) => ({
         name: i.name,
         description: i.description,
@@ -480,6 +494,7 @@ export async function buildSnapshot(tx: Tx, ctx: TenantContext, menuId: string):
         allergens: i.allergens,
         ...(i.imageMediaId ? { imageId: i.imageMediaId } : {}),
         ...(i.recommended ? { recommended: true } : {}),
+        ...(has(t.products.get(i.productId)) ? { i18n: t.products.get(i.productId) } : {}),
       })),
     })),
   };

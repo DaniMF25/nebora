@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
+import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import type { SiteHighlight } from "@/lib/site";
 import { Icon } from "./icons";
 import { MenuShowcase } from "./menu-showcase";
@@ -31,6 +32,7 @@ export function SiteHome({
   banner?: React.ReactNode;
 }) {
   const menuHref = menuSections ? chrome.links.menu : null;
+  const t = PUBLIC_TEXTS[chrome.lang ?? "es"];
   const bookingHref = chrome.links.booking;
   return (
     <>
@@ -48,11 +50,11 @@ export function SiteHome({
             <div className={styles.heroActions}>
               {bookingHref && (
                 <Link href={bookingHref} className={styles.buttonPrimary}>
-                  Reservar mesa
+                  {t.bookTable}
                 </Link>
               )}
               <a href="#contacto" className={styles.buttonGhost}>
-                Ver horarios <Icon name="arrow" className={styles.buttonIcon} />
+                {t.seeHours} <Icon name="arrow" className={styles.buttonIcon} />
               </a>
             </div>
           </div>
@@ -62,18 +64,18 @@ export function SiteHome({
           <section className={styles.menuBlock} aria-labelledby="nuestra-carta">
             <div className={styles.blockHead}>
               <h2 id="nuestra-carta" className={styles.blockTitle}>
-                Nuestra carta
+                {t.ourMenu}
               </h2>
               <Link href={menuHref} className={styles.textLink}>
-                Ver carta completa <Icon name="arrow" className={styles.buttonIcon} />
+                {t.seeFullMenu} <Icon name="arrow" className={styles.buttonIcon} />
               </Link>
             </div>
-            <MenuShowcase sections={menuSections} fullMenuHref={menuHref} />
+            <MenuShowcase sections={menuSections} fullMenuHref={menuHref} texts={t} />
           </section>
         )}
 
         {site.highlights.length > 0 && (
-          <section className={styles.highlights} aria-label="Lo que nos define">
+          <section className={styles.highlights} aria-label={t.whatDefinesUs}>
             <ul>
               {site.highlights.map((h) => (
                 <li key={h.title}>

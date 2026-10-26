@@ -288,3 +288,14 @@ label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-weigh
 .scope-fields { display: grid; gap: 0.35rem; }
 .scope-fields legend { font-weight: 500; margin-bottom: 0.35rem; }
 .scope-list { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; padding-left: 1.5rem; }
+/* Traducciones: original en español sobre cada campo. */
+.translation-list { display: grid; gap: 1rem; }
+.translation-item { display: grid; gap: 0.5rem; padding: 0.85rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.translation-item > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.translation-input { gap: 0.25rem; }
+.translation-source { font-weight: 400; color: var(--muted); font-size: 0.85rem; }
+.translation-source::before { content: "ES · "; font-weight: 600; letter-spacing: 0.04em; }
+.badge-warn { border-color: #e8b04a; color: #8a5a00; background: #fff6e0; }
+.lang-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1rem; }
+.lang-tabs a { padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; color: var(--fg); font-size: 0.9rem; background: var(--surface); }
+.lang-tabs a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }

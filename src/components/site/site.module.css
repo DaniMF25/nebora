@@ -268,6 +268,58 @@
 
 .headerAction {
   justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Selector de idioma de la cabecera (sin JavaScript: details/summary). */
+.langMenu {
+  position: relative;
+}
+
+.langMenu summary {
+  list-style: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.78rem;
+  letter-spacing: var(--s-label-spacing);
+  border: 1px solid currentColor;
+  border-radius: var(--s-radius);
+  padding: 0.35rem 0.6rem;
+}
+
+.langMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.langMenu ul {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 5;
+  min-width: 10rem;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+  border-radius: var(--s-radius);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+}
+
+.langMenu a {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: var(--s-fg);
+  text-decoration: none;
+  border-radius: var(--s-radius);
+  font-size: 0.95rem;
+}
+
+.langMenu a:hover,
+.langMenu a[aria-current="true"] {
+  color: var(--s-accent);
 }
 
 .headerCta {

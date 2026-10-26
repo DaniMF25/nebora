@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ALLERGEN_LABELS } from "@/lib/allergens";
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import { formatEuros } from "@/lib/money";
+import type { PublicTexts } from "@/lib/public-i18n";
 import { publicMediaUrl } from "@/lib/site";
 import styles from "./site.module.css";
 
@@ -12,6 +12,7 @@ type Item = MenuSnapshot["sections"][number]["items"][number];
 interface Props {
   sections: MenuSnapshot["sections"];
   fullMenuHref: string;
+  texts: PublicTexts;
 }
 
 const MAX_CARDS = 12;
@@ -20,10 +21,10 @@ const MAX_CARDS = 12;
  * Pestañas por categoría y carrusel de platos de la carta publicada. Solo
  * reorganiza datos de la instantánea: no hay acciones de servidor.
  */
-export function MenuShowcase({ sections, fullMenuHref }: Props) {
+export function MenuShowcase({ sections, fullMenuHref, texts: t }: Props) {
   const recommended = sections.flatMap((s) => s.items.filter((i) => i.recommended));
   const tabs: { name: string; items: Item[] }[] = [
-    ...(recommended.length > 0 ? [{ name: "Recomendados", items: recommended }] : []),
+    ...(recommended.length > 0 ? [{ name: t.recommendedTab, items: recommended }] : []),
     ...sections.filter((s) => s.items.length > 0),
   ];
   const [tab, setTab] = useState(0);
@@ -56,7 +57,7 @@ export function MenuShowcase({ sections, fullMenuHref }: Props) {
   return (
     <>
       {tabs.length > 1 && (
-        <div className={styles.tabs} role="tablist" aria-label="Categorías de la carta">
+        <div className={styles.tabs} role="tablist" aria-label={t.menuCategories}>
           {tabs.map((t, n) => (
             <button
               key={t.name}
@@ -71,7 +72,7 @@ export function MenuShowcase({ sections, fullMenuHref }: Props) {
           ))}
         </div>
       )}
-      <ul className={styles.cards} ref={track} onScroll={onScroll} aria-label={`Platos: ${current.name}`}>
+      <ul className={styles.cards} ref={track} onScroll={onScroll} aria-label={`${t.dishes}: ${current.name}`}>
         {items.map((item, n) => (
           <li key={`${current.name}-${n}`} className={`${styles.card} ${item.imageId ? "" : styles.cardNoImage}`}>
             {item.imageId && (
@@ -79,15 +80,17 @@ export function MenuShowcase({ sections, fullMenuHref }: Props) {
               <img className={styles.cardImage} src={publicMediaUrl(item.imageId)} alt={item.name} loading="lazy" />
             )}
             <div className={styles.cardBody}>
-              {item.recommended && <p className={styles.cardBadge}>Recomendado</p>}
+              {item.recommended && <p className={styles.cardBadge}>{t.recommended}</p>}
               <h3 className={styles.cardTitle}>{item.name}</h3>
               <p className={styles.cardPrice}>{formatEuros(item.priceCents)}</p>
               {item.description && <p className={styles.cardText}>{item.description}</p>}
               {item.allergens.length > 0 && (
-                <p className={styles.cardAllergens}>Alérgenos: {item.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ")}</p>
+                <p className={styles.cardAllergens}>
+                  {t.allergens}: {item.allergens.map((a) => t.allergenNames[a]).join(", ")}
+                </p>
               )}
               <a className={styles.cardLink} href={fullMenuHref}>
-                Ver en la carta
+                {t.seeInMenu}
               </a>
             </div>
           </li>
@@ -100,7 +103,7 @@ export function MenuShowcase({ sections, fullMenuHref }: Props) {
               key={n}
               type="button"
               className={styles.dot}
-              aria-label={`Ver ${item.name}`}
+              aria-label={`${t.see} ${item.name}`}
               aria-current={n === active ? "true" : undefined}
               onClick={() => goTo(n)}
             />

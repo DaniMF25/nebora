@@ -1,19 +1,33 @@
-import { ALLERGEN_LABELS } from "@/lib/allergens";
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
+import type { PublicLanguage } from "@/lib/languages";
 import { formatEuros } from "@/lib/money";
+import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { publicMediaUrl } from "@/lib/site";
 import styles from "./menu-view.module.css";
 
 interface Props {
   snapshot: MenuSnapshot;
   footer?: React.ReactNode;
+  lang?: PublicLanguage;
+  /** Selector de idioma (si la carta se ofrece en varios). */
+  languageLinks?: { lang: PublicLanguage; label: string; href: string }[];
 }
 
 /** Representación de una carta a partir de una instantánea (publicada o vista previa del borrador). */
-export function MenuView({ snapshot, footer }: Props) {
+export function MenuView({ snapshot, footer, lang = "es", languageLinks = [] }: Props) {
+  const t = PUBLIC_TEXTS[lang];
   return (
-    <div className={`${styles.page} ${styles[snapshot.theme]}`}>
+    <div lang={lang} className={`${styles.page} ${styles[snapshot.theme]}`}>
       <article className={styles.menu}>
+        {languageLinks.length > 1 && (
+          <nav className={styles.languages} aria-label={t.language}>
+            {languageLinks.map((l) => (
+              <a key={l.lang} href={l.href} hrefLang={l.lang} lang={l.lang} aria-current={l.lang === lang ? "true" : undefined}>
+                {l.label}
+              </a>
+            ))}
+          </nav>
+        )}
         <header className={styles.header}>
           <p className={styles.establishment}>{snapshot.establishmentName}</p>
           <h1 className={styles.title}>{snapshot.menuName}</h1>
@@ -34,14 +48,14 @@ export function MenuView({ snapshot, footer }: Props) {
                       <span className={styles.dots} aria-hidden="true" />
                       <span className={styles.price}>{formatEuros(item.priceCents)}</span>
                     </div>
-                    {item.recommended && <p className={styles.recommended}>Recomendado</p>}
+                    {item.recommended && <p className={styles.recommended}>{t.recommended}</p>}
                     {item.description && <p className={styles.description}>{item.description}</p>}
                     {item.allergens.length > 0 && (
                       <p className={styles.allergens}>
-                        <span className={styles.visuallyHidden}>Alérgenos: </span>
+                        <span className={styles.visuallyHidden}>{t.allergens}: </span>
                         {item.allergens.map((a) => (
                           <span key={a} className={styles.allergen}>
-                            {ALLERGEN_LABELS[a]}
+                            {t.allergenNames[a]}
                           </span>
                         ))}
                       </p>
@@ -53,7 +67,7 @@ export function MenuView({ snapshot, footer }: Props) {
           </section>
         ))}
         <footer className={styles.footer}>
-          <p>Precios en euros. Consulta al personal cualquier duda sobre alérgenos.</p>
+          <p>{t.menuNote}</p>
           {footer}
         </footer>
       </article>

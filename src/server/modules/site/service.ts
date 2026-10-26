@@ -9,6 +9,7 @@ import { storeImage } from "@/server/modules/media/service";
 import { getEstablishment } from "@/server/modules/establishments/service";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { parseInput } from "@/server/validation";
+import type { Language, PublicLanguage } from "@/lib/languages";
 
 /** Contenido de la página pública del local, tal como lo edita el restaurante. */
 export interface SiteProfile {
@@ -246,6 +247,33 @@ export interface PublicSite {
   featuredMenuCode: string | null;
   bookingEnabled: boolean;
   openingHours: { weekday: number; opensMinute: number; durationMinutes: number }[];
+  /** Idiomas adicionales del local y traducciones del perfil (D-033). */
+  languages: Language[];
+  i18n: Partial<Record<Language, Record<string, unknown>>>;
+}
+
+/**
+ * La web con sus textos en `lang`. Cada campo sin traducir se queda en
+ * español; los destacados se traducen uno a uno.
+ */
+export function localizePublicSite(site: PublicSite, lang: PublicLanguage): PublicSite {
+  if (lang === "es" || !site.languages.includes(lang)) return site;
+  const e = site.i18n[lang] ?? {};
+  const str = (key: string, fallback: string | null) =>
+    typeof e[key] === "string" && e[key] ? (e[key] as string) : fallback;
+  const hl = Array.isArray(e.highlights) ? (e.highlights as { title?: unknown; text?: unknown }[]) : [];
+  return {
+    ...site,
+    tagline: str("tagline", site.tagline),
+    heroEyebrow: str("heroEyebrow", site.heroEyebrow),
+    heroTitle: str("heroTitle", site.heroTitle),
+    heroText: str("heroText", site.heroText),
+    highlights: site.highlights.map((h, n) => ({
+      ...h,
+      title: typeof hl[n]?.title === "string" && hl[n]!.title ? (hl[n]!.title as string) : h.title,
+      text: typeof hl[n]?.text === "string" && hl[n]!.text ? (hl[n]!.text as string) : h.text,
+    })),
+  };
 }
 
 const publicSlug = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$/;
@@ -274,6 +302,8 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     featured_menu_slug: string | null;
     featured_menu_code: string | null;
     booking_enabled: boolean;
+    languages: Language[];
+    i18n: PublicSite["i18n"];
   }>("SELECT * FROM app.public_site($1, $2)", slugs);
   const r = rows[0];
   if (!r) return null;
@@ -300,6 +330,8 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     featuredMenuSlug: r.featured_menu_slug,
     featuredMenuCode: r.featured_menu_code,
     bookingEnabled: r.booking_enabled,
+    languages: r.languages,
+    i18n: r.i18n ?? {},
     openingHours: hours.rows.map((h) => ({
       weekday: h.weekday,
       opensMinute: h.opens_minute,

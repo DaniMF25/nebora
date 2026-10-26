@@ -12,6 +12,10 @@ import { getMenuDraft, hasUnpublishedChanges, listVersions, publicationProblems 
 import { listProducts } from "@/server/modules/menus/products";
 import { menuShortUrl } from "@/server/modules/menus/qr";
 import { withTenant } from "@/server/tenancy/context";
+import { TranslationInput, TranslationStatusBadge } from "@/components/panel/translation-field";
+import { LANGUAGE_LABELS } from "@/lib/languages";
+import { getEstablishment } from "@/server/modules/establishments/service";
+import { getMenuTranslationForm } from "@/server/modules/translations/service";
 import {
   activateVersionAction,
   addItemAction,
@@ -23,6 +27,7 @@ import {
   publishMenuAction,
   removeItemAction,
   renameSectionAction,
+  saveMenuTranslationsAction,
   setItemPriceAction,
   setItemRecommendedAction,
   unpublishMenuAction,
@@ -35,22 +40,18 @@ const dateFormat = new Intl.DateTimeFormat("es-ES", {
   timeZone: "Europe/Madrid",
 });
 
-const TABS = ["contenido", "publicacion", "ajustes"] as const;
-const TAB_LIST = [
-  { id: "contenido", label: "Contenido" },
-  { id: "publicacion", label: "Publicación y QR" },
-  { id: "ajustes", label: "Ajustes" },
-];
+const TABS = ["contenido", "traducciones", "publicacion", "ajustes"] as const;
 
 export default async function MenuEditorPage({
   params,
   searchParams,
 }: {
   params: Promise<{ orgId: string; menuId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; lang?: string }>;
 }) {
   const { orgId, menuId } = await params;
-  const tab = pickTab((await searchParams).tab, TABS);
+  const search = await searchParams;
+  const tab = pickTab(search.tab, TABS);
   const user = await requireUser();
 
   let data;
@@ -65,6 +66,8 @@ export default async function MenuEditorPage({
         products: await listProducts(tx, ctx, { activeOnly: true, availableIn: draft.menu.establishmentId }),
         canEdit: ctx.permissions.has("menus.edit"),
         canPublish: ctx.permissions.has("menus.publish"),
+        translations: tab === "traducciones" ? await getMenuTranslationForm(tx, ctx, menuId, search.lang) : null,
+        languages: (await getEstablishment(tx, ctx, draft.menu.establishmentId)).languages,
       };
     });
   } catch (err) {
@@ -72,7 +75,13 @@ export default async function MenuEditorPage({
     throw err;
   }
 
-  const { draft, versions, products, canEdit, canPublish, outdated } = data;
+  const { draft, versions, products, canEdit, canPublish, outdated, translations, languages } = data;
+  const tabList = [
+    { id: "contenido", label: "Contenido" },
+    ...(languages.length > 0 ? [{ id: "traducciones", label: "Traducciones" }] : []),
+    { id: "publicacion", label: "Publicación y QR" },
+    { id: "ajustes", label: "Ajustes" },
+  ];
   const { menu } = draft;
   const publicPath = `/m/${draft.organizationSlug}/${draft.establishmentSlug}/${menu.slug}`;
   const problems = publicationProblems(draft);
@@ -106,7 +115,106 @@ export default async function MenuEditorPage({
           <Link href={`/app/${orgId}/menus/${menuId}?tab=publicacion`}>Ir a publicación</Link>
         </p>
       )}
-      <PageTabs tabs={TAB_LIST} current={tab} basePath={`/app/${orgId}/menus/${menuId}`} />
+      <PageTabs tabs={tabList} current={tab} basePath={`/app/${orgId}/menus/${menuId}`} />
+
+      {tab === "traducciones" && (
+        <section>
+          <h3>Traducciones</h3>
+          {!translations ? (
+            <p className="muted">
+              Este local no tiene idiomas adicionales. Actívalos en{" "}
+              <Link href={`/app/${orgId}/establishments/${menu.establishmentId}?tab=datos`}>Datos del local</Link>.
+            </p>
+          ) : (
+            <>
+              <nav className="lang-tabs" aria-label="Idioma de la traducción">
+                {translations.languages.map((l) => (
+                  <Link
+                    key={l}
+                    href={`/app/${orgId}/menus/${menuId}?tab=traducciones&lang=${l}`}
+                    aria-current={l === translations.lang ? "page" : undefined}
+                  >
+                    {LANGUAGE_LABELS[l]}
+                  </Link>
+                ))}
+              </nav>
+              <p className="muted">
+                {translations.summary.done} traducidos · {translations.summary.stale} por revisar ·{" "}
+                {translations.summary.missing} sin traducir. Lo que quede sin traducir se muestra en español. Los
+                cambios se ven en la carta pública al volver a publicar.
+              </p>
+              <ActionForm
+                action={saveMenuTranslationsAction.bind(null, orgId, menuId, translations.lang, translations.canEditProducts)}
+                submitLabel={`Guardar traducción (${LANGUAGE_LABELS[translations.lang].toLowerCase()})`}
+              >
+                <div className="translation-list">
+                  <div className="translation-item">
+                    <header>
+                      <strong>Carta</strong>
+                      <TranslationStatusBadge status={translations.menu.status} />
+                    </header>
+                    <TranslationInput
+                      name="menuName"
+                      label="Nombre de la carta"
+                      source={translations.menu.source.name}
+                      value={translations.menu.value.name}
+                      max={120}
+                      readOnly={!canEdit}
+                    />
+                  </div>
+                  {translations.sections.map((s) => (
+                    <div key={s.id} className="translation-item">
+                      <header>
+                        <strong>Categoría</strong>
+                        <TranslationStatusBadge status={s.status} />
+                      </header>
+                      <TranslationInput
+                        name={`section:${s.id}`}
+                        label={`Categoría «${s.source.name}»`}
+                        source={s.source.name}
+                        value={s.value.name}
+                        max={120}
+                        readOnly={!canEdit}
+                      />
+                    </div>
+                  ))}
+                  {translations.products.map((p) => (
+                    <div key={p.id} className="translation-item">
+                      <header>
+                        <strong>{p.source.name}</strong>
+                        <TranslationStatusBadge status={p.status} />
+                      </header>
+                      <TranslationInput
+                        name={`product:${p.id}:name`}
+                        label={`Nombre de «${p.source.name}»`}
+                        source={p.source.name}
+                        value={p.value.name}
+                        max={120}
+                        readOnly={!translations.canEditProducts}
+                      />
+                      <TranslationInput
+                        name={`product:${p.id}:description`}
+                        label={`Descripción de «${p.source.name}»`}
+                        source={p.source.description}
+                        value={p.value.description ?? ""}
+                        max={500}
+                        multiline
+                        readOnly={!translations.canEditProducts}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {!translations.canEditProducts && translations.products.length > 0 && (
+                  <p className="muted">
+                    Los productos son del catálogo común: sus traducciones solo las cambia quien gestiona el catálogo.
+                  </p>
+                )}
+                <p className="muted">Las traducciones de un producto sirven para todas las cartas que lo incluyan.</p>
+              </ActionForm>
+            </>
+          )}
+        </section>
+      )}
 
       {tab === "contenido" && (
         <>

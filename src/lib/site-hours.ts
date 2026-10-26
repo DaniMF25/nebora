@@ -11,7 +11,7 @@ export interface HoursLine {
   slots: string[];
 }
 
-const SHORT_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
+const SPANISH = { shortDays: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"], and: "y" } as const;
 
 function hhmm(minute: number): string {
   const m = ((minute % 1440) + 1440) % 1440;
@@ -22,7 +22,11 @@ function hhmm(minute: number): string {
  * Agrupa los días consecutivos con los mismos turnos: «Lun – Vie» con
  * «13:00 – 16:00», «20:00 – 23:30». Los días sin turnos no aparecen.
  */
-export function groupOpeningHours(slots: readonly WeeklySlot[]): HoursLine[] {
+export function groupOpeningHours(
+  slots: readonly WeeklySlot[],
+  words: { shortDays: readonly string[]; and: string } = SPANISH,
+): HoursLine[] {
+  const SHORT_DAYS = words.shortDays;
   const byDay = new Map<number, string[]>();
   for (const s of [...slots].sort((a, b) => a.weekday - b.weekday || a.opensMinute - b.opensMinute)) {
     const label = `${hhmm(s.opensMinute)} – ${hhmm(s.opensMinute + s.durationMinutes)}`;
@@ -41,7 +45,7 @@ export function groupOpeningHours(slots: readonly WeeklySlot[]): HoursLine[] {
       l.from === l.to
         ? SHORT_DAYS[l.from - 1]!
         : l.to === l.from + 1
-          ? `${SHORT_DAYS[l.from - 1]} y ${SHORT_DAYS[l.to - 1]}`
+          ? `${SHORT_DAYS[l.from - 1]} ${words.and} ${SHORT_DAYS[l.to - 1]}`
           : `${SHORT_DAYS[l.from - 1]} – ${SHORT_DAYS[l.to - 1]}`,
     slots: l.slots,
   }));

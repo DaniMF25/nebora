@@ -21,6 +21,7 @@ import {
   unpublishMenu,
   updateMenu,
 } from "@/server/modules/menus/menus";
+import { saveMenuTranslations } from "@/server/modules/translations/service";
 
 // Todos los ids ligados (orgId, menuId, sectionId…) llegan del cliente: los
 // servicios comprueban que pertenecen a la carta y a la organización.
@@ -178,4 +179,39 @@ export async function deleteMenuAction(
   );
   if (!state.ok) return state;
   redirect(`/app/${orgId}/establishments/${establishmentId}/menus`);
+}
+
+/**
+ * Traducciones de la carta a un idioma. Campos: `menuName`, `section:<id>` y,
+ * si se pueden editar los productos, `product:<id>:name|description`.
+ */
+export async function saveMenuTranslationsAction(
+  orgId: string,
+  menuId: string,
+  lang: string,
+  withProducts: boolean,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  const sections: Record<string, string> = {};
+  const products: Record<string, { name: string; description: string }> = {};
+  for (const [key, value] of fd.entries()) {
+    if (typeof value !== "string") continue;
+    const [kind, id, field] = key.split(":");
+    if (kind === "section" && id) sections[id] = value;
+    if (kind === "product" && id && (field === "name" || field === "description")) {
+      products[id] = { ...(products[id] ?? { name: "", description: "" }), [field]: value };
+    }
+  }
+  return runTenantAction(
+    orgId,
+    editorPath(orgId, menuId),
+    (tx, ctx) =>
+      saveMenuTranslations(tx, ctx, menuId, lang, {
+        menuName: formString(fd, "menuName"),
+        sections,
+        ...(withProducts ? { products } : {}),
+      }),
+    "Traducción guardada",
+  );
 }

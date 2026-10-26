@@ -1,20 +1,22 @@
-import { ALLERGEN_LABELS } from "@/lib/allergens";
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
+import type { PublicLanguage } from "@/lib/languages";
 import { formatEuros } from "@/lib/money";
+import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { publicMediaUrl } from "@/lib/site";
 import styles from "./site.module.css";
 
 /** Carta completa con el diseño de la web del local (solo lee la instantánea publicada). */
-export function SiteMenu({ snapshot }: { snapshot: MenuSnapshot }) {
+export function SiteMenu({ snapshot, lang = "es" }: { snapshot: MenuSnapshot; lang?: PublicLanguage }) {
+  const t = PUBLIC_TEXTS[lang];
   return (
     <>
       <section className={styles.pageHead}>
-        <p className={styles.eyebrow}>Nuestra carta</p>
+        <p className={styles.eyebrow}>{t.ourMenu}</p>
         <h1 className={styles.heroTitle}>{snapshot.menuName}</h1>
         <span className={styles.rule} aria-hidden="true" />
       </section>
       {snapshot.sections.length > 1 && (
-        <nav className={styles.sectionNav} aria-label="Categorías">
+        <nav className={styles.sectionNav} aria-label={t.categories}>
           {snapshot.sections.map((s, i) => (
             <a key={i} href={`#categoria-${i + 1}`}>
               {s.name}
@@ -38,12 +40,12 @@ export function SiteMenu({ snapshot }: { snapshot: MenuSnapshot }) {
                       <h3 className={styles.dishName}>{item.name}</h3>
                       <span className={styles.dishPrice}>{formatEuros(item.priceCents)}</span>
                     </div>
-                    {item.recommended && <p className={styles.cardBadge}>Recomendado</p>}
+                    {item.recommended && <p className={styles.cardBadge}>{t.recommended}</p>}
                     {item.description && <p className={styles.cardText}>{item.description}</p>}
                     {item.allergens.length > 0 && (
-                      <ul className={styles.chips} aria-label="Alérgenos">
+                      <ul className={styles.chips} aria-label={t.allergens}>
                         {item.allergens.map((a) => (
-                          <li key={a}>{ALLERGEN_LABELS[a]}</li>
+                          <li key={a}>{t.allergenNames[a]}</li>
                         ))}
                       </ul>
                     )}
@@ -53,7 +55,7 @@ export function SiteMenu({ snapshot }: { snapshot: MenuSnapshot }) {
             </ul>
           </section>
         ))}
-        <p className={styles.menuNote}>Precios en euros. Consulta al personal cualquier duda sobre alérgenos.</p>
+        <p className={styles.menuNote}>{t.menuNote}</p>
       </div>
     </>
   );

@@ -367,3 +367,18 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativa descartada:** catálogos separados por local (duplicaría recetas, escandallos y fotos de los platos comunes).
 
+## D-033 — Traducciones de cartas y web
+**Fecha:** 2026-10-26. **Estado:** aceptada.
+
+**Contexto:** la competencia ofrece multilenguaje incluso en su plan gratuito. El usuario prefiere, por ahora, traducción manual sin servicios externos.
+
+**Decisión:**
+- Español como idioma de origen; cada local activa idiomas de una lista cerrada (`en`, `fr`, `de`, `it`, `pt`, `ca`), validada también en la base de datos.
+- Traducciones en una columna `i18n` (jsonb) de la propia fila (productos, cartas, categorías, perfil de la web): heredan RLS de organización y de local sin tablas nuevas. Estructura y tamaño validados con CHECK; longitudes por campo en el servidor.
+- Cada traducción guarda `src`, la huella del texto español del que se hizo: si el original cambia, el panel la marca «por revisar». Se sigue mostrando hasta que se revise.
+- Cartas: las traducciones entran en la instantánea al publicar (los campos solo aparecen si hay traducción, así las cartas sin traducir no cambian). Web: se aplican al guardar, como el resto del perfil.
+- Público: idioma por `?lang=`, o el primero del navegador (`Accept-Language`) que ofrezca el local, o español; los enlaces internos conservan el idioma elegido; lo que falta se muestra en español. Textos fijos y alérgenos en un diccionario de la aplicación.
+- Un traductor automático (p. ej. Claude o DeepL) podría añadirse como adaptador que rellene estas columnas como borrador marcado para revisión; no se ha conectado (requiere cuenta y clave del cliente, y enviar los textos a ese proveedor).
+
+**Alternativas descartadas:** tabla genérica de traducciones (complica RLS por local); rutas por idioma (`/en/...`), que darían mejor SEO pero obligan a duplicar rutas; se puede revisar más adelante.
+

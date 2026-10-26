@@ -11,24 +11,29 @@ import { listMenus } from "@/server/modules/menus/menus";
 import { getOrganization } from "@/server/modules/organizations/service";
 import { getSiteProfile } from "@/server/modules/site/service";
 import { withTenant } from "@/server/tenancy/context";
-import { removeHeroImageAction, setHeroImageAction, setThemeAction, updateSiteAction } from "./actions";
+import { TranslationInput, TranslationStatusBadge } from "@/components/panel/translation-field";
+import { LANGUAGE_LABELS } from "@/lib/languages";
+import { getSiteTranslationForm } from "@/server/modules/translations/service";
+import {
+  removeHeroImageAction,
+  saveSiteTranslationsAction,
+  setHeroImageAction,
+  setThemeAction,
+  updateSiteAction,
+} from "./actions";
 
-const TABS = ["estilo", "contenido", "foto"] as const;
-const TAB_LIST = [
-  { id: "estilo", label: "Estilo" },
-  { id: "contenido", label: "Contenido" },
-  { id: "foto", label: "Foto principal" },
-];
+const TABS = ["estilo", "contenido", "foto", "traducciones"] as const;
 
 export default async function SiteProfilePage({
   params,
   searchParams,
 }: {
   params: Promise<{ orgId: string; estId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; lang?: string }>;
 }) {
   const { orgId, estId } = await params;
-  const tab = pickTab((await searchParams).tab, TABS);
+  const search = await searchParams;
+  const tab = pickTab(search.tab, TABS);
   const user = await requireUser();
   let data;
   try {
@@ -38,12 +43,19 @@ export default async function SiteProfilePage({
       profile: await getSiteProfile(tx, ctx, estId),
       menus: ctx.permissions.has("menus.read") ? await listMenus(tx, ctx, estId) : [],
       canEdit: ctx.permissions.has("establishments.update"),
+      translations: tab === "traducciones" ? await getSiteTranslationForm(tx, ctx, estId, search.lang) : null,
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, profile: p, menus, canEdit, orgSlug } = data;
+  const { establishment: est, profile: p, menus, canEdit, orgSlug, translations: tr } = data;
+  const TAB_LIST = [
+    { id: "estilo", label: "Estilo" },
+    { id: "contenido", label: "Contenido" },
+    { id: "foto", label: "Foto principal" },
+    ...(est.languages.length > 0 ? [{ id: "traducciones", label: "Traducciones" }] : []),
+  ];
   const slots = Array.from({ length: MAX_HIGHLIGHTS }, (_, n) => p.highlights[n]);
 
   return (
@@ -233,6 +245,102 @@ export default async function SiteProfilePage({
                   className="inline-form"
                 />
               )}
+            </>
+          )}
+        </section>
+      )}
+      {tab === "traducciones" && (
+        <section>
+          <h3>Traducciones</h3>
+          {!tr ? (
+            <p className="muted">
+              Este local no tiene idiomas adicionales. Actívalos en{" "}
+              <Link href={`/app/${orgId}/establishments/${est.id}?tab=datos`}>Datos del local</Link>.
+            </p>
+          ) : (
+            <>
+              <nav className="lang-tabs" aria-label="Idioma de la traducción">
+                {tr.languages.map((l) => (
+                  <Link
+                    key={l}
+                    href={`/app/${orgId}/establishments/${est.id}/site?tab=traducciones&lang=${l}`}
+                    aria-current={l === tr.lang ? "page" : undefined}
+                  >
+                    {LANGUAGE_LABELS[l]}
+                  </Link>
+                ))}
+              </nav>
+              <p>
+                <TranslationStatusBadge status={tr.status} />{" "}
+                <span className="muted">
+                  Los cambios se ven en la web en cuanto se guardan. Lo que no esté traducido se muestra en español.
+                </span>
+              </p>
+              <ActionForm
+                action={saveSiteTranslationsAction.bind(null, orgId, est.id, tr.lang)}
+                submitLabel={`Guardar traducción (${LANGUAGE_LABELS[tr.lang].toLowerCase()})`}
+              >
+                <div className="translation-list">
+                  <div className="translation-item">
+                    <TranslationInput
+                      name="tagline"
+                      label="Eslogan"
+                      source={tr.source.tagline}
+                      value={tr.value.tagline}
+                      max={60}
+                      readOnly={!canEdit}
+                    />
+                    <TranslationInput
+                      name="heroEyebrow"
+                      label="Antetítulo"
+                      source={tr.source.heroEyebrow}
+                      value={tr.value.heroEyebrow}
+                      max={60}
+                      readOnly={!canEdit}
+                    />
+                    <TranslationInput
+                      name="heroTitle"
+                      label="Titular"
+                      source={tr.source.heroTitle}
+                      value={tr.value.heroTitle}
+                      max={120}
+                      readOnly={!canEdit}
+                    />
+                    <TranslationInput
+                      name="heroText"
+                      label="Texto de bienvenida"
+                      source={tr.source.heroText}
+                      value={tr.value.heroText}
+                      max={400}
+                      multiline
+                      readOnly={!canEdit}
+                    />
+                  </div>
+                  {tr.source.highlights.map((h, n) => (
+                    <div key={n} className="translation-item">
+                      <header>
+                        <strong>Destacado {n + 1}</strong>
+                      </header>
+                      <TranslationInput
+                        name={`h${n}title`}
+                        label={`Título del destacado ${n + 1}`}
+                        source={h.title}
+                        value={tr.value.highlights[n]?.title ?? ""}
+                        max={40}
+                        readOnly={!canEdit}
+                      />
+                      <TranslationInput
+                        name={`h${n}text`}
+                        label={`Texto del destacado ${n + 1}`}
+                        source={h.text}
+                        value={tr.value.highlights[n]?.text ?? ""}
+                        max={120}
+                        readOnly={!canEdit}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </ActionForm>
             </>
           )}
         </section>
