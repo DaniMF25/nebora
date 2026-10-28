@@ -94,6 +94,18 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
       .first()
       .evaluate((el) => getComputedStyle(el).getPropertyValue("--s-accent").trim()),
   ).toBe("#b48c56");
+
+  // «Quitar logotipo» va junto a «Subir logotipo» y quita el logotipo (sin enviar el archivo).
+  const upload = await page.getByRole("button", { name: "Subir logotipo" }).boundingBox();
+  const remove = await page.getByRole("button", { name: "Quitar logotipo" }).boundingBox();
+  expect(Math.abs(upload!.y - remove!.y)).toBeLessThan(2);
+  expect(remove!.x).toBeGreaterThan(upload!.x + upload!.width);
+  await page.getByRole("button", { name: "Quitar logotipo" }).click();
+  await expect(page.getByText("Logotipo quitado", { exact: true })).toBeVisible();
+  await expect(page.getByText("Sin logotipo")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Quitar logotipo" })).toHaveCount(0);
+  await visitor.reload();
+  await expect(visitor.getByRole("banner").getByRole("img", { name: "El Faro" })).toHaveCount(0);
 });
 
 test("web pública: hovers con los colores del tema y puntos del carrusel solo si hacen falta", async ({ browser }) => {

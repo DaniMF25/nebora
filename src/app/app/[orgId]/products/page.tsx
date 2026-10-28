@@ -69,14 +69,13 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
                 {data.canEdit && (
                   <details>
                     <summary>Editar {p.name}</summary>
-                    <ActionForm action={updateProductAction.bind(null, orgId, p.id)} submitLabel="Guardar cambios">
+                    <ActionForm
+                      action={updateProductAction.bind(null, orgId, p.id)}
+                      submitLabel="Guardar cambios"
+                      secondary={{ action: deleteProductAction.bind(null, orgId, p.id), label: `Eliminar ${p.name}` }}
+                    >
                       <ProductFields idPrefix={p.id} defaults={p} />
                     </ActionForm>
-                    <ActionForm
-                      action={deleteProductAction.bind(null, orgId, p.id)}
-                      submitLabel={`Eliminar ${p.name}`}
-                      className="inline-form"
-                    />
                   </details>
                 )}
               </li>

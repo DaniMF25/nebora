@@ -7,6 +7,7 @@ import { formatQuantity } from "@/lib/quantity";
 import { getDashboard, type Dashboard } from "@/server/modules/dashboard/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createEstablishmentAction } from "./actions";
+import { OpenStatus } from "@/components/panel/open-status";
 
 export default async function OrganizationPage({ params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params;
@@ -74,7 +75,7 @@ function Today({ orgId, dashboard }: { orgId: string; dashboard: Dashboard }) {
               </h3>
               {e.address && <p className="muted">{e.address}</p>}
               <p>
-                <span className={`badge ${e.openNow ? "badge-ok" : ""}`}>{e.openNow ? "Abierto" : "Cerrado"}</span>
+                <OpenStatus open={e.openNow} label={e.openNow ? "Abierto" : "Cerrado"} small />
                 {e.nextOpening && <span className="muted"> · abre a las {time.format(e.nextOpening)}</span>}
               </p>
               {r && (

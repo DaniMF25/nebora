@@ -205,7 +205,8 @@ export default async function ReservationsPage({
                       <ActionForm
                         key={a.to}
                         action={setStatusAction.bind(null, orgId, estId, r.id, a.to)}
-                        submitLabel={`${a.label} (${r.customerName})`}
+                        submitLabel={a.label}
+                        submitAriaLabel={`${a.label} (${r.customerName})`}
                         className="inline-form"
                       />
                     ))}
@@ -214,7 +215,7 @@ export default async function ReservationsPage({
                 {canManage && ["pending", "confirmed", "seated"].includes(r.status) && (
                   <details>
                     <summary>Modificar reserva de {r.customerName}</summary>
-                    <ActionForm action={updateReservationAction.bind(null, orgId, estId, r.id)} submitLabel="Guardar cambios">
+                    <ActionForm action={updateReservationAction.bind(null, orgId, estId, r.id)} submitLabel="Guardar cambios" className="form form-wide">
                       <div className="inline-form">
                         <label>
                           Fecha
@@ -348,7 +349,7 @@ export default async function ReservationsPage({
         {canManage && (
           <details>
             <summary>Apuntar en lista de espera</summary>
-            <ActionForm action={addWaitlistAction.bind(null, orgId, estId)} submitLabel="Añadir a la lista de espera">
+            <ActionForm action={addWaitlistAction.bind(null, orgId, estId)} submitLabel="Añadir a la lista de espera" className="form form-wide">
               <input type="hidden" name="date" value={date} readOnly />
               <div className="inline-form">
                 <label>
@@ -391,7 +392,7 @@ export default async function ReservationsPage({
       {canManage && (
         <section>
           <h3>Nueva reserva</h3>
-          <form method="get" className="form">
+          <form method="get" className="form form-wide">
             <input type="hidden" name="date" value={date} />
             <div className="inline-form">
               <label>
@@ -411,7 +412,7 @@ export default async function ReservationsPage({
           </form>
           {searchError && <p className="alert">{searchError}</p>}
           {search && (
-            <ActionForm action={createReservationAction.bind(null, orgId, estId)} submitLabel="Crear reserva">
+            <ActionForm action={createReservationAction.bind(null, orgId, estId)} submitLabel="Crear reserva" className="form form-wide">
               <input type="hidden" name="idempotencyKey" value={randomUUID()} readOnly />
               <input type="hidden" name="date" value={date} readOnly />
               <input type="hidden" name="time" value={search.time} readOnly />
@@ -463,7 +464,7 @@ export default async function ReservationsPage({
           </p>
           <details>
             <summary>Configurar reservas online</summary>
-            <ActionForm action={updateSettingsAction.bind(null, orgId, estId)} submitLabel="Guardar configuración">
+            <ActionForm action={updateSettingsAction.bind(null, orgId, estId)} submitLabel="Guardar configuración" className="form form-wide">
               <label className="inline-form">
                 <input type="checkbox" name="publicEnabled" defaultChecked={settings.publicEnabled} /> Aceptar reservas desde
                 la web
@@ -500,7 +501,7 @@ export default async function ReservationsPage({
                   <input type="number" name="maxDaysAhead" min={1} max={365} defaultValue={settings.maxDaysAhead} />
                 </label>
               </div>
-              <label className="inline-form">
+              <label className="check">
                 <input type="checkbox" name="autoConfirm" defaultChecked={settings.autoConfirm} /> Confirmar automáticamente
                 (si no, quedan pendientes de revisión)
               </label>

@@ -18,6 +18,7 @@ import {
   type Slot,
 } from "@/server/modules/schedules/time";
 import { withTenant } from "@/server/tenancy/context";
+import { OpenStatus } from "@/components/panel/open-status";
 import { LANGUAGE_LABELS, LANGUAGES } from "@/lib/languages";
 import {
   deleteExceptionAction,
@@ -102,7 +103,7 @@ export default async function EstablishmentPage({
       </p>
       <h2>{est.name}</h2>
       <p className="status-line">
-        <span className={`badge ${openNow ? "badge-ok" : ""}`}>{openNow ? "Abierto ahora" : "Cerrado ahora"}</span>
+        <OpenStatus open={openNow} label={openNow ? "Abierto ahora" : "Cerrado ahora"} />
         <span className="muted">
           Hora local {fmtTime.format(now)} · {tz}
           {est.address && <> · {est.address}</>}

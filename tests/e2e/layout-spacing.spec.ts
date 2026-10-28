@@ -5,7 +5,8 @@ import { PASSWORD, register, suffix } from "./helpers";
 /**
  * Botones pegados: recorre las páginas del panel con datos reales y comprueba
  * que ningún par de botones visibles queda a menos de MIN_GAP píxeles (en la
- * misma fila o en la misma columna). Abre antes los desplegables. Los planos
+ * misma fila o en la misma columna) ni desalineado con su vecino de fila.
+ * Abre antes los desplegables. Los planos
  * de sala se excluyen: sus mesas son botones colocados en una cuadrícula.
  */
 const MIN_GAP = 6;
@@ -31,6 +32,11 @@ async function touchingButtons(page: Page): Promise<string[]> {
         const sameColumn = hGap < 0;
         if ((sameRow && hGap < minGap) || (sameColumn && vGap < minGap)) {
           out.push(`«${name(a.el)}» y «${name(b.el)}» (separación ${Math.round(Math.max(hGap, vGap))} px)`);
+        }
+        // Botones vecinos en la misma fila: a la misma altura.
+        const dy = Math.abs(a.r.top + a.r.height / 2 - (b.r.top + b.r.height / 2));
+        if (sameRow && hGap >= 0 && hGap < 40 && dy > 2) {
+          out.push(`«${name(a.el)}» y «${name(b.el)}» desalineados (${Math.round(dy)} px)`);
         }
       }
     }

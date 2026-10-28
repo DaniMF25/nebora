@@ -86,13 +86,16 @@ export function BrandSettings({
         )}
         {canEdit && (
           <>
-            <ActionForm action={setLogo} submitLabel="Subir logotipo">
+            <ActionForm
+              action={setLogo}
+              submitLabel="Subir logotipo"
+              secondary={logoUrl ? { action: removeLogo, label: "Quitar logotipo" } : undefined}
+            >
               <label>
                 Imagen del logotipo (PNG, WebP o JPEG, hasta 8 MB)
                 <input type="file" name="image" accept="image/png,image/webp,image/jpeg" required />
               </label>
             </ActionForm>
-            {logoUrl && <ActionForm action={removeLogo} submitLabel="Quitar logotipo" className="inline-form" />}
           </>
         )}
       </section>

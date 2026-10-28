@@ -119,17 +119,19 @@ export default async function FloorPage({ params }: { params: Promise<{ orgId: s
                     <ul className="cards">
                       {zone.tables.map((t) => (
                         <li key={t.id}>
-                          <ActionForm action={updateTableAction.bind(null, orgId, estId, t.id)} submitLabel={`Guardar ${t.name}`}>
+                          <ActionForm
+                            action={updateTableAction.bind(null, orgId, estId, t.id)}
+                            submitLabel={`Guardar ${t.name}`}
+                            secondary={{
+                              action: deleteTableAction.bind(null, orgId, estId, t.id),
+                              label: `Eliminar ${t.name}`,
+                            }}
+                          >
                             <TableFields defaults={t} />
                             <label className="inline-form">
                               <input type="checkbox" name="active" defaultChecked={t.active} /> Activa
                             </label>
                           </ActionForm>
-                          <ActionForm
-                            action={deleteTableAction.bind(null, orgId, estId, t.id)}
-                            submitLabel={`Eliminar ${t.name}`}
-                            className="inline-form"
-                          />
                         </li>
                       ))}
                     </ul>
@@ -137,14 +139,16 @@ export default async function FloorPage({ params }: { params: Promise<{ orgId: s
                 )}
                 <details>
                   <summary>Ajustes de {zone.name}</summary>
-                  <ActionForm action={updateZoneAction.bind(null, orgId, estId, zone.id)} submitLabel="Guardar zona">
+                  <ActionForm
+                    action={updateZoneAction.bind(null, orgId, estId, zone.id)}
+                    submitLabel="Guardar zona"
+                    secondary={{
+                      action: deleteZoneAction.bind(null, orgId, estId, zone.id),
+                      label: `Eliminar zona ${zone.name}`,
+                    }}
+                  >
                     <ZoneFields name={zone.name} width={zone.planWidth} height={zone.planHeight} />
                   </ActionForm>
-                  <ActionForm
-                    action={deleteZoneAction.bind(null, orgId, estId, zone.id)}
-                    submitLabel={`Eliminar zona ${zone.name}`}
-                    className="inline-form"
-                  />
                 </details>
               </>
             )}
