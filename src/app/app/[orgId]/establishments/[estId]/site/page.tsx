@@ -20,6 +20,7 @@ import {
   removeLogoAction,
   setBrandingAction,
   setLogoAction,
+  setLogoSizeAction,
   saveSiteTranslationsAction,
   setHeroImageAction,
   setThemeAction,
@@ -116,6 +117,7 @@ export default async function SiteProfilePage({
           theme={p.theme}
           establishmentName={est.name}
           logoUrl={p.logoMediaId ? privateMediaUrl(orgId, p.logoMediaId) : null}
+          logoSize={p.logoSize}
           accentColor={p.accentColor}
           fontPairing={p.fontPairing}
           previewHref={(font) =>
@@ -124,6 +126,7 @@ export default async function SiteProfilePage({
           canEdit={canEdit}
           setLogo={setLogoAction.bind(null, orgId, est.id)}
           removeLogo={removeLogoAction.bind(null, orgId, est.id)}
+          setLogoSize={setLogoSizeAction.bind(null, orgId, est.id)}
           setBranding={setBrandingAction.bind(null, orgId, est.id)}
         />
       )}

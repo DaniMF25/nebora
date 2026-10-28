@@ -198,11 +198,25 @@
 
 .brandLogo {
   display: block;
-  max-height: 3.25rem;
-  max-width: min(11rem, 42vw);
   width: auto;
   height: auto;
   object-fit: contain;
+}
+
+/* Tamaños del logotipo (el ancho máximo evita que tape el menú en el móvil). */
+.logo-small {
+  max-height: 3rem;
+  max-width: min(10rem, 42vw);
+}
+
+.logo-medium {
+  max-height: 4.5rem;
+  max-width: min(15rem, 52vw);
+}
+
+.logo-large {
+  max-height: 6.5rem;
+  max-width: min(21rem, 60vw);
 }
 
 .brandName {
@@ -565,7 +579,16 @@
   cursor: pointer;
 }
 
-.tab[aria-selected="true"] {
+/* Pestañas y puntos son botones: sin el relleno de hover de los botones comunes. */
+.tab:hover {
+  background: transparent;
+  color: var(--s-fg);
+  border-color: transparent;
+  border-bottom-color: var(--s-line);
+}
+
+.tab[aria-selected="true"],
+.tab[aria-selected="true"]:hover {
   color: var(--s-fg);
   border-bottom-color: var(--s-accent);
 }
@@ -717,7 +740,13 @@
   cursor: pointer;
 }
 
-.dot[aria-current="true"] {
+.dot:hover {
+  background: color-mix(in srgb, var(--s-accent) 55%, var(--s-line));
+  border-color: transparent;
+}
+
+.dot[aria-current="true"],
+.dot[aria-current="true"]:hover {
   background: var(--s-accent);
 }
 
@@ -910,12 +939,19 @@
 
 /* ------------------------------------------- páginas interiores (carta, reservas) */
 
-/* Los formularios comunes (globals.css) toman los colores del tema. */
+/*
+ * Los formularios y botones comunes (globals.css) toman los colores del tema
+ * y del color de marca: así ningún hover ni foco usa el violeta del panel.
+ */
 .site {
   --bg: var(--s-bg);
   --fg: var(--s-fg);
   --muted: var(--s-muted);
   --accent: var(--s-accent);
+  --accent-strong: color-mix(in srgb, var(--s-accent) 82%, var(--s-fg));
+  --accent-soft: color-mix(in srgb, var(--s-accent) 32%, transparent);
+  --on-accent: var(--s-on-accent);
+  --surface: var(--s-surface);
   --border: var(--s-line);
 }
 

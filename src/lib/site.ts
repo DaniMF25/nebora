@@ -30,3 +30,8 @@ export function publicMediaUrl(id: string): string {
 export function privateMediaUrl(orgId: string, id: string): string {
   return `/app/${orgId}/media/${id}`;
 }
+
+/** Tamaños del logotipo en la cabecera de la web (D-034). */
+export const LOGO_SIZES = ["small", "medium", "large"] as const;
+export type LogoSize = (typeof LOGO_SIZES)[number];
+export const LOGO_SIZE_LABELS: Record<LogoSize, string> = { small: "Pequeño", medium: "Mediano", large: "Grande" };

@@ -4,7 +4,14 @@ import type { FormState } from "@/lib/form-state";
 import { MAX_HIGHLIGHTS } from "@/lib/site";
 import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
-import { setSiteBranding, setSiteHeroImage, setSiteLogo, setSiteTheme, updateSiteProfile } from "@/server/modules/site/service";
+import {
+  setSiteBranding,
+  setSiteHeroImage,
+  setSiteLogo,
+  setSiteLogoSize,
+  setSiteTheme,
+  updateSiteProfile,
+} from "@/server/modules/site/service";
 import { saveSiteTranslations } from "@/server/modules/translations/service";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/site`;
@@ -133,5 +140,14 @@ export async function setBrandingAction(orgId: string, estId: string, _p: FormSt
         fontPairing: pairing === "" ? null : pairing,
       }),
     "Marca guardada",
+  );
+}
+
+export async function setLogoSizeAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => setSiteLogoSize(tx, ctx, estId, { logoSize: formString(fd, "logoSize") }),
+    "Tamaño guardado",
   );
 }

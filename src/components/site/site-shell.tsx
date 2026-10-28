@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PublicLanguage } from "@/lib/languages";
 import type { MenuTheme } from "@/lib/menu-snapshot";
 import { readableOn } from "@/lib/color";
+import type { LogoSize } from "@/lib/site";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { pairingStyle, resolvePairing } from "@/lib/site-fonts";
 import { groupOpeningHours, type WeeklySlot } from "@/lib/site-hours";
@@ -22,6 +23,7 @@ export interface SiteChrome {
   links: { home: string; menu: string | null; booking: string | null };
   /** Marca (D-034): logotipo, color de acento y combinación tipográfica. */
   logoUrl?: string | null;
+  logoSize?: LogoSize;
   accentColor?: string | null;
   fontPairing?: string | null;
   /** Idioma de la página (por defecto español) y enlaces del selector de idioma. */
@@ -88,7 +90,11 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
         <Link href={links.home} className={styles.brand}>
           {site.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- imagen ya reducida y servida por la app
-            <img className={styles.brandLogo} src={site.logoUrl} alt={site.establishmentName} />
+            <img
+              className={`${styles.brandLogo} ${styles[`logo-${site.logoSize ?? "medium"}`]}`}
+              src={site.logoUrl}
+              alt={site.establishmentName}
+            />
           ) : (
             <span className={styles.brandName}>{site.establishmentName}</span>
           )}

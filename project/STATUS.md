@@ -2,7 +2,7 @@
 
 **Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 completa (idiomas con traducción manual); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-28 — marca de la web: logotipo, color y tipografías.
+**Última actualización:** 2026-10-28 — tamaño del logotipo, hovers con los colores del tema y puntos del carrusel solo si hacen falta.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -60,6 +60,7 @@
 - [x] Productos disponibles por local (migración 0018, D-032): en la ficha del producto, «Disponible en» todos los locales (por defecto, también los futuros) o solo algunos; el editor de cartas solo ofrece los disponibles en su local y un trigger lo garantiza en la base de datos. No se puede retirar un producto de un local mientras esté en alguna de sus cartas. El listado de productos indica «solo en …».
 - [x] Multilenguaje (migración 0019, D-033): cada local activa idiomas adicionales (inglés, francés, alemán, italiano, portugués, catalán) en «Datos del local». Pestaña «Traducciones» en cada carta (nombre, categorías y productos) y en la web (eslogan, antetítulo, titular, texto y destacados), con el original en español al lado y estado por campo: traducido, por revisar (el original cambió después de traducir) o sin traducir. Las traducciones de productos son del catálogo común. Las cartas llevan sus traducciones en la versión publicada; la web las aplica al guardar. Páginas públicas: idioma por `?lang=` o por el del navegador si el local lo ofrece, selector de idioma, textos fijos y alérgenos traducidos, `lang` en el HTML, y español en lo que falte. Pendiente: la página de reserva online sigue en español; traductor automático no conectado (decisión del usuario: solo manual por ahora).
 - [x] Marca de la web (migración 0020, D-034): pestaña «Marca» en la web del local con logotipo (PNG/WebP/JPEG reprocesado a WebP con transparencia; sustituye al nombre en la cabecera; solo público con la web publicada), color de marca propio (sustituye al acento del estilo; texto legible calculado y aviso si contrasta poco con el fondo) y 4 tipografías por estilo (la original y 3 alternativas, con muestra y vista previa sin guardar). Las 33 fuentes las aloja la aplicación y el navegador solo descarga las de la combinación usada.
+- [x] Ajustes de la web (migración 0021): tamaño del logotipo (pequeño, mediano —por defecto, mayor que el anterior— o grande) con muestra en el panel; los botones de la web (pestañas, puntos, reserva) ya no usan el violeta del panel al pasar el ratón: toman el color del tema o de marca, y su texto el color legible calculado; los puntos del carrusel solo aparecen si los platos no caben.
 - [x] Prueba local gratuita con Docker Compose (`docker compose up --build`, instrucciones en README; verificado con recorrido completo y reinicio).
 - [x] Demo temporal: `scripts/demo-sprite.sh` (una orden en una máquina Linux limpia; verificado en Ubuntu 24.04). Preparación para Fly.io: `fly.toml` de pruebas, `CLIENT_IP_HEADER` (IP real del cliente desde `Fly-Client-IP`), `pnpm db:provision`.
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
@@ -73,7 +74,7 @@
 | `pnpm test` | PASÓ — 16 archivos, 74 pruebas |
 | `pnpm test:integration` | PASÓ — 24 archivos, 231 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 29 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 30 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 

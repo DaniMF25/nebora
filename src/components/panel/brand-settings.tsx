@@ -4,6 +4,7 @@ import { fontClasses } from "@/components/site/fonts";
 import type { FormState } from "@/lib/form-state";
 import { contrastRatio } from "@/lib/color";
 import type { MenuTheme } from "@/lib/menu-snapshot";
+import { LOGO_SIZE_LABELS, LOGO_SIZES, type LogoSize } from "@/lib/site";
 import { pairingsFor, resolvePairing } from "@/lib/site-fonts";
 import { THEME_INFO } from "@/lib/site-themes";
 import styles from "./brand-settings.module.css";
@@ -18,23 +19,27 @@ export function BrandSettings({
   theme,
   establishmentName,
   logoUrl,
+  logoSize,
   accentColor,
   fontPairing,
   previewHref,
   canEdit,
   setLogo,
   removeLogo,
+  setLogoSize,
   setBranding,
 }: {
   theme: MenuTheme;
   establishmentName: string;
   logoUrl: string | null;
+  logoSize: LogoSize;
   accentColor: string | null;
   fontPairing: string | null;
   previewHref: (fontId?: string) => string;
   canEdit: boolean;
   setLogo: Action;
   removeLogo: Action;
+  setLogoSize: Action;
   setBranding: Action;
 }) {
   const info = THEME_INFO[theme];
@@ -57,6 +62,27 @@ export function BrandSettings({
           </div>
         ) : (
           <p className="muted">Sin logotipo: se muestra el nombre del local con la letra del estilo.</p>
+        )}
+        {logoUrl && canEdit && (
+          <div className={styles.block}>
+            <ActionForm action={setLogoSize} submitLabel="Guardar tamaño">
+              <fieldset>
+                <legend className={styles.legend}>Tamaño en la cabecera</legend>
+                <div className={styles.sizes}>
+                  {LOGO_SIZES.map((size) => (
+                    <label key={size} className={styles.size}>
+                      <input type="radio" name="logoSize" value={size} defaultChecked={size === logoSize} />
+                      <span className={styles.sizeStage} style={{ ["--logo-bg" as string]: info.mock.bg }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada */}
+                        <img src={logoUrl} alt="" className={styles[`size-${size}`]} />
+                      </span>
+                      {LOGO_SIZE_LABELS[size]}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </ActionForm>
+          </div>
         )}
         {canEdit && (
           <>
@@ -83,8 +109,7 @@ export function BrandSettings({
               <legend>Color de marca</legend>
               <p className="muted">
                 Se usa en botones, enlaces y detalles. El del estilo {info.name} es{" "}
-                <span className={styles.swatch} style={{ background: info.accent }} aria-hidden="true" />{" "}
-                {info.accent}.
+                <span className={styles.swatch} style={{ background: info.accent }} aria-hidden="true" /> {info.accent}.
               </p>
               <label className="check">
                 <input type="checkbox" name="customAccent" value="1" defaultChecked={accentColor !== null} />

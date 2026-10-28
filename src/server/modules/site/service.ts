@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { MENU_THEMES, type MenuTheme } from "@/lib/menu-snapshot";
-import { HIGHLIGHT_ICONS, MAX_HIGHLIGHTS, type SiteHighlight } from "@/lib/site";
+import { HIGHLIGHT_ICONS, LOGO_SIZES, MAX_HIGHLIGHTS, type LogoSize, type SiteHighlight } from "@/lib/site";
 import { recordAudit } from "@/server/audit/audit";
 import { getPool, type Tx } from "@/server/db/pool";
 import { ValidationError } from "@/server/errors";
@@ -30,6 +30,7 @@ export interface SiteProfile {
   featuredMenuId: string | null;
   /** Marca (D-034): logotipo, color de acento (#rrggbb) y combinación tipográfica. */
   logoMediaId: string | null;
+  logoSize: LogoSize;
   accentColor: string | null;
   fontPairing: string | null;
   updatedAt: Date | null;
@@ -91,7 +92,7 @@ export const updateSiteSchema = z
 
 const COLUMNS = `establishment_id AS "establishmentId", published, theme, tagline, hero_eyebrow AS "heroEyebrow",
   hero_title AS "heroTitle", hero_text AS "heroText", hero_media_id AS "heroMediaId", phone, whatsapp, instagram,
-  highlights, featured_menu_id AS "featuredMenuId", logo_media_id AS "logoMediaId", accent_color AS "accentColor",
+  highlights, featured_menu_id AS "featuredMenuId", logo_media_id AS "logoMediaId", logo_size AS "logoSize", accent_color AS "accentColor",
   font_pairing AS "fontPairing", updated_at AS "updatedAt"`;
 
 function emptyProfile(establishmentId: string): SiteProfile {
@@ -110,6 +111,7 @@ function emptyProfile(establishmentId: string): SiteProfile {
     highlights: [],
     featuredMenuId: null,
     logoMediaId: null,
+    logoSize: "medium",
     accentColor: null,
     fontPairing: null,
     updatedAt: null,
@@ -254,6 +256,25 @@ export async function setSiteLogo(
   });
 }
 
+/** Tamaño del logotipo en la cabecera. */
+export async function setSiteLogoSize(tx: Tx, ctx: TenantContext, establishmentId: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  const { logoSize } = parseInput(z.object({ logoSize: z.enum(LOGO_SIZES) }).strict(), input);
+  await getEstablishment(tx, ctx, establishmentId);
+  await lockProfile(tx, ctx, establishmentId);
+  await tx.query("UPDATE establishment_profiles SET logo_size = $3 WHERE organization_id = $1 AND establishment_id = $2", [
+    ctx.organizationId,
+    establishmentId,
+    logoSize,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: "site.logo_size_set",
+    entityType: "establishment",
+    entityId: establishmentId,
+    metadata: { logoSize },
+  });
+}
+
 const brandingSchema = z
   .object({
     /** null o "" = el color del estilo. */
@@ -321,6 +342,7 @@ export interface PublicSite {
   languages: Language[];
   /** Marca (D-034). */
   logoMediaId: string | null;
+  logoSize: LogoSize;
   accentColor: string | null;
   fontPairing: string | null;
   i18n: Partial<Record<Language, Record<string, unknown>>>;
@@ -379,6 +401,7 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     languages: Language[];
     i18n: PublicSite["i18n"];
     logo_media_id: string | null;
+    logo_size: LogoSize;
     accent_color: string | null;
     font_pairing: string | null;
   }>("SELECT * FROM app.public_site($1, $2)", slugs);
@@ -410,6 +433,7 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     languages: r.languages,
     i18n: r.i18n ?? {},
     logoMediaId: r.logo_media_id,
+    logoSize: r.logo_size,
     accentColor: r.accent_color,
     fontPairing: r.font_pairing,
     openingHours: hours.rows.map((h) => ({

@@ -54,6 +54,7 @@ export default async function SitePreviewPage({ params, searchParams }: { params
         instagram: profile.instagram,
         openingHours: preview.openingHours,
         logoUrl: profile.logoMediaId ? privateMediaUrl(orgId, profile.logoMediaId) : null,
+        logoSize: profile.logoSize,
         accentColor: profile.accentColor,
         fontPairing,
         links: {

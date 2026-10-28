@@ -10,6 +10,7 @@ import {
   getSiteProfile,
   setSiteBranding,
   setSiteLogo,
+  setSiteLogoSize,
   updateSiteProfile,
 } from "@/server/modules/site/service";
 import { withTenant, type TenantContext } from "@/server/tenancy/context";
@@ -118,6 +119,14 @@ describe("marca de la web", () => {
       accentColor: "#e4572e",
       fontPairing: "mod-dmserif",
     });
+
+    // Tamaño del logotipo: mediano por defecto; solo pequeño, mediano o grande.
+    expect((await getPublicSite(orgSlug, est.slug))!.logoSize).toBe("medium");
+    await asOwner((tx, ctx) => setSiteLogoSize(tx, ctx, est.id, { logoSize: "large" }));
+    expect((await getPublicSite(orgSlug, est.slug))!.logoSize).toBe("large");
+    await expect(
+      asOwner((tx, ctx) => setSiteLogoSize(tx, ctx, est.id, { logoSize: "huge" })),
+    ).rejects.toBeInstanceOf(ValidationError);
 
     await asOwner((tx, ctx) => setSiteLogo(tx, ctx, est.id, null));
     expect((await getPublicSite(orgSlug, est.slug))!.logoMediaId).toBeNull();

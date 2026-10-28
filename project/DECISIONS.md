@@ -395,3 +395,5 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** paleta libre completa (fondo, texto…), que rompe fácilmente la legibilidad; fuentes subidas por el cliente (licencias y seguridad); fuentes cargadas desde Google en el navegador del visitante (privacidad).
 
+**Ampliación (2026-10-28):** tamaño del logotipo (`logo_size`: small, medium, large; migración 0021). Las variables del panel que usan los estilos comunes de `globals.css` (`--accent`, `--accent-strong`, `--accent-soft`, `--on-accent`, `--surface`) se redefinen dentro de la web con los colores del tema y de marca, para que ningún hover, foco ni botón use el violeta del panel; pestañas y puntos del carrusel tienen su propio hover.
+

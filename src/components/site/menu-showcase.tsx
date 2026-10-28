@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import { formatEuros } from "@/lib/money";
 import type { PublicTexts } from "@/lib/public-i18n";
@@ -30,6 +30,16 @@ export function MenuShowcase({ sections, fullMenuHref, texts: t }: Props) {
   const [tab, setTab] = useState(0);
   const [active, setActive] = useState(0);
   const track = useRef<HTMLUListElement>(null);
+  // Los puntos solo tienen sentido si los platos no caben y hay que desplazarse.
+  const [overflowing, setOverflowing] = useState(false);
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const check = () => setOverflowing(el.scrollWidth > el.clientWidth + 1);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [tab]);
   const current = tabs[tab] ?? tabs[0];
   if (!current) return null;
   // Con foto primero: el carrusel luce más; el orden de la carta se mantiene dentro de cada grupo.
@@ -96,7 +106,7 @@ export function MenuShowcase({ sections, fullMenuHref, texts: t }: Props) {
           </li>
         ))}
       </ul>
-      {items.length > 1 && (
+      {overflowing && items.length > 1 && (
         <div className={styles.dots}>
           {items.map((item, n) => (
             <button

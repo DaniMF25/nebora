@@ -104,3 +104,63 @@
   font-size: 0.85rem;
   justify-self: start;
 }
+
+/* Tamaños del logotipo: muestra a escala reducida (la mitad del tamaño real). */
+.sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.size {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.size:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.sizeStage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 11rem;
+  height: 4.25rem;
+  background: var(--logo-bg);
+  border-radius: 8px;
+}
+
+.sizeStage img {
+  object-fit: contain;
+}
+
+.size-small {
+  max-height: 1.5rem;
+  max-width: 5rem;
+}
+
+.size-medium {
+  max-height: 2.25rem;
+  max-width: 7.5rem;
+}
+
+.size-large {
+  max-height: 3.25rem;
+  max-width: 10.5rem;
+}
+
+.block {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
