@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
-import { MAX_SLOTS_PER_DAY, slotFieldsFor, WEEKDAY_LABELS } from "@/lib/schedule-form";
+import { ExceptionSlotsEditor, WeeklyHoursEditor } from "@/components/panel/hours-editor";
+import { MAX_SLOTS_PER_DAY, WEEKDAY_LABELS } from "@/lib/schedule-form";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
 import { getEstablishment } from "@/server/modules/establishments/service";
@@ -27,33 +28,6 @@ import {
 } from "./actions";
 
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
-
-function SlotInputs({ prefix, slots, label }: { prefix: string; slots: Slot[]; label: string }) {
-  return (
-    <>
-      {Array.from({ length: slotFieldsFor(slots.length) }, (_, n) => {
-        const s = slots[n];
-        return (
-          <span key={n} className="inline-form">
-            <input
-              type="time"
-              name={`${prefix}s${n}o`}
-              defaultValue={s ? formatMinutes(s.opensMinute) : ""}
-              aria-label={`${label}, turno ${n + 1}, apertura`}
-            />
-            –
-            <input
-              type="time"
-              name={`${prefix}s${n}c`}
-              defaultValue={s ? formatMinutes((s.opensMinute + s.durationMinutes) % 1440) : ""}
-              aria-label={`${label}, turno ${n + 1}, cierre`}
-            />
-          </span>
-        );
-      })}
-    </>
-  );
-}
 
 function describeSlots(slots: Slot[]): string {
   return slots.map((s) => `${formatMinutes(s.opensMinute)}–${slotClosingTime(s)}`).join(", ");
@@ -209,24 +183,26 @@ export default async function EstablishmentPage({
           <section>
             <h3>Horario semanal</h3>
             <p className="muted">
-              Hasta {MAX_SLOTS_PER_DAY} turnos por día: al guardar aparece un hueco más en los días que lo necesiten. Si
-              el cierre es anterior a la apertura, el turno termina al día siguiente (p. ej. 20:00–02:00).
+              Marca los días que abres y sus turnos (hasta {MAX_SLOTS_PER_DAY} por día, p. ej. comidas y cenas). Si el
+              cierre es anterior a la apertura, el turno termina al día siguiente (p. ej. 20:00 a 02:00).
             </p>
             {canEdit ? (
-              <ActionForm action={saveWeeklyHoursAction.bind(null, orgId, est.id)} submitLabel="Guardar horario">
-                <fieldset className="schedule-grid">
-                  <legend className="visually-hidden">Turnos por día</legend>
-                  {WEEKDAY_LABELS.map((label, i) => (
-                    <div key={label} className="schedule-row">
-                      <span className="schedule-day">{label}</span>
-                      <SlotInputs
-                        prefix={`d${i + 1}`}
-                        label={label}
-                        slots={schedule.weekly.filter((s) => s.weekday === i + 1)}
-                      />
-                    </div>
-                  ))}
-                </fieldset>
+              <ActionForm
+                action={saveWeeklyHoursAction.bind(null, orgId, est.id)}
+                submitLabel="Guardar horario"
+                className="form form-wide"
+                resetOnSuccess={false}
+              >
+                <WeeklyHoursEditor
+                  initial={WEEKDAY_LABELS.map((_, i) =>
+                    schedule.weekly
+                      .filter((s) => s.weekday === i + 1)
+                      .map((s) => ({
+                        opens: formatMinutes(s.opensMinute),
+                        closes: formatMinutes((s.opensMinute + s.durationMinutes) % 1440),
+                      })),
+                  )}
+                />
               </ActionForm>
             ) : (
               <ul>
@@ -269,13 +245,7 @@ export default async function EstablishmentPage({
                   Fecha
                   <input type="date" name="date" required min={today} />
                 </label>
-                <label className="inline-form">
-                  <input type="checkbox" name="closed" /> Cerrado todo el día
-                </label>
-                <div>
-                  <span>Turnos especiales (si no está cerrado)</span>
-                  <SlotInputs prefix="x" label="Excepción" slots={[]} />
-                </div>
+                <ExceptionSlotsEditor />
                 <label>
                   Nota (opcional)
                   <input name="note" maxLength={200} />

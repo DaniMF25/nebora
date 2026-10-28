@@ -15,12 +15,14 @@ import { TranslationInput, TranslationStatusBadge } from "@/components/panel/tra
 import { LANGUAGE_LABELS } from "@/lib/languages";
 import { getSiteTranslationForm } from "@/server/modules/translations/service";
 import { BrandSettings } from "@/components/panel/brand-settings";
+import { PublishSwitch } from "@/components/panel/publish-switch";
 import {
   removeHeroImageAction,
   removeLogoAction,
   setBrandingAction,
   setLogoAction,
   setLogoSizeAction,
+  setPublishedAction,
   saveSiteTranslationsAction,
   setHeroImageAction,
   setThemeAction,
@@ -78,18 +80,25 @@ export default async function SiteProfilePage({
           </p>
         </div>
         <div className="info-box">
-          <p>
-            Estado: <strong>{p.published ? "publicada" : "sin publicar"}</strong>
-            {p.published && (
+          {canEdit ? (
+            <PublishSwitch published={p.published} action={setPublishedAction.bind(null, orgId, est.id)} />
+          ) : (
+            <p>
+              Estado: <strong>{p.published ? "publicada" : "sin publicar"}</strong>
+            </p>
+          )}
+          <p className="muted">
+            {p.published ? (
               <>
-                {" · "}
+                Tus clientes ya la ven.{" "}
                 <a href={`/${orgSlug}/${est.slug}`} target="_blank" rel="noopener">
                   Ver página pública
                 </a>
               </>
+            ) : (
+              "Nadie la ve todavía. Prepárala con calma y publícala cuando esté lista."
             )}
           </p>
-          <p className="muted">Puedes cambiar de estilo cuando quieras: tu contenido se mantiene.</p>
         </div>
       </div>
 
@@ -235,12 +244,7 @@ export default async function SiteProfilePage({
                     </label>
                   </fieldset>
                 ))}
-                <label className="checkbox">
-                  <span>
-                    <input type="checkbox" name="published" defaultChecked={p.published} /> Publicar la página
-                  </span>
-                </label>
-              </fieldset>
+                              </fieldset>
             </ActionForm>
           )}
         </section>

@@ -42,6 +42,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Idiomas y alérgenos — alérgenos UE; traducción manual de cartas y web a inglés, francés, alemán, italiano, portugués y catalán (D-033). Pendiente: traductor automático (adaptador) y reserva online traducida.
 - [x] Productos disponibles por local: cada carta solo ofrece los productos disponibles en su local (D-032).
 - [x] Marca de la web: logotipo, color propio y 4 tipografías por estilo (D-034).
+- [x] Interruptor para publicar o retirar la web desde la cabecera (D-035).
 - [x] Carta en papel: página para imprimir o guardar como PDF (publicada o borrador, alérgenos, descripciones, QR, 1 o 2 columnas).
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 - [x] Fotos de platos y marca «recomendado» (migración 0013, D-021).

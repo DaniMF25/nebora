@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, setDailyHours, suffix } from "./helpers";
 
 function localDate(daysAhead: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date(Date.now() + daysAhead * 86_400_000));
@@ -16,14 +16,10 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   const estUrl = page.url();
 
   await openTab(page, "Horario");
-  for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) {
-    await page.getByLabel(`${day}, turno 1, apertura`).fill("13:00");
-    await page.getByLabel(`${day}, turno 1, cierre`).fill("16:00");
-    await page.getByLabel(`${day}, turno 2, apertura`).fill("20:00");
-    await page.getByLabel(`${day}, turno 2, cierre`).fill("00:00");
-  }
-  await page.getByRole("button", { name: "Guardar horario" }).click();
-  await expect(page.getByText("Horario guardado")).toBeVisible();
+  await setDailyHours(page, [
+    ["13:00", "16:00"],
+    ["20:00", "00:00"],
+  ]);
 
   await page.goto(`${estUrl}/floor`);
   await page.getByLabel("Nombre de la zona").fill("Comedor");

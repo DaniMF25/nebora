@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, setDailyHours, suffix } from "./helpers";
 
 const DATE = "2030-06-14"; // viernes futuro
 
@@ -13,12 +13,7 @@ test("lista de espera: apuntar, ver hueco y convertir en reserva", async ({ page
   await page.waitForURL(/\/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
   await openTab(page, "Horario");
-  for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) {
-    await page.getByLabel(`${day}, turno 1, apertura`).fill("20:00");
-    await page.getByLabel(`${day}, turno 1, cierre`).fill("23:30");
-  }
-  await page.getByRole("button", { name: "Guardar horario" }).click();
-  await expect(page.getByText("Horario guardado")).toBeVisible();
+  await setDailyHours(page, [["20:00", "23:30"]]);
 
   await page.goto(`${estUrl}/floor`);
   await page.getByLabel("Nombre de la zona").fill("Sala");

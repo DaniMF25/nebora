@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openTab, register, suffix } from "./helpers";
+import { openTab, register, setSitePublished, suffix } from "./helpers";
 
 const GOOGLEBOT_UA = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 const MOBILE_UA =
@@ -51,9 +51,9 @@ test("estadísticas: cuenta visitas reales a la web, la carta y el QR, y no las 
 
   await page.goto(`${estUrl}/site?tab=contenido`);
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Bienvenidos");
-  await page.getByLabel("Publicar la página").check();
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
+  await setSitePublished(page, true);
 
   const sitePath = `/${orgSlug}/puerto`;
   const menuPath = `/m/${orgSlug}/puerto/mediodia`;

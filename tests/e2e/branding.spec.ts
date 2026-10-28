@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { openTab, register, suffix } from "./helpers";
+import { openTab, register, setSitePublished, suffix } from "./helpers";
 
 test("marca de la web: logotipo, color propio y tipografía elegida", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -20,9 +20,9 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
 
   await page.goto(`${estUrl}/site?tab=contenido`);
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Cocina junto al mar");
-  await page.getByLabel("Publicar la página").check();
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
+  await setSitePublished(page, true);
 
   await openTab(page, "Marca");
   await expect(page.getByText("Sin logotipo")).toBeVisible();
@@ -148,9 +148,9 @@ test("web pública: hovers con los colores del tema y puntos del carrusel solo s
   await page.goto(`${estUrl}/site?tab=contenido`);
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Bienvenidos");
   await page.getByLabel("Carta destacada").selectOption({ label: "Carta" });
-  await page.getByLabel("Publicar la página").check();
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
+  await setSitePublished(page, true);
 
   // Escritorio: los dos platos caben, no hay puntos.
   const visitor = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();

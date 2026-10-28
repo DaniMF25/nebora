@@ -135,10 +135,3 @@ describe("intervalos de apertura", () => {
     expect(ivs[0]!.end.getTime() - ivs[0]!.start.getTime()).toBe(8 * 3600 * 1000);
   });
 });
-
-describe("huecos de turno del formulario", () => {
-  it("muestra siempre los turnos guardados más uno libre, entre 2 y 6", async () => {
-    const { slotFieldsFor } = await import("@/lib/schedule-form");
-    expect([0, 1, 2, 3, 5, 6].map(slotFieldsFor)).toEqual([2, 2, 3, 4, 6, 6]);
-  });
-});

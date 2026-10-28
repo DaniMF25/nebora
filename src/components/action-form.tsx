@@ -8,6 +8,8 @@ interface Props {
   submitLabel: string;
   children?: ReactNode;
   className?: string;
+  /** Limpiar el formulario al ir bien (por defecto). No en editores que muestran lo guardado. */
+  resetOnSuccess?: boolean;
 }
 
 /**
@@ -18,14 +20,14 @@ interface Props {
  * envía a mano (sin ese restablecimiento) y solo se limpia si la acción va
  * bien. Sin JavaScript sigue funcionando con el envío nativo.
  */
-export function ActionForm({ action, submitLabel, children, className = "form" }: Props) {
+export function ActionForm({ action, submitLabel, children, className = "form", resetOnSuccess = true }: Props) {
   const [state, formAction, pending] = useActionState(action, {} as FormState);
   const formRef = useRef<HTMLFormElement>(null);
   const fieldErrors = Object.entries(state.fieldErrors ?? {});
 
   useEffect(() => {
-    if (state.ok) formRef.current?.reset();
-  }, [state]);
+    if (state.ok && resetOnSuccess) formRef.current?.reset();
+  }, [state, resetOnSuccess]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

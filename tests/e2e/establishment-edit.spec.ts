@@ -24,23 +24,28 @@ test("editar los datos del local y guardar más de dos turnos sin perderlos", as
   await page.getByRole("button", { name: "Guardar datos" }).click();
   await expect(page.getByText("Zona horaria no válida")).toBeVisible();
 
-  // Tres turnos el lunes: el tercer hueco aparece tras guardar dos y no se pierde al volver a guardar.
+  // Tres turnos el lunes: se guardan y no se pierden al volver a guardar.
   await openTab(page, "Horario");
   const turno = (n: number, kind: "apertura" | "cierre") => page.getByLabel(`Lunes, turno ${n}, ${kind}`);
+  await page.getByLabel("Lunes abierto").check();
   await turno(1, "apertura").fill("09:00");
   await turno(1, "cierre").fill("11:00");
+  await page.getByRole("button", { name: "Añadir turno en Lunes" }).click();
   await turno(2, "apertura").fill("13:00");
   await turno(2, "cierre").fill("16:00");
   await page.getByRole("button", { name: "Guardar horario" }).click();
   await expect(page.getByText("Horario guardado")).toBeVisible();
   await page.reload();
+  await page.getByRole("button", { name: "Añadir turno en Lunes" }).click();
   await turno(3, "apertura").fill("20:00");
   await turno(3, "cierre").fill("23:00");
   await page.getByRole("button", { name: "Guardar horario" }).click();
   await expect(page.getByText("Horario guardado")).toBeVisible();
+  // Tras guardar, el formulario sigue mostrando lo guardado.
+  await expect(turno(3, "apertura")).toHaveValue("20:00");
   await page.reload();
   await expect(turno(3, "apertura")).toHaveValue("20:00");
-  await expect(turno(4, "apertura")).toHaveValue("");
+  await expect(turno(4, "apertura")).toHaveCount(0);
   // Guardar sin tocar nada conserva los tres turnos.
   await page.getByRole("button", { name: "Guardar horario" }).click();
   await expect(page.getByText("Horario guardado")).toBeVisible();

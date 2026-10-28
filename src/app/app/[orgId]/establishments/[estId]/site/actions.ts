@@ -9,6 +9,7 @@ import {
   setSiteHeroImage,
   setSiteLogo,
   setSiteLogoSize,
+  setSitePublished,
   setSiteTheme,
   updateSiteProfile,
 } from "@/server/modules/site/service";
@@ -40,7 +41,6 @@ export async function updateSiteAction(orgId: string, estId: string, _p: FormSta
         instagram: formString(fd, "instagram"),
         highlights,
         featuredMenuId: formString(fd, "featuredMenuId") || null,
-        published: fd.get("published") === "on",
       }),
     "Página guardada",
   );
@@ -149,5 +149,15 @@ export async function setLogoSizeAction(orgId: string, estId: string, _p: FormSt
     path(orgId, estId),
     (tx, ctx) => setSiteLogoSize(tx, ctx, estId, { logoSize: formString(fd, "logoSize") }),
     "Tamaño guardado",
+  );
+}
+
+export async function setPublishedAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  const published = fd.get("published") === "1";
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => setSitePublished(tx, ctx, estId, { published }),
+    published ? "Web publicada" : "Web retirada",
   );
 }

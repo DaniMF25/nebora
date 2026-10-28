@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { openTab, register, suffix } from "./helpers";
+import { openTab, register, setSitePublished, suffix } from "./helpers";
 
 async function jpeg(color: string): Promise<Buffer> {
   return sharp({
@@ -78,6 +78,10 @@ test("página pública del local con foto, carta destacada y despublicación", a
   });
   await page.getByRole("button", { name: "Subir foto principal" }).click();
   await expect(page.getByRole("img", { name: "Foto principal" })).toBeVisible();
+  // Sin titular guardado no se puede publicar.
+  await page.getByRole("switch", { name: "Publicar la web" }).click();
+  await expect(page.getByText("Antes de publicar, escribe y guarda un titular")).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Publicar la web" })).toHaveAttribute("aria-checked", "false");
   await openTab(page, "Contenido");
   await page.getByLabel("Eslogan (junto al nombre)").fill("Cocina mediterránea");
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Sabores del mar");
@@ -85,9 +89,9 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByLabel("Instagram").fill("@altamar.bcn");
   const h1 = page.getByRole("group", { name: "Destacado 1 (opcional)" });
   await h1.getByLabel("Título").fill("Pescado del día");
-  await page.getByLabel("Publicar la página").check();
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
+  await setSitePublished(page, true);
 
   // Estilos en tarjetas: el actual marcado, cambiar sin tocar el contenido y vista previa de otro.
   await openTab(page, "Estilo");
@@ -138,9 +142,8 @@ test("página pública del local con foto, carta destacada y despublicación", a
 
   // Despublicar: la página y la foto principal dejan de estar disponibles
   await openTab(page, "Contenido");
-  await page.getByLabel("Publicar la página").uncheck();
-  await page.getByRole("button", { name: "Guardar página" }).click();
-  await expect(page.getByText("Página guardada")).toBeVisible();
+  await setSitePublished(page, false);
+  await expect(page.getByText("Nadie la ve todavía")).toBeVisible();
   expect((await visitor.request.get(siteUrl)).status()).toBe(404);
   await openTab(page, "Foto principal");
   const heroSrc = (await page.getByRole("img", { name: "Foto principal" }).getAttribute("src"))!;

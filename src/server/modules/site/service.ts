@@ -86,7 +86,8 @@ export const updateSiteSchema = z
     instagram: instagramSchema,
     highlights: z.array(highlightSchema).max(MAX_HIGHLIGHTS),
     featuredMenuId: z.string().uuid().nullable(),
-    published: z.boolean(),
+    /** Ausente: se mantiene el estado actual (se publica con setSitePublished). */
+    published: z.boolean().optional(),
   })
   .strict();
 
@@ -160,10 +161,17 @@ export async function updateSiteProfile(
       throw new ValidationError("Carta no válida", { featuredMenuId: ["Elige una carta de este local"] });
     }
   }
-  if (data.published && !data.heroTitle) {
-    throw new ValidationError("Falta el titular", { heroTitle: ["Escribe un titular antes de publicar la página"] });
-  }
   await lockProfile(tx, ctx, establishmentId);
+  const current = await tx.query<{ published: boolean }>(
+    "SELECT published FROM establishment_profiles WHERE organization_id = $1 AND establishment_id = $2",
+    [ctx.organizationId, establishmentId],
+  );
+  const published = data.published ?? current.rows[0]?.published ?? false;
+  if (published && !data.heroTitle) {
+    throw new ValidationError("Falta el titular", {
+      heroTitle: ["Una web publicada necesita titular: escríbelo o despublica la web antes"],
+    });
+  }
   const { rows } = await tx.query<SiteProfile>(
     `UPDATE establishment_profiles
         SET theme = $3, tagline = $4, hero_eyebrow = $5, hero_title = $6, hero_text = $7, phone = $8,
@@ -183,16 +191,48 @@ export async function updateSiteProfile(
       data.instagram,
       JSON.stringify(data.highlights),
       data.featuredMenuId,
-      data.published,
+      published,
     ],
   );
   await recordAudit(tx, ctx, {
     action: "site.updated",
     entityType: "establishment",
     entityId: establishmentId,
-    metadata: { published: data.published },
+    metadata: { published },
   });
   return rows[0]!;
+}
+
+/** Publica o retira la web del local. Publicar exige haber guardado un titular. */
+export async function setSitePublished(
+  tx: Tx,
+  ctx: TenantContext,
+  establishmentId: string,
+  input: unknown,
+): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  const { published } = parseInput(z.object({ published: z.boolean() }).strict(), input);
+  await getEstablishment(tx, ctx, establishmentId);
+  await lockProfile(tx, ctx, establishmentId);
+  if (published) {
+    const { rows } = await tx.query<{ hero_title: string | null }>(
+      "SELECT hero_title FROM establishment_profiles WHERE organization_id = $1 AND establishment_id = $2",
+      [ctx.organizationId, establishmentId],
+    );
+    if (!rows[0]?.hero_title) {
+      throw new ValidationError("Antes de publicar, escribe y guarda un titular en «Contenido»");
+    }
+  }
+  await tx.query("UPDATE establishment_profiles SET published = $3 WHERE organization_id = $1 AND establishment_id = $2", [
+    ctx.organizationId,
+    establishmentId,
+    published,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: published ? "site.published" : "site.unpublished",
+    entityType: "establishment",
+    entityId: establishmentId,
+  });
 }
 
 /** Cambia solo el estilo de la página (el contenido no se toca). */

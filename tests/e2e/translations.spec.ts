@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openTab, register, suffix } from "./helpers";
+import { openTab, register, setSitePublished, suffix } from "./helpers";
 
 test("traducciones: el local activa inglés, traduce web y carta, y el cliente las ve en su idioma", async ({
   browser,
@@ -66,9 +66,9 @@ test("traducciones: el local activa inglés, traduce web y carta, y el cliente l
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Bienvenidos al puerto");
   await page.getByLabel("Texto de bienvenida").fill("Producto del día");
   await page.getByLabel("Carta destacada").selectOption({ label: "Carta" });
-  await page.getByLabel("Publicar la página").check();
   await page.getByRole("button", { name: "Guardar página" }).click();
   await expect(page.getByText("Página guardada")).toBeVisible();
+  await setSitePublished(page, true);
   await openTab(page, "Traducciones");
   await page.getByLabel("Titular").fill("Welcome to the harbour");
   await page.getByRole("button", { name: "Guardar traducción (inglés)" }).click();

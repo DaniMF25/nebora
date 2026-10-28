@@ -397,3 +397,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Ampliación (2026-10-28):** tamaño del logotipo (`logo_size`: small, medium, large; migración 0021). Las variables del panel que usan los estilos comunes de `globals.css` (`--accent`, `--accent-strong`, `--accent-soft`, `--on-accent`, `--surface`) se redefinen dentro de la web con los colores del tema y de marca, para que ningún hover, foco ni botón use el violeta del panel; pestañas y puntos del carrusel tienen su propio hover.
 
+## D-035 — Publicar la web con un interruptor propio
+**Fecha:** 2026-10-28. **Estado:** aceptada.
+
+**Contexto:** publicar la web era una casilla al final del formulario de contenido; el usuario pidió un interruptor junto al estado, en la parte superior.
+
+**Decisión:**
+- Acción de servidor separada `setSitePublished` (permiso `establishments.update`, bloqueo del perfil, auditoría `site.published` / `site.unpublished`). Publicar exige un titular ya guardado.
+- `updateSiteProfile` deja de cambiar el estado si no se le indica (`published` opcional): guardar el contenido conserva la web publicada o no. Con la web publicada no se puede vaciar el titular.
+- El interruptor es un botón `role="switch"` dentro de un formulario: funciona sin JavaScript y muestra el error del servidor si no se puede publicar.
+
+**Alternativas descartadas:** mantener la casilla y moverla arriba (seguiría ligada a guardar todo el contenido, y un descuido al guardar podía despublicar).
+

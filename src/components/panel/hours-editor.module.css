@@ -1,0 +1,185 @@
+.editor {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.day {
+  display: grid;
+  grid-template-columns: 7rem 8rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dayName {
+  font-weight: 600;
+  padding-top: 0.45rem;
+}
+
+.closed .dayName {
+  color: var(--muted);
+}
+
+/* Interruptor Abierto/Cerrado (casilla con aspecto de switch). */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  grid-template-columns: none;
+  padding-top: 0.35rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.switch input {
+  appearance: none;
+  width: 2.25rem;
+  height: 1.3rem;
+  margin: 0;
+  border-radius: 999px;
+  background: #d4d4dc;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+
+.switch input:checked {
+  background: var(--ok, #1f8a5b);
+}
+
+.switch input:checked::after {
+  transform: translateX(0.95rem);
+}
+
+.switch input:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+.closed .switch span {
+  color: var(--muted);
+}
+
+.slots {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
+
+/* «de [apertura] a [cierre] ×»: las dos horas siempre en la misma línea. */
+.slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.range {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slot input {
+  width: 8.75rem;
+}
+
+.from {
+  color: var(--muted);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.remove {
+  padding: 0.2rem 0.6rem;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.remove:hover {
+  background: var(--bg);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+.add {
+  padding: 0.3rem 0.7rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--border);
+  font-weight: 500;
+}
+
+.add:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg);
+  font-size: 0.92rem;
+}
+
+.copy label {
+  display: inline;
+  font-weight: 400;
+}
+
+.copy select {
+  width: auto;
+}
+
+.exception {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.exceptionLabel {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 640px) {
+  .day {
+    grid-template-columns: 1fr auto;
+  }
+
+  .slot input {
+    width: 7.5rem;
+  }
+
+  .slots {
+    grid-column: 1 / -1;
+  }
+}

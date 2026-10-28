@@ -47,6 +47,7 @@ h3 { font-size: 1.05rem; font-weight: 600; }
 
 /* --------------------------------------------------------------- formularios */
 .form { display: grid; gap: 0.85rem; max-width: 30rem; }
+.form.form-wide { max-width: 44rem; }
 label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.3rem; font-weight: 500; font-size: 0.92rem; }
 input, select, textarea {
   font: inherit; font-size: 0.95rem; padding: 0.55rem 0.7rem; border: 1px solid var(--border);
@@ -70,6 +71,8 @@ button.link { background: transparent; color: var(--accent); border: none; paddi
 button:disabled { opacity: 0.6; cursor: progress; }
 .inline-form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .inline-form > label, .inline-form > select { min-width: 0; max-width: 100%; }
+/* Formularios seguidos (p. ej. «Guardar» y «Eliminar», también tras un desplegable): que sus botones no se toquen. */
+:is(form, details) + form { margin-top: 0.75rem; }
 fieldset { border: none; padding: 0; margin: 0; }
 details { margin-top: 0.75rem; }
 summary { cursor: pointer; color: var(--accent); font-weight: 500; }
@@ -299,3 +302,13 @@ label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-weigh
 .lang-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1rem; }
 .lang-tabs a { padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; color: var(--fg); font-size: 0.9rem; background: var(--surface); }
 .lang-tabs a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* Interruptor de publicación de la web. */
+.publish-switch { display: grid; gap: 0.5rem; justify-items: start; }
+.publish-switch p { margin: 0; }
+button.switch-button { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0.2rem; background: transparent; border: none; color: var(--fg); font-weight: 600; }
+button.switch-button:hover { background: transparent; border: none; }
+.switch-track { position: relative; width: 2.6rem; height: 1.5rem; border-radius: 999px; background: #d4d4dc; transition: background 0.15s; flex: none; }
+.switch-thumb { position: absolute; top: 0.18rem; left: 0.18rem; width: 1.14rem; height: 1.14rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); transition: transform 0.15s; }
+button.switch-button[aria-checked="true"] .switch-track { background: var(--ok); }
+button.switch-button[aria-checked="true"] .switch-thumb { transform: translateX(1.1rem); }
+button.switch-button:hover .switch-track { filter: brightness(0.95); }

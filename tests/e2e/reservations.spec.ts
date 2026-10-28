@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, openTab, register, setDailyHours, suffix } from "./helpers";
 
 const DATE = "2030-06-14"; // viernes futuro: evita depender de la hora actual
 
@@ -15,14 +15,10 @@ test("reservas: buscar mesas libres, reservar, ocupación en el plano, cancelar 
 
   await openTab(page, "Horario");
   // Horario: mediodía y noche todos los días.
-  for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) {
-    await page.getByLabel(`${day}, turno 1, apertura`).fill("13:00");
-    await page.getByLabel(`${day}, turno 1, cierre`).fill("16:00");
-    await page.getByLabel(`${day}, turno 2, apertura`).fill("20:00");
-    await page.getByLabel(`${day}, turno 2, cierre`).fill("00:00");
-  }
-  await page.getByRole("button", { name: "Guardar horario" }).click();
-  await expect(page.getByText("Horario guardado")).toBeVisible();
+  await setDailyHours(page, [
+    ["13:00", "16:00"],
+    ["20:00", "00:00"],
+  ]);
 
   // Plano: una zona con dos mesas.
   await page.goto(`${estUrl}/floor`);
