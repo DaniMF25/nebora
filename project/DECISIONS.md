@@ -382,3 +382,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** tabla genérica de traducciones (complica RLS por local); rutas por idioma (`/en/...`), que darían mejor SEO pero obligan a duplicar rutas; se puede revisar más adelante.
 
+## D-034 — Marca de la web: logotipo, color y tipografías
+**Fecha:** 2026-10-28. **Estado:** aceptada.
+
+**Contexto:** el plan Pro de la competencia permite personalizar la web; el usuario pidió logotipo, colores y 3-4 tipografías por estilo.
+
+**Decisión:**
+- En `establishment_profiles`: `logo_media_id` (imagen por el mismo sistema de fotos; pública solo con la web publicada, vía `app.public_media`), `accent_color` (#rrggbb, CHECK en BD) y `font_pairing` (id de una combinación; la lista la valida el servidor).
+- El color sustituye a las variables de acento del tema (`--s-accent`, `--s-contact-accent`) y se calcula el color de texto legible encima (`--s-on-accent`, contraste WCAG). Se avisa en el panel si contrasta menos de 3:1 con el fondo del estilo. No se cambian fondos ni textos: el estilo sigue siendo reconocible y legible.
+- Tipografías: 4 combinaciones por estilo (la original primero) definidas en `src/lib/site-fonts.ts`, que cambian las variables `--s-font-*` del tema. Una combinación de otro estilo se ignora (se usa la original del estilo actual), así cambiar de estilo nunca deja una mezcla rara. Todas las fuentes se alojan con next/font sin precarga: el visitante solo descarga las que usa.
+- Se aplica en la web, la carta integrada y la reserva (comparten `SiteShell`) y en la vista previa del panel, que acepta `?font=` para probar sin guardar. La carta sin web, la vista previa del borrador y la carta impresa no cambian.
+
+**Alternativas descartadas:** paleta libre completa (fondo, texto…), que rompe fácilmente la legibilidad; fuentes subidas por el cliente (licencias y seguridad); fuentes cargadas desde Google en el navegador del visitante (privacidad).
+

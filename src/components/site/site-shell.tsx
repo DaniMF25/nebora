@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { PublicLanguage } from "@/lib/languages";
 import type { MenuTheme } from "@/lib/menu-snapshot";
+import { readableOn } from "@/lib/color";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
+import { pairingStyle, resolvePairing } from "@/lib/site-fonts";
 import { groupOpeningHours, type WeeklySlot } from "@/lib/site-hours";
 import { themeFontClasses } from "./fonts";
 import { Icon } from "./icons";
@@ -18,6 +20,10 @@ export interface SiteChrome {
   instagram: string | null;
   openingHours: WeeklySlot[];
   links: { home: string; menu: string | null; booking: string | null };
+  /** Marca (D-034): logotipo, color de acento y combinación tipográfica. */
+  logoUrl?: string | null;
+  accentColor?: string | null;
+  fontPairing?: string | null;
   /** Idioma de la página (por defecto español) y enlaces del selector de idioma. */
   lang?: PublicLanguage;
   languageLinks?: { lang: PublicLanguage; label: string; href: string }[];
@@ -45,11 +51,23 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
   ];
   const hours = groupOpeningHours(site.openingHours, t);
   const languages = site.languageLinks ?? [];
+  // La marca sustituye variables del tema; el CSS del tema no cambia.
+  const brandStyle: Record<string, string> = {
+    ...pairingStyle(resolvePairing(site.theme, site.fontPairing)),
+    ...(site.accentColor
+      ? {
+          "--s-accent": site.accentColor,
+          "--s-contact-accent": site.accentColor,
+          "--s-on-accent": readableOn(site.accentColor),
+        }
+      : {}),
+  };
 
   return (
     <div
       lang={lang}
-      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${themeFontClasses(site.theme)}`}
+      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
+      style={brandStyle}
     >
       <header className={styles.header}>
         <details className={styles.menuToggle}>
@@ -68,7 +86,12 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
           </nav>
         </details>
         <Link href={links.home} className={styles.brand}>
-          <span className={styles.brandName}>{site.establishmentName}</span>
+          {site.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- imagen ya reducida y servida por la app
+            <img className={styles.brandLogo} src={site.logoUrl} alt={site.establishmentName} />
+          ) : (
+            <span className={styles.brandName}>{site.establishmentName}</span>
+          )}
           {site.tagline && <span className={styles.brandTagline}>{site.tagline}</span>}
         </Link>
         <div className={styles.headerAction}>

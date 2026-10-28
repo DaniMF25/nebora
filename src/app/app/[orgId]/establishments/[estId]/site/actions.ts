@@ -4,7 +4,7 @@ import type { FormState } from "@/lib/form-state";
 import { MAX_HIGHLIGHTS } from "@/lib/site";
 import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
-import { setSiteHeroImage, setSiteTheme, updateSiteProfile } from "@/server/modules/site/service";
+import { setSiteBranding, setSiteHeroImage, setSiteLogo, setSiteTheme, updateSiteProfile } from "@/server/modules/site/service";
 import { saveSiteTranslations } from "@/server/modules/translations/service";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/site`;
@@ -105,5 +105,33 @@ export async function saveSiteTranslationsAction(
         highlights,
       }),
     "Traducción guardada",
+  );
+}
+
+export async function setLogoAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    async (tx, ctx) => setSiteLogo(tx, ctx, estId, await readImageField(fd)),
+    "Logotipo guardado",
+  );
+}
+
+export async function removeLogoAction(orgId: string, estId: string, _p: FormState, _fd: FormData): Promise<FormState> {
+  return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => setSiteLogo(tx, ctx, estId, null), "Logotipo quitado");
+}
+
+export async function setBrandingAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  const custom = fd.get("customAccent") === "1";
+  const pairing = formString(fd, "fontPairing");
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) =>
+      setSiteBranding(tx, ctx, estId, {
+        accentColor: custom ? formString(fd, "accentColor") : null,
+        fontPairing: pairing === "" ? null : pairing,
+      }),
+    "Marca guardada",
   );
 }

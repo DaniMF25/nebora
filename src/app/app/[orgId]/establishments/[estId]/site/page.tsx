@@ -14,15 +14,19 @@ import { withTenant } from "@/server/tenancy/context";
 import { TranslationInput, TranslationStatusBadge } from "@/components/panel/translation-field";
 import { LANGUAGE_LABELS } from "@/lib/languages";
 import { getSiteTranslationForm } from "@/server/modules/translations/service";
+import { BrandSettings } from "@/components/panel/brand-settings";
 import {
   removeHeroImageAction,
+  removeLogoAction,
+  setBrandingAction,
+  setLogoAction,
   saveSiteTranslationsAction,
   setHeroImageAction,
   setThemeAction,
   updateSiteAction,
 } from "./actions";
 
-const TABS = ["estilo", "contenido", "foto", "traducciones"] as const;
+const TABS = ["estilo", "marca", "contenido", "foto", "traducciones"] as const;
 
 export default async function SiteProfilePage({
   params,
@@ -52,6 +56,7 @@ export default async function SiteProfilePage({
   const { establishment: est, profile: p, menus, canEdit, orgSlug, translations: tr } = data;
   const TAB_LIST = [
     { id: "estilo", label: "Estilo" },
+    { id: "marca", label: "Marca" },
     { id: "contenido", label: "Contenido" },
     { id: "foto", label: "Foto principal" },
     ...(est.languages.length > 0 ? [{ id: "traducciones", label: "Traducciones" }] : []),
@@ -104,6 +109,23 @@ export default async function SiteProfilePage({
             choose={canEdit ? (theme) => setThemeAction.bind(null, orgId, est.id, theme) : undefined}
           />
         </section>
+      )}
+
+      {tab === "marca" && (
+        <BrandSettings
+          theme={p.theme}
+          establishmentName={est.name}
+          logoUrl={p.logoMediaId ? privateMediaUrl(orgId, p.logoMediaId) : null}
+          accentColor={p.accentColor}
+          fontPairing={p.fontPairing}
+          previewHref={(font) =>
+            `/preview/site/${orgId}/${est.id}?theme=${p.theme}${font ? `&font=${encodeURIComponent(font)}` : ""}`
+          }
+          canEdit={canEdit}
+          setLogo={setLogoAction.bind(null, orgId, est.id)}
+          removeLogo={removeLogoAction.bind(null, orgId, est.id)}
+          setBranding={setBrandingAction.bind(null, orgId, est.id)}
+        />
       )}
 
       {tab === "contenido" && (

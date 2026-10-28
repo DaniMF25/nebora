@@ -196,6 +196,15 @@
   line-height: 1.1;
 }
 
+.brandLogo {
+  display: block;
+  max-height: 3.25rem;
+  max-width: min(11rem, 42vw);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 .brandName {
   font-family: var(--s-font-brand);
   font-size: var(--s-brand-size);

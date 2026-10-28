@@ -10,6 +10,8 @@ import { getEstablishment } from "@/server/modules/establishments/service";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { parseInput } from "@/server/validation";
 import type { Language, PublicLanguage } from "@/lib/languages";
+import { normalizeHex } from "@/lib/color";
+import { FONT_PAIRING_IDS } from "@/lib/site-fonts";
 
 /** Contenido de la página pública del local, tal como lo edita el restaurante. */
 export interface SiteProfile {
@@ -26,6 +28,10 @@ export interface SiteProfile {
   instagram: string | null;
   highlights: SiteHighlight[];
   featuredMenuId: string | null;
+  /** Marca (D-034): logotipo, color de acento (#rrggbb) y combinación tipográfica. */
+  logoMediaId: string | null;
+  accentColor: string | null;
+  fontPairing: string | null;
   updatedAt: Date | null;
 }
 
@@ -85,7 +91,8 @@ export const updateSiteSchema = z
 
 const COLUMNS = `establishment_id AS "establishmentId", published, theme, tagline, hero_eyebrow AS "heroEyebrow",
   hero_title AS "heroTitle", hero_text AS "heroText", hero_media_id AS "heroMediaId", phone, whatsapp, instagram,
-  highlights, featured_menu_id AS "featuredMenuId", updated_at AS "updatedAt"`;
+  highlights, featured_menu_id AS "featuredMenuId", logo_media_id AS "logoMediaId", accent_color AS "accentColor",
+  font_pairing AS "fontPairing", updated_at AS "updatedAt"`;
 
 function emptyProfile(establishmentId: string): SiteProfile {
   return {
@@ -102,6 +109,9 @@ function emptyProfile(establishmentId: string): SiteProfile {
     instagram: null,
     highlights: [],
     featuredMenuId: null,
+    logoMediaId: null,
+    accentColor: null,
+    fontPairing: null,
     updatedAt: null,
   };
 }
@@ -223,6 +233,66 @@ export async function setSiteHeroImage(
   });
 }
 
+export async function setSiteLogo(
+  tx: Tx,
+  ctx: TenantContext,
+  establishmentId: string,
+  bytes: Uint8Array | null,
+): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  await getEstablishment(tx, ctx, establishmentId);
+  await lockProfile(tx, ctx, establishmentId);
+  const image = bytes ? await storeImage(tx, ctx, bytes) : null;
+  await tx.query(
+    "UPDATE establishment_profiles SET logo_media_id = $3 WHERE organization_id = $1 AND establishment_id = $2",
+    [ctx.organizationId, establishmentId, image?.id ?? null],
+  );
+  await recordAudit(tx, ctx, {
+    action: image ? "site.logo_set" : "site.logo_removed",
+    entityType: "establishment",
+    entityId: establishmentId,
+  });
+}
+
+const brandingSchema = z
+  .object({
+    /** null o "" = el color del estilo. */
+    accentColor: z
+      .string()
+      .nullable()
+      .transform((v, c) => {
+        if (v === null || v.trim() === "") return null;
+        const hex = normalizeHex(v);
+        if (!hex) c.addIssue({ code: "custom", message: "Color no válido (formato #RRGGBB)" });
+        return hex;
+      }),
+    /** null = la combinación original del estilo. */
+    fontPairing: z
+      .string()
+      .nullable()
+      .refine((v) => v === null || FONT_PAIRING_IDS.includes(v), { message: "Tipografía no válida" }),
+  })
+  .strict();
+
+/** Color de marca y tipografía de la web (el estilo y el contenido no cambian). */
+export async function setSiteBranding(tx: Tx, ctx: TenantContext, establishmentId: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  const data = parseInput(brandingSchema, input);
+  await getEstablishment(tx, ctx, establishmentId);
+  await lockProfile(tx, ctx, establishmentId);
+  await tx.query(
+    `UPDATE establishment_profiles SET accent_color = $3, font_pairing = $4
+      WHERE organization_id = $1 AND establishment_id = $2`,
+    [ctx.organizationId, establishmentId, data.accentColor, data.fontPairing],
+  );
+  await recordAudit(tx, ctx, {
+    action: "site.branding_set",
+    entityType: "establishment",
+    entityId: establishmentId,
+    metadata: { accentColor: data.accentColor, fontPairing: data.fontPairing },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Lectura pública (sin sesión)
 // ---------------------------------------------------------------------------
@@ -249,6 +319,10 @@ export interface PublicSite {
   openingHours: { weekday: number; opensMinute: number; durationMinutes: number }[];
   /** Idiomas adicionales del local y traducciones del perfil (D-033). */
   languages: Language[];
+  /** Marca (D-034). */
+  logoMediaId: string | null;
+  accentColor: string | null;
+  fontPairing: string | null;
   i18n: Partial<Record<Language, Record<string, unknown>>>;
 }
 
@@ -304,6 +378,9 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     booking_enabled: boolean;
     languages: Language[];
     i18n: PublicSite["i18n"];
+    logo_media_id: string | null;
+    accent_color: string | null;
+    font_pairing: string | null;
   }>("SELECT * FROM app.public_site($1, $2)", slugs);
   const r = rows[0];
   if (!r) return null;
@@ -332,6 +409,9 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     bookingEnabled: r.booking_enabled,
     languages: r.languages,
     i18n: r.i18n ?? {},
+    logoMediaId: r.logo_media_id,
+    accentColor: r.accent_color,
+    fontPairing: r.font_pairing,
     openingHours: hours.rows.map((h) => ({
       weekday: h.weekday,
       opensMinute: h.opens_minute,

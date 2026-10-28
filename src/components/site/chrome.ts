@@ -1,4 +1,5 @@
 import { LANGUAGE_NATIVE_NAMES, withLang, type PublicLanguage } from "@/lib/languages";
+import { publicMediaUrl } from "@/lib/site";
 import type { PublicSite } from "@/server/modules/site/service";
 import type { SiteChrome } from "./site-shell";
 
@@ -22,6 +23,7 @@ export function siteChrome(
   const menu = menuHref ?? (site.featuredMenuSlug ? `/m/${org}/${est}/${site.featuredMenuSlug}` : null);
   return {
     ...site,
+    logoUrl: site.logoMediaId ? publicMediaUrl(site.logoMediaId) : null,
     lang: i18n?.lang ?? "es",
     languageLinks: multilingual ? languageLinks(site.languages, i18n.selfPath) : [],
     links: {

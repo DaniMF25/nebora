@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteHome } from "@/components/site/site-home";
 import { MENU_THEME_LABELS, MENU_THEMES, type MenuTheme } from "@/lib/menu-snapshot";
 import { privateMediaUrl } from "@/lib/site";
+import { FONT_PAIRING_IDS, resolvePairing } from "@/lib/site-fonts";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getPublishedMenu } from "@/server/modules/menus/menus";
@@ -13,7 +14,7 @@ import { withTenant } from "@/server/tenancy/context";
 export const metadata: Metadata = { title: "Vista previa", robots: { index: false, follow: false } };
 
 type Params = Promise<{ orgId: string; estId: string }>;
-type Search = Promise<{ theme?: string }>;
+type Search = Promise<{ theme?: string; font?: string }>;
 
 /**
  * Vista previa de la web del local tal como está guardada (aunque no esté
@@ -21,7 +22,8 @@ type Search = Promise<{ theme?: string }>;
  */
 export default async function SitePreviewPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const { orgId, estId } = await params;
-  const requested = (await searchParams).theme;
+  const search = await searchParams;
+  const requested = search.theme;
   const user = await requireUser();
   let preview;
   try {
@@ -35,6 +37,9 @@ export default async function SitePreviewPage({ params, searchParams }: { params
   const org = preview.organizationSlug;
   const est = preview.establishmentSlug;
   const menu = preview.featuredMenuSlug ? await getPublishedMenu(org, est, preview.featuredMenuSlug) : null;
+  // Con ?font= se prueba una combinación tipográfica sin guardarla.
+  const fontPairing = search.font && FONT_PAIRING_IDS.includes(search.font) ? search.font : profile.fontPairing;
+  const pairing = resolvePairing(theme, fontPairing);
   const self = `/preview/site/${orgId}/${estId}?theme=${theme}`;
 
   return (
@@ -48,6 +53,9 @@ export default async function SitePreviewPage({ params, searchParams }: { params
         whatsapp: profile.whatsapp,
         instagram: profile.instagram,
         openingHours: preview.openingHours,
+        logoUrl: profile.logoMediaId ? privateMediaUrl(orgId, profile.logoMediaId) : null,
+        accentColor: profile.accentColor,
+        fontPairing,
         links: {
           home: self,
           menu: menu && preview.featuredMenuSlug ? `/m/${org}/${est}/${preview.featuredMenuSlug}` : null,
@@ -59,7 +67,7 @@ export default async function SitePreviewPage({ params, searchParams }: { params
       menuSections={menu?.snapshot.sections ?? null}
       banner={
         <div className="preview-banner" role="note">
-          Vista previa · estilo {MENU_THEME_LABELS[theme]}
+          Vista previa · estilo {MENU_THEME_LABELS[theme]} · letra {pairing.name.toLowerCase()} ({pairing.description})
           {profile.published ? "" : " · página sin publicar"} ·{" "}
           <Link href={`/app/${orgId}/establishments/${estId}/site`}>Volver al panel</Link>
         </div>
