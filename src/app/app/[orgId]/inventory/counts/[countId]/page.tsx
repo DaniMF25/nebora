@@ -79,8 +79,8 @@ export default async function CountPage({ params }: { params: Promise<{ orgId: s
                 <tbody>
                   {count.lines.map((l) => (
                     <tr key={l.ingredientId}>
-                      <td>{l.ingredientName}</td>
-                      <td>
+                      <td data-label="Ingrediente">{l.ingredientName}</td>
+                      <td data-label="Contado">
                         <input type="hidden" name="ingredientId" value={l.ingredientId} readOnly />
                         <span className="inline-form">
                           <input
@@ -155,10 +155,10 @@ export default async function CountPage({ params }: { params: Promise<{ orgId: s
                 <tbody>
                   {count.lines.map((l) => (
                     <tr key={l.ingredientId}>
-                      <td>{l.ingredientName}</td>
-                      <td>{formatQuantity(l.counted!, l.baseUnit)}</td>
-                      {count.status === "applied" && <td>{formatQuantity(l.expected!, l.baseUnit)}</td>}
-                      {count.status === "applied" && <td>{signed(l.difference!, l.baseUnit)}</td>}
+                      <td data-label="Ingrediente">{l.ingredientName}</td>
+                      <td data-label="Contado">{formatQuantity(l.counted!, l.baseUnit)}</td>
+                      {count.status === "applied" && <td data-label="En sistema">{formatQuantity(l.expected!, l.baseUnit)}</td>}
+                      {count.status === "applied" && <td data-label="Ajuste">{signed(l.difference!, l.baseUnit)}</td>}
                     </tr>
                   ))}
                 </tbody>

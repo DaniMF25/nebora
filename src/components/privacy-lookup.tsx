@@ -63,13 +63,13 @@ export function PrivacyLookup({ searchAction, eraseAction, exportUrl }: Props) {
               <tbody>
                 {results.map((r) => (
                   <tr key={r.id}>
-                    <td>{r.when}</td>
-                    <td>{r.establishment}</td>
-                    <td>{r.name}</td>
-                    <td>{[r.phone, r.email].filter(Boolean).join(" · ")}</td>
-                    <td>{r.partySize}</td>
-                    <td>{r.status}</td>
-                    <td>{r.channel}</td>
+                    <td data-label="Fecha">{r.when}</td>
+                    <td data-label="Local">{r.establishment}</td>
+                    <td data-label="Nombre">{r.name}</td>
+                    <td data-label="Contacto">{[r.phone, r.email].filter(Boolean).join(" · ")}</td>
+                    <td data-label="Pers.">{r.partySize}</td>
+                    <td data-label="Estado">{r.status}</td>
+                    <td data-label="Canal">{r.channel}</td>
                   </tr>
                 ))}
               </tbody>

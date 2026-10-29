@@ -109,17 +109,17 @@ export default async function OrderPage({ params }: { params: Promise<{ orgId: s
               <tbody>
                 {order.lines.map((l) => (
                   <tr key={l.id}>
-                    <td>{l.ingredientName}</td>
-                    <td>{formatQuantity(l.quantityOrdered, l.baseUnit)}</td>
-                    <td>{formatQuantity(l.quantityReceived, l.baseUnit)}</td>
+                    <td data-label="Ingrediente">{l.ingredientName}</td>
+                    <td data-label="Pedido">{formatQuantity(l.quantityOrdered, l.baseUnit)}</td>
+                    <td data-label="Recibido">{formatQuantity(l.quantityReceived, l.baseUnit)}</td>
                     {canSeeCosts && (
-                      <td>
+                      <td data-label="Precio">
                         {l.unitPriceCents && `${formatCentsNumeric(l.unitPriceCents)} ${PRICE_UNIT[l.baseUnit].slice(1)}`}
                       </td>
                     )}
-                    {canSeeCosts && <td>{l.lineTotalCents && formatCentsNumeric(l.lineTotalCents)}</td>}
+                    {canSeeCosts && <td data-label="Importe">{l.lineTotalCents && formatCentsNumeric(l.lineTotalCents)}</td>}
                     {canManage && isDraft && (
-                      <td>
+                      <td data-label="Acciones">
                         <ActionForm
                           action={removeOrderLineAction.bind(null, orgId, orderId, l.id)}
                           submitLabel={`Quitar ${l.ingredientName}`}

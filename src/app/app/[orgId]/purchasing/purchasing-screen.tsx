@@ -68,14 +68,14 @@ export async function PurchasingScreen({ orgId, establishmentId }: { orgId: stri
               <tbody>
                 {orders.map((o) => (
                   <tr key={o.id}>
-                    <td>
+                    <td data-label="Nº">
                       <Link href={`/app/${orgId}/purchasing/${o.id}`}>Pedido {o.number}</Link>
                     </td>
-                    <td>{o.supplierName}</td>
-                    <td>{group ? `${o.establishmentName} · ${o.warehouseName}` : o.warehouseName}</td>
-                    <td>{ORDER_STATUS_LABELS[o.status]}</td>
-                    <td>{o.expectedDate ?? "—"}</td>
-                    {canSeeCosts && <td>{o.totalCents ? formatCentsNumeric(o.totalCents) : "—"}</td>}
+                    <td data-label="Proveedor">{o.supplierName}</td>
+                    <td data-label="Destino">{group ? `${o.establishmentName} · ${o.warehouseName}` : o.warehouseName}</td>
+                    <td data-label="Estado">{ORDER_STATUS_LABELS[o.status]}</td>
+                    <td data-label="Entrega prevista">{o.expectedDate ?? "—"}</td>
+                    {canSeeCosts && <td data-label="Total">{o.totalCents ? formatCentsNumeric(o.totalCents) : "—"}</td>}
                   </tr>
                 ))}
               </tbody>

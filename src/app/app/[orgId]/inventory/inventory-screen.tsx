@@ -142,10 +142,10 @@ export async function InventoryScreen({
                   <tbody>
                     {stock.map((l) => (
                       <tr key={`${l.warehouseId}-${l.ingredientId}`}>
-                        <td>{whLabel(l)}</td>
-                        <td>{l.ingredientName}</td>
-                        <td>{formatQuantity(l.quantity, l.baseUnit)}</td>
-                        <td>
+                        <td data-label="Almacén">{whLabel(l)}</td>
+                        <td data-label="Ingrediente">{l.ingredientName}</td>
+                        <td data-label="Cantidad">{formatQuantity(l.quantity, l.baseUnit)}</td>
+                        <td data-label="Estado">
                           {l.belowReorder ? (
                             <strong>Bajo mínimo ({formatQuantity(l.reorderLevel!, l.baseUnit)})</strong>
                           ) : (
@@ -337,21 +337,21 @@ export async function InventoryScreen({
                   <tbody>
                     {movements.map((m) => (
                       <tr key={m.id}>
-                        <td>{dateFormat.format(m.createdAt)}</td>
-                        <td>
+                        <td data-label="Fecha">{dateFormat.format(m.createdAt)}</td>
+                        <td data-label="Tipo">
                           {KIND_LABELS[m.kind]}
                           {m.correctedByMovementId && <span className="muted"> (anulado)</span>}
                           {m.note && <div className="muted">{m.note}</div>}
                         </td>
-                        <td>{m.ingredientName}</td>
-                        <td>
+                        <td data-label="Ingrediente">{m.ingredientName}</td>
+                        <td data-label="Cantidad">
                           {m.quantityDelta.startsWith("-") ? "−" : "+"}
                           {formatQuantity(m.quantityDelta.replace(/^-/, ""), m.baseUnit)}
                         </td>
-                        <td>{whLabel(m)}</td>
-                        <td>{m.createdByName ?? "—"}</td>
+                        <td data-label="Almacén">{whLabel(m)}</td>
+                        <td data-label="Por">{m.createdByName ?? "—"}</td>
                         {canManage && (
-                          <td>
+                          <td data-label="Acciones">
                             {/* Traspasos y recuentos se compensan con otro traspaso o recuento, no se anulan sueltos. */}
                             {!["correction", "transfer_out", "transfer_in", "count"].includes(m.kind) &&
                               !m.correctedByMovementId && (

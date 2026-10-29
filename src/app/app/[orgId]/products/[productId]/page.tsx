@@ -190,15 +190,15 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
               <tbody>
                 {recipe.lines.map((l) => (
                   <tr key={l.id}>
-                    <td>
+                    <td data-label="Ingrediente">
                       {l.ingredientName}
                       {!l.ingredientActive && <span className="muted"> (archivado)</span>}
                     </td>
-                    <td>{formatQuantity(l.quantity, l.baseUnit)}</td>
-                    <td>{l.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ") || "—"}</td>
-                    {costing && <td>{l.lineCostCents ? formatCentsNumeric(l.lineCostCents) : "sin coste"}</td>}
+                    <td data-label="Cantidad">{formatQuantity(l.quantity, l.baseUnit)}</td>
+                    <td data-label="Alérgenos">{l.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ") || "—"}</td>
+                    {costing && <td data-label="Coste">{l.lineCostCents ? formatCentsNumeric(l.lineCostCents) : "sin coste"}</td>}
                     {canEdit && (
-                      <td>
+                      <td data-label="Acciones">
                         <ActionForm
                           action={removeRecipeLineAction.bind(null, orgId, productId, l.id)}
                           submitLabel={`Quitar ${l.ingredientName}`}

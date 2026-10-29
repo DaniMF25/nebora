@@ -104,7 +104,7 @@ table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
 th { text-align: left; padding: 0.6rem 0.75rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
 td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
 tbody tr:hover { background: #fafafc; }
-.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.table-wrap { position: relative; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
 .table-wrap td:first-child, .table-wrap th:first-child { padding-left: 1rem; }
 tbody tr:last-child td { border-bottom: none; }
 dl.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; margin: 0; }
@@ -182,7 +182,7 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
 .avatar { flex: none; display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: #2a2d3f; color: #fff; font-size: 0.8rem; font-weight: 600; }
 .icon-button { display: inline-grid; place-items: center; padding: 0.4rem; background: transparent; border: 1px solid transparent; color: inherit; border-radius: 9px; }
 .icon-button:hover { background: rgba(255, 255, 255, 0.08); border-color: transparent; }
-.panel-main { max-width: 72rem; width: 100%; margin: 0; padding: 2.25rem clamp(1rem, 4vw, 3rem) 4rem; }
+.panel-main { max-width: 72rem; width: 100%; min-width: 0; margin: 0; padding: 2.25rem clamp(1rem, 4vw, 3rem) 4rem; }
 h1.panel-org { margin: 0 0 0.35rem; font-family: var(--font-sans); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .panel-main h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0.25rem 0 1rem; }
 .panel-main section h2 { font-size: 1.35rem; margin-top: 0; }
@@ -207,7 +207,7 @@ main.auth .form { max-width: none; }
 main.auth button[type="submit"] { width: 100%; }
 
 @media (max-width: 900px) {
-  .panel { grid-template-columns: 1fr; }
+  .panel { grid-template-columns: minmax(0, 1fr); }
   .panel-topbar {
     position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between;
     padding: 0.6rem 0.85rem; background: var(--sidebar); color: var(--sidebar-fg);
@@ -223,8 +223,30 @@ main.auth button[type="submit"] { width: 100%; }
 @media (max-width: 640px) {
   main { padding: 1rem 0.85rem 2rem; }
   .form { max-width: none; }
-  dl.kpis { grid-template-columns: repeat(3, 1fr); }
+  dl.kpis { grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr)); gap: 0.5rem; }
+  dl.kpis div { min-width: 0; padding: 0.55rem 0.7rem; }
+  dl.kpis dt { overflow-wrap: anywhere; }
   dl.kpis dd { font-size: 1.15rem; }
+  /* Pestañas: en varias líneas antes que cortadas. */
+  .page-tabs { flex-wrap: wrap; overflow: visible; }
+  .page-tabs a { padding: 0.55rem 0.75rem; }
+  /* Tablas: cada fila es una tarjeta con la etiqueta de cada dato (data-label). */
+  .table-wrap { overflow: visible; border: none; background: none; border-radius: 0; }
+  .table-wrap table, .table-wrap tbody, .table-wrap tr, .table-wrap td, .table-wrap tbody th { display: block; width: auto; }
+  .table-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .table-wrap tr { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 0.45rem 0.85rem; }
+  .table-wrap tr + tr { margin-top: 0.6rem; }
+  .table-wrap tbody tr:hover { background: var(--surface); }
+  .table-wrap td, .table-wrap tbody th, .table-wrap td:first-child, .table-wrap tbody th:first-child {
+    position: relative; padding: 0.35rem 0 0.35rem 7.5rem; border: none; text-align: left; overflow-wrap: anywhere; min-height: 1.9rem;
+  }
+  .table-wrap td[data-label]::before, .table-wrap tbody th[data-label]::before {
+    content: attr(data-label); position: absolute; left: 0; top: 0.4rem; width: 7rem;
+    color: var(--muted); font-size: 0.8rem; font-weight: 500; overflow-wrap: anywhere;
+  }
+  /* Acciones: a todo el ancho, sin etiqueta. */
+  .table-wrap td[data-label="Acciones"] { padding-left: 0; }
+  .table-wrap td[data-label="Acciones"]::before { content: none; }
   main.auth { margin-top: 4vh; padding: 1.5rem 1.25rem; }
 }
 

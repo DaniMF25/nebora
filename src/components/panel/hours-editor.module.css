@@ -175,8 +175,31 @@
     grid-template-columns: 1fr auto;
   }
 
+  .day {
+    padding: 0.75rem;
+  }
+
+  /* Turno a todo el ancho: «de [ ] a [ ]» se reparte el espacio y la × queda a la derecha. */
+  .slot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-self: stretch;
+  }
+
+  .range {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
   .slot input {
-    width: 7.5rem;
+    width: 100%;
+    min-width: 0;
+    padding-inline: 0.45rem;
+  }
+
+  .hint {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .slots {

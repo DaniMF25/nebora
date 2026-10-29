@@ -74,15 +74,15 @@ export default async function MembersPage({ params }: { params: Promise<{ orgId:
                   data.canManage && m.userId !== user.id && (m.role !== "owner" || data.actorRole === "owner");
                 return (
                   <tr key={m.membershipId}>
-                    <td>
+                    <td data-label="Nombre">
                       {m.displayName}
                       {m.status === "suspended" && <span className="muted"> (suspendido)</span>}
                     </td>
-                    <td>{m.email}</td>
-                    <td>{ROLE_LABELS[m.role]}</td>
-                    <td>{scopeLabel(m.allEstablishments, m.establishmentIds)}</td>
+                    <td data-label="Correo">{m.email}</td>
+                    <td data-label="Rol">{ROLE_LABELS[m.role]}</td>
+                    <td data-label="Locales">{scopeLabel(m.allEstablishments, m.establishmentIds)}</td>
                     {data.canManage && (
-                      <td>
+                      <td data-label="Acciones">
                         {editable ? (
                           <>
                             <ActionForm

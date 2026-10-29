@@ -108,10 +108,10 @@ export default async function StatsPage({
                       .reverse()
                       .map((d) => (
                         <tr key={d.date}>
-                          <th scope="row">{longDate(d.date)}</th>
-                          <td>{number.format(d.site)}</td>
-                          <td>{number.format(d.menu)}</td>
-                          <td>{number.format(d.qr)}</td>
+                          <th scope="row" data-label="Día">{longDate(d.date)}</th>
+                          <td data-label="Web">{number.format(d.site)}</td>
+                          <td data-label="Cartas">{number.format(d.menu)}</td>
+                          <td data-label="De ellas, por QR">{number.format(d.qr)}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -144,12 +144,12 @@ export default async function StatsPage({
               <tbody>
                 {stats.menus.map((m) => (
                   <tr key={m.menuId}>
-                    <th scope="row">
+                    <th scope="row" data-label="Carta">
                       <Link href={`/app/${orgId}/menus/${m.menuId}`}>{m.name}</Link>
                       {!m.published && <span className="badge">Sin publicar</span>}
                     </th>
-                    <td>{number.format(m.views)}</td>
-                    <td>{number.format(m.qr)}</td>
+                    <td data-label="Visitas">{number.format(m.views)}</td>
+                    <td data-label="Escaneos de QR">{number.format(m.qr)}</td>
                   </tr>
                 ))}
               </tbody>
