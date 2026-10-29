@@ -92,14 +92,17 @@
   gap: 0.5rem;
 }
 
+/* Rejilla: cada hora tiene su hueco y nunca se monta sobre «de» / «a». */
 .range {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: auto 8.75rem auto 8.75rem;
   align-items: center;
   gap: 0.5rem;
 }
 
 .slot input {
-  width: 8.75rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .from {
@@ -111,13 +114,22 @@
   font-size: 0.85rem;
 }
 
+/* Quitar turno: botón cuadrado con icono, igual en todos los navegadores. */
 .remove {
-  padding: 0.2rem 0.6rem;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--border);
-  font-size: 1.05rem;
-  line-height: 1;
+  border-radius: 8px;
+}
+
+.remove svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .remove:hover {
@@ -187,13 +199,10 @@
   }
 
   .range {
-    display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
   }
 
   .slot input {
-    width: 100%;
-    min-width: 0;
     padding-inline: 0.45rem;
   }
 

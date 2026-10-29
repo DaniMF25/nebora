@@ -207,7 +207,8 @@ main.auth .form { max-width: none; }
 main.auth button[type="submit"] { width: 100%; }
 
 @media (max-width: 900px) {
-  .panel { grid-template-columns: minmax(0, 1fr); }
+  /* align-content: si la página es corta, el espacio sobrante queda abajo y la barra superior no crece. */
+  .panel { grid-template-columns: minmax(0, 1fr); align-content: start; }
   .panel-topbar {
     position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between;
     padding: 0.6rem 0.85rem; background: var(--sidebar); color: var(--sidebar-fg);
@@ -363,4 +364,11 @@ button.switch-button:hover .switch-track { filter: brightness(0.95); }
   80%, 100% { transform: scale(2.6); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .live-dot::after { animation: none; } }
+
+/* Safari en iPhone: los campos de fecha y hora tienen un ancho mínimo propio
+   y no respetan el de su contenedor (se montan sobre lo que tienen al lado). */
+@supports (-webkit-touch-callout: none) {
+  input[type="time"], input[type="date"] { -webkit-appearance: none; appearance: none; min-width: 0; min-height: 2.6rem; }
+  input::-webkit-date-and-time-value { text-align: left; }
+}
 

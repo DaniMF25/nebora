@@ -64,7 +64,16 @@ function SlotList({
             aria-label={`Quitar turno ${n + 1} de ${label}`}
             title="Quitar turno"
           >
-            ×
+            <svg
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M4 4l8 8M12 4l-8 8" />
+            </svg>
           </button>
         </div>
       ))}

@@ -115,6 +115,19 @@ async function overflowIssues(page: Page): Promise<string[]> {
       const r = el.getBoundingClientRect();
       out.push(`${describe(el)} se sale de la pantalla o de su caja (${Math.round(r.left)}–${Math.round(r.right)} px)`);
     }
+    // Campos y botones no se montan sobre sus vecinos (p. ej. «de 12:00 a 16:00»).
+    for (const el of document.querySelectorAll(".panel-main :is(input, select, textarea, button)")) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || !el.parentElement) continue;
+      for (const sib of el.parentElement.children) {
+        if (sib === el || sib.contains(el)) continue;
+        const o = sib.getBoundingClientRect();
+        if (o.width === 0 || o.height === 0 || getComputedStyle(sib).position === "absolute") continue;
+        const w = Math.min(r.right, o.right) - Math.max(r.left, o.left);
+        const h = Math.min(r.bottom, o.bottom) - Math.max(r.top, o.top);
+        if (w > 1 && h > 1) out.push(`${describe(el)} se monta sobre ${describe(sib)}`);
+      }
+    }
     return [...new Set(out)];
   });
 }
@@ -302,11 +315,17 @@ test("botones separados y sin desbordamientos en móvil en las páginas del pane
   }
   for (const width of [390, 360]) {
     await page.setViewportSize({ width, height: 800 });
+    const topbars = new Map<number, string[]>();
     for (const url of pages) {
       await page.goto(url);
       const where = `${width}px ${new URL(page.url()).pathname}${new URL(page.url()).search}`;
       for (const p of await overflowIssues(page)) problems.push(`${where}: ${p}`);
+      // La barra superior mide lo mismo en todas las páginas, cortas o largas.
+      const bar = await page.evaluate(() => document.querySelector(".panel-topbar")?.getBoundingClientRect() ?? null);
+      if (bar) topbars.set(Math.round(bar.height), [...(topbars.get(Math.round(bar.height)) ?? []), where]);
     }
+    if (topbars.size > 1)
+      problems.push(`${width}px: la barra superior cambia de alto: ${JSON.stringify([...topbars])}`);
   }
   expect(problems, problems.join("\n")).toEqual([]);
 });
