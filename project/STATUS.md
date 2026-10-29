@@ -2,7 +2,7 @@
 
 **Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 completa (idiomas con traducción manual); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-10-29 — barra superior del panel con alto fijo en móvil, campos de hora que no se montan sobre «de»/«a» (también en Safari de iPhone) y botón de quitar turno con icono.
+**Última actualización:** 2026-10-29 — campos a 16 px en pantallas táctiles para que Safari en iPhone no amplíe la página al escribir.
 
 ## Completado y verificado
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
@@ -30,6 +30,7 @@
 - [x] Editor de horarios (2026-10-28): un día por fila con interruptor Abierto/Cerrado, turnos «de … a …» que se añaden y quitan, aviso «termina al día siguiente» y «Copiar el horario del lunes a lunes a viernes / fin de semana / todos». Excepciones con el mismo editor. El servidor sigue validando formatos, solapes y máximo de 6 turnos. Tras guardar, el formulario muestra lo guardado.
 - [x] Publicar/retirar la web con un interruptor en la cabecera de «Web» (D-035): acción propia `setSitePublished` (permiso `establishments.update`, exige titular guardado, auditada); guardar el contenido ya no cambia el estado de publicación.
 - [x] Botones de un mismo formulario en fila (2026-10-28): `ActionForm` admite una acción secundaria sin campos («Eliminar», «Quitar logotipo») cuyo botón va junto al principal; se envía sin los campos del formulario. Formularios de reservas con ancho amplio (teléfono y correo, fecha/hora/duración/comensales en una fila), botones de campo alineados con el campo y botones de estado de reserva con texto corto («Sentar») y nombre accesible completo. Estado «Abierto/Cerrado» del local con punto verde o rojo que late (sin animación si el sistema pide menos movimiento).
+- [x] Sin zoom al escribir en móvil: en pantallas táctiles los campos usan letra de 16 px (con menos, Safari en iPhone amplía la página al entrar en un campo). No se bloquea el zoom (`maximum-scale`), por accesibilidad. `tests/e2e/mobile-inputs.spec.ts` lo comprueba en registro, panel y horario (falla con 15,2 px). Pendiente de confirmar en un iPhone real.
 - [x] Barra superior del panel con el mismo alto en todas las páginas del móvil (en páginas cortas la rejilla repartía el alto sobrante y la barra crecía). Turnos del horario en rejilla (cada hora en su hueco) y, en Safari de iPhone, los campos de fecha y hora respetan el ancho de su contenedor. Botón «quitar turno» cuadrado con icono. La prueba de maquetación comprueba el alto de la barra y que ningún campo o botón se monte sobre un vecino. Safari no se puede ejecutar en este entorno (solo Chromium): la corrección para iPhone está sin verificar en un dispositivo real.
 - [x] Panel en móvil (2026-10-29): ninguna página se desplaza en horizontal. Causa principal: la columna del panel crecía con el contenido más ancho (ahora `minmax(0, 1fr)`); el texto oculto de las tablas se escapaba de su contenedor (`position: relative`). Por debajo de 640 px las tablas se muestran como tarjetas con la etiqueta de cada dato (`data-label`), las pestañas pasan a varias líneas, las cifras no desbordan, el horario reparte el ancho y los tres tamaños del logotipo van en una fila. `layout-spacing.spec.ts` comprueba a 390 y 360 px que no hay scroll horizontal, que nada se sale de la pantalla, de su tarjeta o (imágenes) de su contenedor, que nada queda recortado y que no hay contenido que desplazar en horizontal salvo el plano de sala.
 - [x] Separación entre botones: formularios seguidos (p. ej. «Guardar» y «Eliminar») ya no quedan pegados; `tests/e2e/layout-spacing.spec.ts` recorre 27 páginas con datos (panel y web pública) a 1280 px y 390 px y falla si dos botones están a menos de 6 px o si dos botones vecinos de una fila están desalineados.
@@ -72,7 +73,7 @@
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
 - [ ] Despliegue real: hosting, PostgreSQL gestionado, dominio/TLS, almacenamiento de fotos, monitorización y alertas, simulacro de restauración (ver `docs/DEPLOYMENT.md`).
 
-## Pruebas (última ejecución: 2026-10-28, PostgreSQL 16.15 local)
+## Pruebas (última ejecución: 2026-10-29, PostgreSQL 16.15 local)
 | Comando | Resultado |
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
@@ -80,7 +81,7 @@
 | `pnpm test` | PASÓ — 16 archivos, 73 pruebas (se retiró la prueba de `slotFieldsFor`, función eliminada al sustituir el formulario de huecos fijos) |
 | `pnpm test:integration` | PASÓ — 25 archivos, 235 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ (incluido en `test:e2e`) |
-| `pnpm test:e2e` | PASÓ — 31 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
+| `pnpm test:e2e` | PASÓ — 32 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`) |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
