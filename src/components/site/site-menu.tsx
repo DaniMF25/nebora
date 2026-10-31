@@ -1,6 +1,7 @@
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import type { PublicLanguage } from "@/lib/languages";
 import { formatEuros } from "@/lib/money";
+import { PriceFormatList } from "@/components/price-formats";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import type { MenuServing } from "@/server/modules/menus/availability";
 import { publicMediaUrl } from "@/lib/site";
@@ -50,8 +51,11 @@ export function SiteMenu({
                   <div>
                     <div className={styles.dishHead}>
                       <h3 className={styles.dishName}>{item.name}</h3>
-                      <span className={styles.dishPrice}>{formatEuros(item.priceCents)}</span>
+                      {!item.formats && <span className={styles.dishPrice}>{formatEuros(item.priceCents)}</span>}
                     </div>
+                    {item.formats && (
+                      <PriceFormatList formats={item.formats} lang={lang} priceClassName={styles.dishPrice} />
+                    )}
                     {item.recommended && <p className={styles.cardBadge}>{t.recommended}</p>}
                     {item.description && <p className={styles.cardText}>{item.description}</p>}
                     {item.allergens.length > 0 && (

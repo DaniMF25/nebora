@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
+import { priceSummary, productOptionLabel } from "@/lib/price-formats";
 import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
@@ -11,7 +12,6 @@ import { hasUnpublishedChanges, listMenus } from "@/server/modules/menus/menus";
 import { getOrganization } from "@/server/modules/organizations/service";
 import { listProducts } from "@/server/modules/menus/products";
 import { listSpecials, MAX_SPECIALS, type Special, type SpecialStatus } from "@/server/modules/menus/specials";
-import { formatEuros } from "@/lib/money";
 import { addSpecialAction, removeSpecialAction } from "./actions";
 import { withTenant } from "@/server/tenancy/context";
 import { createMenuAction } from "../actions";
@@ -130,8 +130,8 @@ export default async function EstablishmentMenusPage({
           <ul className="cards">
             {specials.map((s) => (
               <li key={s.id}>
-                <strong>{s.productName}</strong> · {formatEuros(s.priceCents)}
-                {s.priceOverrideCents !== null && <span className="muted"> (precio especial)</span>}{" "}
+                <strong>{s.productName}</strong> · {priceSummary(s.priceCents, s.formats)}
+                {s.priceOverrideCents !== null && !s.formats && <span className="muted"> (precio especial)</span>}{" "}
                 <span className={`badge ${s.status === "visible" ? "badge-ok" : s.status === "scheduled" ? "badge-warn" : ""}`}>
                   {STATUS_LABELS[s.status]}
                 </span>
@@ -161,7 +161,7 @@ export default async function EstablishmentMenusPage({
                     .filter((p) => !offered.has(p.id))
                     .map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name} ({formatEuros(p.priceCents)})
+                        {productOptionLabel(p)}
                       </option>
                     ))}
                 </select>

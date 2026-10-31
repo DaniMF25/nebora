@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { MAX_FORMAT_LABEL, MAX_FORMATS, MIN_FORMATS, type PriceFormat } from "@/lib/price-formats";
 import { ALLERGENS, type Allergen } from "@/lib/allergens";
 import { recordAudit } from "@/server/audit/audit";
 import { storeImage } from "@/server/modules/media/service";
@@ -20,6 +21,8 @@ export interface Product {
   active: boolean;
   /** Foto del plato (WebP reprocesado), o null. */
   imageMediaId: string | null;
+  /** Formatos de venta (D-038); null = precio único. Con formatos, priceCents es el más bajo. */
+  formats: PriceFormat[] | null;
   /** Disponible en todos los locales o solo en `establishmentIds` (D-032). */
   allEstablishments: boolean;
   establishmentIds: string[];
@@ -34,6 +37,24 @@ const descriptionSchema = z
 
 export const priceCentsSchema = z.number().int().min(0).max(MAX_PRICE_CENTS);
 
+/** De 2 a 6 formatos con nombres distintos; null = precio único. */
+const formatsSchema = z
+  .array(
+    z
+      .object({
+        label: z.string().trim().min(1, "Cada formato necesita un nombre").max(MAX_FORMAT_LABEL),
+        priceCents: priceCentsSchema,
+      })
+      .strict(),
+  )
+  .min(MIN_FORMATS, `Indica al menos ${MIN_FORMATS} formatos o usa un precio único`)
+  .max(MAX_FORMATS, `Como máximo ${MAX_FORMATS} formatos`)
+  .refine(
+    (f) => new Set(f.map((x) => x.label.toLocaleLowerCase("es"))).size === f.length,
+    "Hay formatos con el mismo nombre",
+  )
+  .nullable();
+
 const allergensSchema = z
   .array(z.enum(ALLERGENS))
   .max(ALLERGENS.length)
@@ -44,6 +65,7 @@ export const createProductSchema = z
     name: nameSchema,
     description: descriptionSchema.optional(),
     priceCents: priceCentsSchema,
+    formats: formatsSchema.optional(),
     allergens: allergensSchema.default([]),
   })
   .strict();
@@ -53,12 +75,13 @@ export const updateProductSchema = z
     name: nameSchema.optional(),
     description: descriptionSchema.optional(),
     priceCents: priceCentsSchema.optional(),
+    formats: formatsSchema.optional(),
     allergens: allergensSchema.optional(),
     active: z.boolean().optional(),
   })
   .strict();
 
-const COLUMNS = `id, name, description, price_cents AS "priceCents", allergens, active,
+const COLUMNS = `id, name, description, price_cents AS "priceCents", formats, allergens, active,
   image_media_id AS "imageMediaId", all_establishments AS "allEstablishments",
   coalesce((SELECT array_agg(pe.establishment_id ORDER BY pe.establishment_id) FROM product_establishments pe
              WHERE pe.organization_id = menu_products.organization_id AND pe.product_id = menu_products.id), '{}')
@@ -67,6 +90,7 @@ const COLUMN_BY_FIELD = {
   name: "name",
   description: "description",
   priceCents: "price_cents",
+  formats: "formats",
   allergens: "allergens",
   active: "active",
 } as const;
@@ -170,13 +194,28 @@ export async function getProduct(tx: Tx, ctx: TenantContext, id: string): Promis
   return rows[0];
 }
 
+/** Con formatos, el precio del producto es el más bajo («desde»). */
+function withFormatPrice<T extends { priceCents?: number; formats?: PriceFormat[] | null }>(data: T): T {
+  if (!data.formats) return data;
+  return { ...data, priceCents: Math.min(...data.formats.map((f) => f.priceCents)) };
+}
+
+const jsonOrNull = (v: unknown) => (v ? JSON.stringify(v) : null);
+
 export async function createProduct(tx: Tx, ctx: TenantContext, input: unknown): Promise<Product> {
   requirePermission(ctx, "catalog.manage");
-  const data = parseInput(createProductSchema, input);
+  const data = withFormatPrice(parseInput(createProductSchema, input));
   const { rows } = await tx.query<Product>(
-    `INSERT INTO menu_products (organization_id, name, description, price_cents, allergens)
-     VALUES ($1, $2, $3, $4, $5) RETURNING ${COLUMNS}`,
-    [ctx.organizationId, data.name, data.description ?? null, data.priceCents, data.allergens],
+    `INSERT INTO menu_products (organization_id, name, description, price_cents, formats, allergens)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING ${COLUMNS}`,
+    [
+      ctx.organizationId,
+      data.name,
+      data.description ?? null,
+      data.priceCents,
+      data.formats ? JSON.stringify(data.formats) : null,
+      data.allergens,
+    ],
   );
   const product = rows[0]!;
   await recordAudit(tx, ctx, { action: "product.created", entityType: "product", entityId: product.id });
@@ -186,14 +225,17 @@ export async function createProduct(tx: Tx, ctx: TenantContext, input: unknown):
 export async function updateProduct(tx: Tx, ctx: TenantContext, id: string, input: unknown): Promise<Product> {
   requirePermission(ctx, "catalog.manage");
   if (!isUuid(id)) throw new NotFoundError();
-  const data = parseInput(updateProductSchema, input);
+  const data = withFormatPrice(parseInput(updateProductSchema, input));
   const fields = Object.keys(data) as (keyof typeof data)[];
   if (fields.length === 0) return getProduct(tx, ctx, id);
+  if (data.priceCents !== undefined && data.formats === undefined && (await getProduct(tx, ctx, id)).formats) {
+    throw new ValidationError("Este plato tiene formatos: cambia el precio de cada formato");
+  }
   // Columnas de una lista blanca; valores parametrizados.
   const sets = fields.map((f, i) => `${COLUMN_BY_FIELD[f]} = $${i + 3}`).join(", ");
   const { rows } = await tx.query<Product>(
     `UPDATE menu_products SET ${sets} WHERE organization_id = $1 AND id = $2 RETURNING ${COLUMNS}`,
-    [ctx.organizationId, id, ...fields.map((f) => data[f] ?? null)],
+    [ctx.organizationId, id, ...fields.map((f) => (f === "formats" ? jsonOrNull(data.formats) : (data[f] ?? null)))],
   );
   if (!rows[0]) throw new NotFoundError();
   await recordAudit(tx, ctx, {

@@ -46,6 +46,8 @@ export interface MenuSnapshot {
       imageId?: string;
       /** Destacado como «recomendado». */
       recommended?: boolean;
+      /** Formatos de venta (D-038); con ellos, priceCents es el más bajo. Ausente = precio único. */
+      formats?: { label: string; priceCents: number }[];
       i18n?: Partial<Record<Language, { name?: string; description?: string }>>;
     }[];
   }[];

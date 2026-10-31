@@ -70,7 +70,7 @@ export function SiteHome({
                 {t.seeFullMenu} <Icon name="arrow" className={styles.buttonIcon} />
               </Link>
             </div>
-            <MenuShowcase sections={menuSections} fullMenuHref={menuHref} texts={t} />
+            <MenuShowcase sections={menuSections} fullMenuHref={menuHref} texts={t} lang={chrome.lang ?? "es"} />
           </section>
         )}
 

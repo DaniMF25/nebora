@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
+import { priceSummary, productOptionLabel } from "@/lib/price-formats";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
 import { ALLERGEN_LABELS } from "@/lib/allergens";
 import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
@@ -269,10 +270,10 @@ export default async function MenuEditorPage({
                     <ul className="cards">
                       {section.items.map((item, ii) => (
                         <li key={item.id}>
-                          <strong>{item.name}</strong> · {formatEuros(item.priceCents)}
+                          <strong>{item.name}</strong> · {priceSummary(item.priceCents, item.formats)}
                           {item.recommended && <span className="badge"> Recomendado</span>}
                           {item.imageMediaId && <span className="muted"> · con foto</span>}
-                          {item.priceOverrideCents !== null && (
+                          {item.priceOverrideCents !== null && !item.formats && (
                             <span className="muted"> (precio de catálogo {formatEuros(item.basePriceCents)})</span>
                           )}
                           {!item.productActive && (
@@ -283,24 +284,27 @@ export default async function MenuEditorPage({
                           )}
                           {canEdit && (
                             <div className="inline-form">
-                              <ActionForm
-                                action={setItemPriceAction.bind(null, orgId, menuId, item.id)}
-                                submitLabel="Fijar precio"
-                                className="inline-form"
-                              >
-                                <label>
-                                  <span className="visually-hidden">Precio en esta carta para {item.name}</span>
-                                  <input
-                                    name="price"
-                                    inputMode="decimal"
-                                    placeholder="Precio de catálogo"
-                                    defaultValue={
-                                      item.priceOverrideCents !== null ? centsToInput(item.priceOverrideCents) : ""
-                                    }
-                                    size={10}
-                                  />
-                                </label>
-                              </ActionForm>
+                              {/* Con formatos, los precios se cambian en el catálogo (D-038). */}
+                              {!item.formats && (
+                                <ActionForm
+                                  action={setItemPriceAction.bind(null, orgId, menuId, item.id)}
+                                  submitLabel="Fijar precio"
+                                  className="inline-form"
+                                >
+                                  <label>
+                                    <span className="visually-hidden">Precio en esta carta para {item.name}</span>
+                                    <input
+                                      name="price"
+                                      inputMode="decimal"
+                                      placeholder="Precio de catálogo"
+                                      defaultValue={
+                                        item.priceOverrideCents !== null ? centsToInput(item.priceOverrideCents) : ""
+                                      }
+                                      size={10}
+                                    />
+                                  </label>
+                                </ActionForm>
+                              )}
                               {ii > 0 && (
                                 <ActionForm
                                   action={moveItemAction.bind(null, orgId, menuId, item.id, "up")}
@@ -350,7 +354,7 @@ export default async function MenuEditorPage({
                           <select name="productId" required>
                             {available.map((p) => (
                               <option key={p.id} value={p.id}>
-                                {p.name} ({formatEuros(p.priceCents)})
+                                {productOptionLabel(p)}
                               </option>
                             ))}
                           </select>

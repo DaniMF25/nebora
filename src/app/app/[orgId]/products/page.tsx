@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { ProductFields } from "@/components/product-fields";
 import { ALLERGEN_LABELS } from "@/lib/allergens";
-import { formatEuros } from "@/lib/money";
+import { priceSummary } from "@/lib/price-formats";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { listEstablishments } from "@/server/modules/establishments/service";
@@ -42,7 +42,7 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
                 <Link href={`/app/${orgId}/products/${p.id}`}>
                   <strong>{p.name}</strong>
                 </Link>{" "}
-                · {formatEuros(p.priceCents)}
+                · {priceSummary(p.priceCents, p.formats)}
                 {data.costings && (
                   <span className="muted">
                     {" "}

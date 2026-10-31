@@ -1,0 +1,20 @@
+/* Hereda letra y color del diseño; el precio toma además la clase de precio del diseño. */
+.formats {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.formats li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.price {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

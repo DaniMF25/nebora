@@ -1,6 +1,7 @@
 import { ALLERGEN_LABELS } from "@/lib/allergens";
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import { formatEuros } from "@/lib/money";
+import { PriceFormatList } from "@/components/price-formats";
 import styles from "./menu-print.module.css";
 
 export interface PrintOptions {
@@ -37,9 +38,14 @@ export function MenuPrint({
                 <li key={j} className={styles.item}>
                   <div className={styles.line}>
                     <span className={styles.name}>{item.name}</span>
-                    <span className={styles.leader} aria-hidden="true" />
-                    <span className={styles.price}>{formatEuros(item.priceCents)}</span>
+                    {!item.formats && (
+                      <>
+                        <span className={styles.leader} aria-hidden="true" />
+                        <span className={styles.price}>{formatEuros(item.priceCents)}</span>
+                      </>
+                    )}
                   </div>
+                  {item.formats && <PriceFormatList formats={item.formats} lang="es" priceClassName={styles.price} />}
                   {options.descriptions && item.description && <p className={styles.description}>{item.description}</p>}
                   {options.allergens && item.allergens.length > 0 && (
                     <p className={styles.allergens}>

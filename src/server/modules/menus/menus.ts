@@ -9,6 +9,7 @@ import { nameSchema, slugSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { snapshotTranslations } from "@/server/modules/translations/stored";
 import { isUuid, parseInput } from "@/server/validation";
+import type { PriceFormat } from "@/lib/price-formats";
 import type { WeeklySlot } from "../schedules/time";
 import { MAX_AVAILABILITY_RULES, rulesToSlots } from "./availability";
 import { priceCentsSchema } from "./products";
@@ -42,6 +43,8 @@ export interface DraftItem {
   productActive: boolean;
   imageMediaId: string | null;
   recommended: boolean;
+  /** Formatos del catálogo (D-038): con ellos no se aplica el precio de la carta. */
+  formats: PriceFormat[] | null;
 }
 
 export interface DraftSection {
@@ -75,6 +78,9 @@ export const createMenuSchema = z
 export const updateMenuSchema = z
   .object({ name: nameSchema.optional(), slug: slugSchema.optional(), theme: themeSchema.optional() })
   .strict();
+
+/** Un plato con formatos tiene sus precios en el catálogo (D-038). */
+export const FORMATS_PRICE_MESSAGE = "Este plato tiene formatos: sus precios se cambian en el catálogo";
 
 const sectionNameSchema = z.object({ name: nameSchema }).strict();
 const addItemSchema = z
@@ -269,8 +275,9 @@ export async function getMenuDraft(tx: Tx, ctx: TenantContext, menuId: string): 
   const items = await tx.query<DraftItem & { sectionId: string }>(
     `SELECT i.id, i.section_id AS "sectionId", i.product_id AS "productId", p.name, p.description,
             p.price_cents AS "basePriceCents", i.price_override_cents AS "priceOverrideCents",
-            COALESCE(i.price_override_cents, p.price_cents) AS "priceCents",
-            p.allergens, p.active AS "productActive", p.image_media_id AS "imageMediaId", i.recommended
+            CASE WHEN p.formats IS NULL THEN COALESCE(i.price_override_cents, p.price_cents) ELSE p.price_cents END
+              AS "priceCents",
+            p.allergens, p.active AS "productActive", p.image_media_id AS "imageMediaId", i.recommended, p.formats
        FROM menu_items i
        JOIN menu_sections s ON s.organization_id = i.organization_id AND s.id = i.section_id
        JOIN menu_products p ON p.organization_id = i.organization_id AND p.id = i.product_id
@@ -410,8 +417,8 @@ export async function addItem(
   const data = parseInput(addItemSchema, input);
   await lockMenu(tx, ctx, menuId);
   await requireSection(tx, ctx, menuId, sectionId);
-  const product = await tx.query<{ active: boolean; available: boolean }>(
-    `SELECT p.active, app.product_available_in(p.organization_id, p.id, m.establishment_id) AS available
+  const product = await tx.query<{ active: boolean; available: boolean; formats: PriceFormat[] | null }>(
+    `SELECT p.active, app.product_available_in(p.organization_id, p.id, m.establishment_id) AS available, p.formats
        FROM menu_products p, menus m
       WHERE p.organization_id = $1 AND p.id = $2 AND m.organization_id = $1 AND m.id = $3`,
     [ctx.organizationId, data.productId, menuId],
@@ -420,6 +427,7 @@ export async function addItem(
   if (!product.rows[0].active) throw new ValidationError("El producto está archivado");
   // El trigger de menu_items lo garantiza también en la base de datos.
   if (!product.rows[0].available) throw new ValidationError("Este producto no está disponible en este local");
+  if (product.rows[0].formats && data.priceOverrideCents != null) throw new ValidationError(FORMATS_PRICE_MESSAGE);
   const { rows } = await tx.query<{ n: number; next: number }>(
     `SELECT count(*)::int AS n, COALESCE(max(position), 0) + 1 AS next
        FROM menu_items WHERE organization_id = $1 AND section_id = $2`,
@@ -452,6 +460,14 @@ export async function setItemPrice(
   const { priceOverrideCents } = parseInput(itemPriceSchema, input);
   await lockMenu(tx, ctx, menuId);
   await requireItem(tx, ctx, menuId, itemId);
+  if (priceOverrideCents !== null) {
+    const formats = await tx.query(
+      `SELECT 1 FROM menu_items i JOIN menu_products p ON p.organization_id = i.organization_id AND p.id = i.product_id
+        WHERE i.organization_id = $1 AND i.id = $2 AND p.formats IS NOT NULL`,
+      [ctx.organizationId, itemId],
+    );
+    if (formats.rowCount) throw new ValidationError(FORMATS_PRICE_MESSAGE);
+  }
   await tx.query("UPDATE menu_items SET price_override_cents = $3 WHERE organization_id = $1 AND id = $2", [
     ctx.organizationId,
     itemId,
@@ -544,6 +560,7 @@ export async function buildSnapshot(tx: Tx, ctx: TenantContext, menuId: string):
         allergens: i.allergens,
         ...(i.imageMediaId ? { imageId: i.imageMediaId } : {}),
         ...(i.recommended ? { recommended: true } : {}),
+        ...(i.formats ? { formats: i.formats } : {}),
         ...(has(t.products.get(i.productId)) ? { i18n: t.products.get(i.productId) } : {}),
       })),
     })),

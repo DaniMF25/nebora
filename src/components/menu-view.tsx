@@ -1,6 +1,7 @@
 import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import type { PublicLanguage } from "@/lib/languages";
 import { formatEuros } from "@/lib/money";
+import { PriceFormatList } from "@/components/price-formats";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import type { MenuServing } from "@/server/modules/menus/availability";
 import { publicMediaUrl } from "@/lib/site";
@@ -50,9 +51,14 @@ export function MenuView({ snapshot, footer, lang = "es", languageLinks = [], se
                   <div>
                     <div className={styles.itemLine}>
                       <span className={styles.itemName}>{item.name}</span>
-                      <span className={styles.dots} aria-hidden="true" />
-                      <span className={styles.price}>{formatEuros(item.priceCents)}</span>
+                      {!item.formats && (
+                        <>
+                          <span className={styles.dots} aria-hidden="true" />
+                          <span className={styles.price}>{formatEuros(item.priceCents)}</span>
+                        </>
+                      )}
                     </div>
+                    {item.formats && <PriceFormatList formats={item.formats} lang={lang} priceClassName={styles.price} />}
                     {item.recommended && <p className={styles.recommended}>{t.recommended}</p>}
                     {item.description && <p className={styles.description}>{item.description}</p>}
                     {item.allergens.length > 0 && (

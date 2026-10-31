@@ -11,6 +11,8 @@ import { entryFor, text, type StoredI18n } from "@/server/modules/translations/s
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
 import { isValidLocalDate, localDateOf } from "../schedules/time";
+import type { PriceFormat } from "@/lib/price-formats";
+import { FORMATS_PRICE_MESSAGE } from "./menus";
 import { priceCentsSchema } from "./products";
 
 /**
@@ -33,6 +35,8 @@ export interface Special {
   startsOn: string | null;
   endsOn: string | null;
   status: SpecialStatus;
+  /** Formatos del catálogo (D-038): con ellos no se aplica el precio especial. */
+  formats: PriceFormat[] | null;
 }
 
 const dateSchema = z.string().refine(isValidLocalDate, "Fecha no válida").nullable().optional();
@@ -71,8 +75,9 @@ export async function listSpecials(tx: Tx, ctx: TenantContext, establishmentId: 
     endsOn: string | null;
     active: boolean;
     available: boolean;
+    formats: PriceFormat[] | null;
   }>(
-    `SELECT s.id, s.product_id AS "productId", p.name AS "productName", p.price_cents AS "catalogPrice",
+    `SELECT s.id, p.formats, s.product_id AS "productId", p.name AS "productName", p.price_cents AS "catalogPrice",
             s.price_override_cents AS "priceOverrideCents", s.starts_on::text AS "startsOn", s.ends_on::text AS "endsOn",
             p.active, app.product_available_in(s.organization_id, s.product_id, s.establishment_id) AS available
        FROM menu_specials s
@@ -86,11 +91,12 @@ export async function listSpecials(tx: Tx, ctx: TenantContext, establishmentId: 
     id: r.id,
     productId: r.productId,
     productName: r.productName,
-    priceCents: r.priceOverrideCents ?? r.catalogPrice,
+    priceCents: r.formats ? r.catalogPrice : (r.priceOverrideCents ?? r.catalogPrice),
     priceOverrideCents: r.priceOverrideCents,
     startsOn: r.startsOn,
     endsOn: r.endsOn,
     status: specialStatus(r, today),
+    formats: r.formats,
   }));
 }
 
@@ -106,8 +112,8 @@ export async function addSpecial(tx: Tx, ctx: TenantContext, establishmentId: st
     ctx.organizationId,
     est.id,
   ]);
-  const product = await tx.query<{ active: boolean; available: boolean }>(
-    `SELECT active, app.product_available_in(organization_id, id, $3) AS available
+  const product = await tx.query<{ active: boolean; available: boolean; formats: PriceFormat[] | null }>(
+    `SELECT active, formats, app.product_available_in(organization_id, id, $3) AS available
        FROM menu_products WHERE organization_id = $1 AND id = $2`,
     [ctx.organizationId, data.productId, est.id],
   );
@@ -115,6 +121,7 @@ export async function addSpecial(tx: Tx, ctx: TenantContext, establishmentId: st
   if (!product.rows[0].active) throw new ValidationError("El producto está archivado");
   // El trigger de menu_specials lo garantiza también en la base de datos.
   if (!product.rows[0].available) throw new ValidationError("Este producto no está disponible en este local");
+  if (product.rows[0].formats && data.priceOverrideCents != null) throw new ValidationError(FORMATS_PRICE_MESSAGE);
   const count = await tx.query<{ n: number }>(
     "SELECT count(*)::int AS n FROM menu_specials WHERE organization_id = $1 AND establishment_id = $2",
     [ctx.organizationId, est.id],
@@ -189,6 +196,7 @@ export async function getPublicSpecials(
     image_media_id: string | null;
     i18n: StoredI18n | null;
     languages: Language[];
+    formats: PriceFormat[] | null;
   }>("SELECT * FROM app.public_specials($1, $2)", slugs);
   return rows.map((r) => {
     const entry = lang !== "es" && r.languages.includes(lang) ? entryFor(r.i18n, lang) : {};
@@ -198,6 +206,7 @@ export async function getPublicSpecials(
       priceCents: r.price_cents,
       allergens: r.allergens,
       ...(r.image_media_id ? { imageId: r.image_media_id } : {}),
+      ...(r.formats ? { formats: r.formats } : {}),
     };
   });
 }

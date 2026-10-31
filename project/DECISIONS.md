@@ -436,3 +436,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** una categoría más en cada carta (exige republicar y repetir en cada carta); platos de texto libre (sin alérgenos fiables).
 
+## D-038 — Formatos de precio por plato
+**Fecha:** 2026-10-31. **Estado:** aceptada.
+
+**Contexto:** muchos platos se venden en varios formatos (media ración y ración, copa y botella…); la competencia lo permite.
+
+**Decisión:**
+- `menu_products.formats` (jsonb): NULL = precio único; si no, de 2 a 6 `{label, priceCents}`. La BD valida la forma; el servidor, nombres (1–40 caracteres, sin repetir) y precios. Con formatos, `price_cents` es el más bajo («desde»): ordenación, desplegables y escandallos siguen funcionando.
+- Los formatos están en el catálogo (no en cada carta) y se congelan en la instantánea publicada; los platos sin formatos conservan exactamente la instantánea anterior.
+- Un plato con formatos no admite precio propio por carta ni precio especial fuera de carta: el servidor lo rechaza y, si había uno anterior, no se aplica.
+- Nombres sugeridos con traducción incorporada en los 7 idiomas; un nombre propio se muestra tal cual (no hay campo de traducción para él).
+
+**Alternativas descartadas:** formatos por carta (multiplica la edición y los errores de precio); traducción manual de cada formato (añade mucha carga para textos casi siempre estándar).
+

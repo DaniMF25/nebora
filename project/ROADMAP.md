@@ -45,7 +45,8 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Interruptor para publicar o retirar la web desde la cabecera (D-035).
 - [x] Cartas con horario: carta del momento en la web y enlace único, aviso de horario en cada carta (D-036).
 - [x] Fuera de carta: platos con precio especial y vigencia, visibles al momento (D-037).
-- [ ] Formatos de precio por plato, galería de imágenes, reserva online traducida.
+- [x] Formatos de precio por plato (D-038).
+- [ ] Galería de imágenes, reserva online traducida.
 - [x] Carta en papel: página para imprimir o guardar como PDF (publicada o borrador, alérgenos, descripciones, QR, 1 o 2 columnas).
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 - [x] Fotos de platos y marca «recomendado» (migración 0013, D-021).

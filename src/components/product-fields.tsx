@@ -1,9 +1,18 @@
 import { ALLERGENS, ALLERGEN_LABELS, type Allergen } from "@/lib/allergens";
 import { centsToInput } from "@/lib/money";
+import type { PriceFormat } from "@/lib/price-formats";
+import { PriceFields } from "@/components/panel/price-fields";
 
 interface Props {
   idPrefix: string;
-  defaults?: { name: string; description: string | null; priceCents: number; allergens: Allergen[]; active: boolean };
+  defaults?: {
+    name: string;
+    description: string | null;
+    priceCents: number;
+    formats: PriceFormat[] | null;
+    allergens: Allergen[];
+    active: boolean;
+  };
 }
 
 /** Campos del formulario de producto (alta y edición). */
@@ -18,16 +27,10 @@ export function ProductFields({ idPrefix, defaults }: Props) {
         Descripción (opcional)
         <input name="description" maxLength={500} defaultValue={defaults?.description ?? ""} />
       </label>
-      <label>
-        Precio (€)
-        <input
-          name="price"
-          inputMode="decimal"
-          required
-          placeholder="12,50"
-          defaultValue={defaults ? centsToInput(defaults.priceCents) : ""}
-        />
-      </label>
+      <PriceFields
+        price={defaults ? centsToInput(defaults.priceCents) : ""}
+        formats={defaults?.formats?.map((f) => ({ label: f.label, price: centsToInput(f.priceCents) })) ?? null}
+      />
       <fieldset className="allergens">
         <legend>Alérgenos</legend>
         {ALLERGENS.map((a) => (
