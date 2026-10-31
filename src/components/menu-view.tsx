@@ -2,7 +2,9 @@ import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import type { PublicLanguage } from "@/lib/languages";
 import { formatEuros } from "@/lib/money";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
+import type { MenuServing } from "@/server/modules/menus/availability";
 import { publicMediaUrl } from "@/lib/site";
+import { MenuServingInfo } from "@/components/menu-serving";
 import styles from "./menu-view.module.css";
 
 interface Props {
@@ -11,10 +13,12 @@ interface Props {
   lang?: PublicLanguage;
   /** Selector de idioma (si la carta se ofrece en varios). */
   languageLinks?: { lang: PublicLanguage; label: string; href: string }[];
+  /** Horario de la carta y las demás cartas del local (D-036). */
+  serving?: MenuServing | null;
 }
 
 /** Representación de una carta a partir de una instantánea (publicada o vista previa del borrador). */
-export function MenuView({ snapshot, footer, lang = "es", languageLinks = [] }: Props) {
+export function MenuView({ snapshot, footer, lang = "es", languageLinks = [], serving = null }: Props) {
   const t = PUBLIC_TEXTS[lang];
   return (
     <div lang={lang} className={`${styles.page} ${styles[snapshot.theme]}`}>
@@ -32,6 +36,7 @@ export function MenuView({ snapshot, footer, lang = "es", languageLinks = [] }: 
           <p className={styles.establishment}>{snapshot.establishmentName}</p>
           <h1 className={styles.title}>{snapshot.menuName}</h1>
         </header>
+        {serving && <MenuServingInfo serving={serving} lang={lang} />}
         {snapshot.sections.map((section, si) => (
           <section key={si} className={styles.section}>
             <h2 className={styles.sectionTitle}>{section.name}</h2>

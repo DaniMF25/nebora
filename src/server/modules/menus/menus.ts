@@ -9,6 +9,8 @@ import { nameSchema, slugSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { snapshotTranslations } from "@/server/modules/translations/stored";
 import { isUuid, parseInput } from "@/server/validation";
+import type { WeeklySlot } from "../schedules/time";
+import { MAX_AVAILABILITY_RULES, rulesToSlots } from "./availability";
 import { priceCentsSchema } from "./products";
 
 export const MAX_SECTIONS = 50;
@@ -24,6 +26,8 @@ export interface MenuSummary {
   publicCode: string;
   publishedVersionNumber: number | null;
   publishedAt: Date | null;
+  /** Horario en que se sirve (D-036); null = siempre. */
+  availability: WeeklySlot[] | null;
 }
 
 export interface DraftItem {
@@ -82,7 +86,7 @@ const recommendedSchema = z.object({ recommended: z.boolean() }).strict();
 
 const SUMMARY_SQL = `
   SELECT m.id, m.establishment_id AS "establishmentId", m.name, m.slug::text AS slug, m.theme,
-         m.public_code AS "publicCode",
+         m.public_code AS "publicCode", m.availability,
          v.version_number AS "publishedVersionNumber", v.published_at AS "publishedAt"
     FROM menus m
     LEFT JOIN menu_versions v ON v.id = m.published_version_id AND v.menu_id = m.id`;
@@ -185,6 +189,52 @@ export async function updateMenu(tx: Tx, ctx: TenantContext, menuId: string, inp
     await recordAudit(tx, ctx, { action: "menu.updated", entityType: "menu", entityId: menuId, metadata: { fields } });
   }
   return getMenuSummary(tx, ctx, menuId);
+}
+
+const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora no válida (HH:MM)");
+const availabilitySchema = z
+  .object({
+    /** null = se sirve siempre. */
+    rules: z
+      .array(
+        z
+          .object({
+            days: z.array(z.number().int().min(1).max(7)).max(7),
+            opens: timeSchema,
+            closes: timeSchema,
+          })
+          .strict(),
+      )
+      .max(MAX_AVAILABILITY_RULES)
+      .nullable(),
+  })
+  .strict();
+
+/**
+ * Horario en que se sirve la carta (D-036). Es configuración viva: se aplica
+ * en las páginas públicas sin volver a publicar.
+ */
+export async function setMenuAvailability(tx: Tx, ctx: TenantContext, menuId: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "menus.edit");
+  const { rules } = parseInput(availabilitySchema, input);
+  let slots: WeeklySlot[] | null = null;
+  if (rules) {
+    const result = rulesToSlots(rules.map((r) => ({ ...r, days: [...new Set(r.days)] })));
+    if (typeof result === "string") throw new ValidationError(result);
+    slots = result;
+  }
+  await lockMenu(tx, ctx, menuId);
+  await tx.query("UPDATE menus SET availability = $3 WHERE organization_id = $1 AND id = $2", [
+    ctx.organizationId,
+    menuId,
+    slots ? JSON.stringify(slots) : null,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: "menu.availability_updated",
+    entityType: "menu",
+    entityId: menuId,
+    metadata: { always: slots === null, slots: slots?.length ?? 0 },
+  });
 }
 
 export async function deleteMenu(tx: Tx, ctx: TenantContext, menuId: string): Promise<void> {
@@ -663,6 +713,46 @@ export async function getPublishedMenu(
   }>("SELECT * FROM app.published_menu($1, $2, $3)", slugs);
   const r = rows[0];
   return r ? { versionNumber: r.version_number, publishedAt: r.published_at, snapshot: r.snapshot } : null;
+}
+
+/** Carta publicada de un local tal como la ven las páginas públicas (D-036). */
+export interface PublicMenuRef {
+  slug: string;
+  name: string;
+  nameI18n: Partial<Record<string, string>>;
+  availability: WeeklySlot[] | null;
+  featured: boolean;
+}
+
+/**
+ * Cartas publicadas de un local y su zona horaria, para elegir la del momento
+ * y enlazar las demás. Solo lee mediante app.public_menus (datos publicados).
+ */
+export async function getPublicMenus(
+  orgSlug: string,
+  establishmentSlug: string,
+): Promise<{ timezone: string; menus: PublicMenuRef[] } | null> {
+  const slugs = [orgSlug, establishmentSlug].map((s) => s.toLowerCase());
+  if (!slugs.every((s) => publicSlug.test(s))) return null;
+  const { rows } = await getPool().query<{
+    slug: string;
+    menu_name: string;
+    menu_name_i18n: Partial<Record<string, string>> | null;
+    availability: WeeklySlot[] | null;
+    featured: boolean;
+    timezone: string;
+  }>("SELECT * FROM app.public_menus($1, $2)", slugs);
+  if (rows.length === 0) return null;
+  return {
+    timezone: rows[0]!.timezone,
+    menus: rows.map((r) => ({
+      slug: r.slug,
+      name: r.menu_name,
+      nameI18n: r.menu_name_i18n ?? {},
+      availability: r.availability,
+      featured: r.featured,
+    })),
+  };
 }
 
 /**

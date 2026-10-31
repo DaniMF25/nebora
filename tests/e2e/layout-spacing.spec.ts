@@ -118,7 +118,8 @@ async function overflowIssues(page: Page): Promise<string[]> {
     // Campos y botones no se montan sobre sus vecinos (p. ej. «de 12:00 a 16:00»).
     for (const el of document.querySelectorAll(".panel-main :is(input, select, textarea, button)")) {
       const r = el.getBoundingClientRect();
-      if (r.width === 0 || !el.parentElement) continue;
+      // Una casilla oculta sobre su etiqueta (p. ej. los días de una franja) no es un solape.
+      if (r.width === 0 || !el.parentElement || getComputedStyle(el).position === "absolute") continue;
       for (const sib of el.parentElement.children) {
         if (sib === el || sib.contains(el)) continue;
         const o = sib.getBoundingClientRect();

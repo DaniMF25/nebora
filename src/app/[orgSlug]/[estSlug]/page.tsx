@@ -7,7 +7,8 @@ import { SiteHome } from "@/components/site/site-home";
 import { resolvePublicLanguage } from "@/lib/languages";
 import { localizeSnapshot } from "@/lib/menu-snapshot";
 import { publicMediaUrl } from "@/lib/site";
-import { getPublishedMenu } from "@/server/modules/menus/menus";
+import { pickCurrentMenu } from "@/server/modules/menus/availability";
+import { getPublicMenus, getPublishedMenu } from "@/server/modules/menus/menus";
 import { getPublicSite, localizePublicSite } from "@/server/modules/site/service";
 import { recordSiteView } from "@/server/modules/stats/service";
 import { trackView } from "@/server/modules/stats/track";
@@ -16,9 +17,18 @@ type Params = Promise<{ orgSlug: string; estSlug: string }>;
 type Search = Promise<{ lang?: string | string[] }>;
 
 // Página pública sin sesión: solo lee el perfil publicado y la carta publicada.
+// Con carta destacada, se muestra la del momento: una carta con horario que se
+// sirva ahora (p. ej. «Desayunos») se impone a la destacada (D-036). Sin
+// destacada, la web no muestra carta, como hasta ahora.
 const load = cache(async (org: string, est: string) => {
-  const site = await getPublicSite(org, est);
-  if (!site) return null;
+  const found = await getPublicSite(org, est);
+  if (!found) return null;
+  let site = found;
+  if (site.featuredMenuSlug) {
+    const menus = await getPublicMenus(org, est);
+    const current = menus ? pickCurrentMenu(menus.menus, menus.timezone, new Date()) : null;
+    if (current) site = { ...site, featuredMenuSlug: current.slug };
+  }
   const menu = site.featuredMenuSlug ? await getPublishedMenu(org, est, site.featuredMenuSlug) : null;
   return { site, menu };
 });

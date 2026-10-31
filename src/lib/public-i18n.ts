@@ -39,6 +39,11 @@ export interface PublicTexts {
   language: string;
   shortDays: readonly [string, string, string, string, string, string, string];
   and: string;
+  /** Cartas con horario (D-036). */
+  servedAt: string;
+  notServedNow: string;
+  ourMenus: string;
+  servedNow: string;
   allergenNames: Record<Allergen, string>;
 }
 
@@ -76,6 +81,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Idioma",
     shortDays: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
     and: "y",
+    servedAt: "Se sirve",
+    notServedNow: "Ahora no se sirve esta carta.",
+    ourMenus: "Nuestras cartas",
+    servedNow: "ahora",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustáceos",
@@ -126,6 +135,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Language",
     shortDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     and: "and",
+    servedAt: "Served",
+    notServedNow: "This menu is not being served right now.",
+    ourMenus: "Our menus",
+    servedNow: "now",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustaceans",
@@ -176,6 +189,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Langue",
     shortDays: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
     and: "et",
+    servedAt: "Servie",
+    notServedNow: "Cette carte n’est pas servie en ce moment.",
+    ourMenus: "Nos cartes",
+    servedNow: "en ce moment",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacés",
@@ -226,6 +243,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Sprache",
     shortDays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
     and: "und",
+    servedAt: "Serviert",
+    notServedNow: "Diese Karte wird gerade nicht serviert.",
+    ourMenus: "Unsere Karten",
+    servedNow: "jetzt",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Krebstiere",
@@ -276,6 +297,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Lingua",
     shortDays: ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
     and: "e",
+    servedAt: "Servito",
+    notServedNow: "Questo menù non è servito in questo momento.",
+    ourMenus: "I nostri menù",
+    servedNow: "ora",
     allergenNames: {
       gluten: "Glutine",
       crustaceans: "Crostacei",
@@ -326,6 +351,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Idioma",
     shortDays: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
     and: "e",
+    servedAt: "Servido",
+    notServedNow: "Este menu não está a ser servido agora.",
+    ourMenus: "Os nossos menus",
+    servedNow: "agora",
     allergenNames: {
       gluten: "Glúten",
       crustaceans: "Crustáceos",
@@ -376,6 +405,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     language: "Idioma",
     shortDays: ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"],
     and: "i",
+    servedAt: "Se serveix",
+    notServedNow: "Ara no se serveix aquesta carta.",
+    ourMenus: "Les nostres cartes",
+    servedNow: "ara",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacis",

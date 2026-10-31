@@ -1,0 +1,149 @@
+.editor {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.mode legend {
+  width: 100%;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+.rules {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+/* Franja: días como botones redondos, «de [ ] a [ ]» y quitar, en una fila si cabe. */
+.rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.days {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.day {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  grid-template-columns: none;
+}
+
+.day input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.day:has(input:checked) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent, #fff);
+}
+
+.day:has(input:focus-visible) {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+.times {
+  display: grid;
+  grid-template-columns: auto 8.75rem auto 8.75rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.times input {
+  width: 100%;
+  min-width: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.remove {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.remove:hover {
+  background: var(--bg);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+.remove svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.add {
+  padding: 0.3rem 0.7rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--border);
+  font-weight: 500;
+}
+
+.add:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .rule {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  .days {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .times {
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .times input {
+    padding-inline: 0.45rem;
+  }
+}

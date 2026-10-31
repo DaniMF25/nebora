@@ -409,3 +409,17 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** mantener la casilla y moverla arriba (seguiría ligada a guardar todo el contenido, y un descuido al guardar podía despublicar).
 
+## D-036 — Cartas con horario
+**Fecha:** 2026-10-31. **Estado:** aceptada.
+
+**Contexto:** la competencia permite programar cartas para que se muestren en ciertos horarios (desayunos, menú del día…).
+
+**Decisión:**
+- `menus.availability` (jsonb): NULL = siempre; si no, turnos semanales con el mismo formato y la misma lógica que el horario de apertura (hora local del local, turnos de madrugada y cambios de hora). La BD valida la forma de cada turno con un CHECK; el servidor, los solapes. En el panel se edita como franjas (días + de/a).
+- Es configuración viva, no parte de la versión publicada: cambiar el horario no obliga a republicar.
+- Una carta fuera de horario **no se oculta**: los QR impresos de cada carta deben seguir funcionando. La página indica cuándo se sirve y avisa de que ahora no se sirve.
+- Carta del momento: entre las publicadas, primero una con horario que se sirva ahora (la destacada si lo es), luego la destacada si se sirve, luego la primera que se sirva, y si ninguna, la destacada o la primera. La web solo la aplica si tiene carta destacada (sin destacada sigue sin mostrar carta). `/m/<org>/<local>` redirige (307) a la carta del momento: sirve como QR único.
+- Lectura pública mediante `app.public_menus` (SECURITY DEFINER): solo cartas publicadas, con el nombre y las traducciones de la instantánea publicada, su horario y si es la destacada.
+
+**Alternativas descartadas:** ocultar cartas fuera de horario (rompe QR y enlaces); guardar el horario en la versión publicada (obligaría a republicar para cambiar una hora).
+

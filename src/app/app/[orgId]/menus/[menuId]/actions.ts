@@ -17,6 +17,7 @@ import {
   removeItem,
   renameSection,
   setItemPrice,
+  setMenuAvailability,
   setItemRecommended,
   unpublishMenu,
   updateMenu,
@@ -42,6 +43,24 @@ export async function updateMenuAction(orgId: string, menuId: string, _p: FormSt
     (tx, ctx) =>
       updateMenu(tx, ctx, menuId, { name: formString(fd, "name"), slug: formString(fd, "slug"), theme: formString(fd, "theme") }),
     "Guardado",
+  );
+}
+
+/** Horario de la carta: «siempre» o franjas r<n>d (días), r<n>o, r<n>c (D-036). */
+export async function setAvailabilityAction(orgId: string, menuId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  const rules: { days: number[]; opens: string; closes: string }[] = [];
+  for (let n = 0; n < 20 && fd.has(`r${n}o`); n++) {
+    rules.push({
+      days: fd.getAll(`r${n}d`).map((d) => Number(d)),
+      opens: formString(fd, `r${n}o`),
+      closes: formString(fd, `r${n}c`),
+    });
+  }
+  return runTenantAction(
+    orgId,
+    editorPath(orgId, menuId),
+    (tx, ctx) => setMenuAvailability(tx, ctx, menuId, { rules: fd.get("mode") === "always" ? null : rules }),
+    "Horario guardado",
   );
 }
 

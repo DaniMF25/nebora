@@ -5,7 +5,10 @@ import { MENU_THEMES, MENU_THEME_LABELS } from "@/lib/menu-snapshot";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getEstablishment } from "@/server/modules/establishments/service";
+import { getEnv } from "@/server/config/env";
+import { describeAvailability } from "@/server/modules/menus/availability";
 import { hasUnpublishedChanges, listMenus } from "@/server/modules/menus/menus";
+import { getOrganization } from "@/server/modules/organizations/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createMenuAction } from "../actions";
 
@@ -21,6 +24,7 @@ export default async function EstablishmentMenusPage({
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       establishment: await getEstablishment(tx, ctx, estId),
+      organization: await getOrganization(tx, ctx),
       menus: await Promise.all(
         (await listMenus(tx, ctx, estId)).map(async (m) => ({
           ...m,
@@ -33,7 +37,11 @@ export default async function EstablishmentMenusPage({
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, menus, canEditMenus } = data;
+  const { establishment: est, organization, menus, canEditMenus } = data;
+  // Enlace único a la carta que se sirve en cada momento (D-036).
+  const currentMenuPath = `/m/${organization.slug}/${est.slug}`;
+  const base = getEnv().APP_BASE_URL;
+  const published = menus.filter((m) => m.publishedVersionNumber);
 
   return (
     <>
@@ -55,9 +63,21 @@ export default async function EstablishmentMenusPage({
                   · {m.publishedVersionNumber ? `publicada (v${m.publishedVersionNumber})` : "sin publicar"}
                   {m.outdated && " · cambios sin publicar"}
                 </span>
+                <div className="muted">
+                  Se sirve: {m.availability ? describeAvailability(m.availability) : "siempre"}
+                </div>
               </li>
             ))}
           </ul>
+        )}
+        {published.length > 1 && (
+          <p className="muted">
+            Carta del momento:{" "}
+            <a href={currentMenuPath} target="_blank" rel="noreferrer">
+              {base ? `${base}${currentMenuPath}` : currentMenuPath}
+            </a>
+            . Lleva siempre a la carta que se sirve ahora según los horarios; útil para un único QR en las mesas.
+          </p>
         )}
         {canEditMenus && (
           <details>

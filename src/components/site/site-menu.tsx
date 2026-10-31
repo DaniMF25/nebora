@@ -2,11 +2,22 @@ import type { MenuSnapshot } from "@/lib/menu-snapshot";
 import type { PublicLanguage } from "@/lib/languages";
 import { formatEuros } from "@/lib/money";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
+import type { MenuServing } from "@/server/modules/menus/availability";
 import { publicMediaUrl } from "@/lib/site";
+import { MenuServingInfo } from "@/components/menu-serving";
 import styles from "./site.module.css";
 
 /** Carta completa con el diseño de la web del local (solo lee la instantánea publicada). */
-export function SiteMenu({ snapshot, lang = "es" }: { snapshot: MenuSnapshot; lang?: PublicLanguage }) {
+export function SiteMenu({
+  snapshot,
+  lang = "es",
+  serving = null,
+}: {
+  snapshot: MenuSnapshot;
+  lang?: PublicLanguage;
+  /** Horario de la carta y las demás cartas del local (D-036). */
+  serving?: MenuServing | null;
+}) {
   const t = PUBLIC_TEXTS[lang];
   return (
     <>
@@ -25,6 +36,7 @@ export function SiteMenu({ snapshot, lang = "es" }: { snapshot: MenuSnapshot; la
         </nav>
       )}
       <div className={styles.menuList}>
+        {serving && <MenuServingInfo serving={serving} lang={lang} />}
         {snapshot.sections.map((section, si) => (
           <section key={si} id={`categoria-${si + 1}`} className={styles.menuSection}>
             <h2 className={styles.blockTitle}>{section.name}</h2>

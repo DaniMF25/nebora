@@ -11,6 +11,8 @@ import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getMenuDraft, hasUnpublishedChanges, listVersions, publicationProblems } from "@/server/modules/menus/menus";
 import { listProducts } from "@/server/modules/menus/products";
 import { menuShortUrl } from "@/server/modules/menus/qr";
+import { describeAvailability, slotsToRules } from "@/server/modules/menus/availability";
+import { MenuAvailabilityEditor } from "@/components/panel/menu-availability-editor";
 import { withTenant } from "@/server/tenancy/context";
 import { TranslationInput, TranslationStatusBadge } from "@/components/panel/translation-field";
 import { LANGUAGE_LABELS } from "@/lib/languages";
@@ -29,6 +31,7 @@ import {
   renameSectionAction,
   saveMenuTranslationsAction,
   setItemPriceAction,
+  setAvailabilityAction,
   setItemRecommendedAction,
   unpublishMenuAction,
   updateMenuAction,
@@ -527,6 +530,27 @@ export default async function MenuEditorPage({
               </details>
             </section>
           )}
+          <section>
+            <h3>Horario de la carta</h3>
+            <p className="muted">
+              Para cartas que solo se sirven a ciertas horas, como desayunos o menú del día. La web del local muestra
+              la carta del momento; fuera de su horario la carta se puede seguir abriendo (por ejemplo desde el QR de
+              la mesa) e indica cuándo se sirve. Se aplica al guardar, sin volver a publicar. Las horas son las del
+              local.
+            </p>
+            {canEdit ? (
+              <ActionForm
+                action={setAvailabilityAction.bind(null, orgId, menuId)}
+                submitLabel="Guardar horario"
+                className="form form-wide"
+                resetOnSuccess={false}
+              >
+                <MenuAvailabilityEditor initial={menu.availability ? slotsToRules(menu.availability) : null} />
+              </ActionForm>
+            ) : (
+              <p>{menu.availability ? describeAvailability(menu.availability) : "Siempre"}</p>
+            )}
+          </section>
         </>
       )}
     </>
