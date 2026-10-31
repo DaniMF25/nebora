@@ -9,6 +9,8 @@ import { localizeSnapshot } from "@/lib/menu-snapshot";
 import { publicMediaUrl } from "@/lib/site";
 import { pickCurrentMenu } from "@/server/modules/menus/availability";
 import { getPublicMenus, getPublishedMenu } from "@/server/modules/menus/menus";
+import { getPublicSpecials, withSpecials } from "@/server/modules/menus/specials";
+import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { getPublicSite, localizePublicSite } from "@/server/modules/site/service";
 import { recordSiteView } from "@/server/modules/stats/service";
 import { trackView } from "@/server/modules/stats/track";
@@ -69,7 +71,15 @@ export default async function PublicSitePage({ params, searchParams }: { params:
       chrome={{ ...chrome, links: { ...chrome.links, menu: menuHref } }}
       site={site}
       heroImageUrl={site.heroMediaId ? publicMediaUrl(site.heroMediaId) : null}
-      menuSections={menu ? localizeSnapshot(menu.snapshot, lang).sections : null}
+      menuSections={
+        menu
+          ? withSpecials(
+              localizeSnapshot(menu.snapshot, lang),
+              await getPublicSpecials(orgSlug, estSlug, lang),
+              PUBLIC_TEXTS[lang].offMenu,
+            ).sections
+          : null
+      }
     />
   );
 }

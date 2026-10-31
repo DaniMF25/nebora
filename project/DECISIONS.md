@@ -423,3 +423,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** ocultar cartas fuera de horario (rompe QR y enlaces); guardar el horario en la versión publicada (obligaría a republicar para cambiar una hora).
 
+## D-037 — Fuera de carta
+**Fecha:** 2026-10-31. **Estado:** aceptada.
+
+**Contexto:** los restaurantes cambian a diario sus sugerencias; republicar una carta para eso es lento y crea versiones que no aportan.
+
+**Decisión:**
+- Tabla `menu_specials` por local: producto del catálogo, precio especial opcional y vigencia opcional (`starts_on`/`ends_on`, fechas locales inclusivas). RLS por organización y por local como las cartas (D-031); un trigger exige que el producto esté disponible en el local (D-032). Un plato una sola vez por local; máximo 30.
+- Se reutiliza el producto del catálogo (no texto libre) para no perder alérgenos (obligatorios en la información al consumidor), foto ni traducciones.
+- No forman parte de las versiones publicadas: `app.public_specials` (SECURITY DEFINER) devuelve al momento los que se ven hoy (`app.special_is_public`: producto activo y disponible, fecha local dentro de la vigencia y local con carta o web publicada). `app.public_media` sirve la foto del producto solo mientras se ve.
+- Se muestran como primera sección «Fuera de carta» de todas las cartas públicas del local y de la carta de la web, reutilizando su diseño, pestañas y traducciones.
+
+**Alternativas descartadas:** una categoría más en cada carta (exige republicar y repetir en cada carta); platos de texto libre (sin alérgenos fiables).
+

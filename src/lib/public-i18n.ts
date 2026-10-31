@@ -44,6 +44,8 @@ export interface PublicTexts {
   notServedNow: string;
   ourMenus: string;
   servedNow: string;
+  /** Platos fuera de carta (D-037). */
+  offMenu: string;
   allergenNames: Record<Allergen, string>;
 }
 
@@ -85,6 +87,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "Ahora no se sirve esta carta.",
     ourMenus: "Nuestras cartas",
     servedNow: "ahora",
+    offMenu: "Fuera de carta",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustáceos",
@@ -139,6 +142,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "This menu is not being served right now.",
     ourMenus: "Our menus",
     servedNow: "now",
+    offMenu: "Off the menu",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustaceans",
@@ -193,6 +197,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "Cette carte n’est pas servie en ce moment.",
     ourMenus: "Nos cartes",
     servedNow: "en ce moment",
+    offMenu: "Hors carte",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacés",
@@ -247,6 +252,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "Diese Karte wird gerade nicht serviert.",
     ourMenus: "Unsere Karten",
     servedNow: "jetzt",
+    offMenu: "Außer der Karte",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Krebstiere",
@@ -301,6 +307,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "Questo menù non è servito in questo momento.",
     ourMenus: "I nostri menù",
     servedNow: "ora",
+    offMenu: "Fuori menù",
     allergenNames: {
       gluten: "Glutine",
       crustaceans: "Crostacei",
@@ -355,6 +362,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "Este menu não está a ser servido agora.",
     ourMenus: "Os nossos menus",
     servedNow: "agora",
+    offMenu: "Fora da carta",
     allergenNames: {
       gluten: "Glúten",
       crustaceans: "Crustáceos",
@@ -409,6 +417,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     notServedNow: "Ara no se serveix aquesta carta.",
     ourMenus: "Les nostres cartes",
     servedNow: "ara",
+    offMenu: "Fora de carta",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacis",

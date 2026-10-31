@@ -9,6 +9,10 @@ import { getEnv } from "@/server/config/env";
 import { describeAvailability } from "@/server/modules/menus/availability";
 import { hasUnpublishedChanges, listMenus } from "@/server/modules/menus/menus";
 import { getOrganization } from "@/server/modules/organizations/service";
+import { listProducts } from "@/server/modules/menus/products";
+import { listSpecials, MAX_SPECIALS, type Special, type SpecialStatus } from "@/server/modules/menus/specials";
+import { formatEuros } from "@/lib/money";
+import { addSpecialAction, removeSpecialAction } from "./actions";
 import { withTenant } from "@/server/tenancy/context";
 import { createMenuAction } from "../actions";
 
@@ -32,12 +36,16 @@ export default async function EstablishmentMenusPage({
         })),
       ),
       canEditMenus: ctx.permissions.has("menus.edit"),
+      specials: await listSpecials(tx, ctx, estId),
+      // Solo platos activos disponibles en este local (D-032).
+      products: await listProducts(tx, ctx, { activeOnly: true, availableIn: estId }),
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, organization, menus, canEditMenus } = data;
+  const { establishment: est, organization, menus, canEditMenus, specials, products } = data;
+  const offered = new Set(specials.map((s) => s.productId));
   // Enlace único a la carta que se sirve en cada momento (D-036).
   const currentMenuPath = `/m/${organization.slug}/${est.slug}`;
   const base = getEnv().APP_BASE_URL;
@@ -109,6 +117,104 @@ export default async function EstablishmentMenusPage({
           locales; en cada carta eliges cuáles se ofrecen aquí y, si quieres, con otro precio.
         </p>
       </section>
+      <section>
+        <h3>Fuera de carta</h3>
+        <p className="muted">
+          Platos que ofreces aparte (sugerencias, producto del día…). Salen al momento como primera sección de las
+          cartas de este local y de su web, sin volver a publicar. Se toman del catálogo, con sus alérgenos, foto y
+          traducciones; el precio especial es opcional.
+        </p>
+        {specials.length === 0 ? (
+          <p className="muted">No hay platos fuera de carta.</p>
+        ) : (
+          <ul className="cards">
+            {specials.map((s) => (
+              <li key={s.id}>
+                <strong>{s.productName}</strong> · {formatEuros(s.priceCents)}
+                {s.priceOverrideCents !== null && <span className="muted"> (precio especial)</span>}{" "}
+                <span className={`badge ${s.status === "visible" ? "badge-ok" : s.status === "scheduled" ? "badge-warn" : ""}`}>
+                  {STATUS_LABELS[s.status]}
+                </span>
+                <div className="muted">{validity(s)}</div>
+                {canEditMenus && (
+                  <ActionForm
+                    action={removeSpecialAction.bind(null, orgId, est.id, s.id)}
+                    submitLabel={`Quitar ${s.productName} de fuera de carta`}
+                    className="inline-form"
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        {canEditMenus && specials.length < MAX_SPECIALS && (
+          <details>
+            <summary>Añadir plato fuera de carta</summary>
+            <ActionForm action={addSpecialAction.bind(null, orgId, est.id)} submitLabel="Añadir fuera de carta">
+              <label>
+                Plato
+                <select name="productId" required defaultValue="">
+                  <option value="" disabled>
+                    Elige un plato del catálogo
+                  </option>
+                  {products
+                    .filter((p) => !offered.has(p.id))
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({formatEuros(p.priceCents)})
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label>
+                Precio especial (€, opcional)
+                <input name="price" inputMode="decimal" placeholder="Vacío = precio del catálogo" />
+              </label>
+              <label className="check">
+                <input type="checkbox" name="today" /> Solo hoy
+              </label>
+              <div className="inline-form">
+                <label>
+                  Desde (opcional)
+                  <input type="date" name="startsOn" />
+                </label>
+                <label>
+                  Hasta (opcional)
+                  <input type="date" name="endsOn" />
+                </label>
+              </div>
+              <p className="muted">Sin fechas, se muestra hasta que lo quites.</p>
+            </ActionForm>
+            {products.length === 0 && (
+              <p className="muted">
+                No hay productos disponibles en este local. <Link href={`/app/${orgId}/products`}>Crea uno en el catálogo</Link>.
+              </p>
+            )}
+          </details>
+        )}
+      </section>
     </>
   );
+}
+
+const STATUS_LABELS: Record<SpecialStatus, string> = {
+  visible: "Visible hoy",
+  scheduled: "Programado",
+  expired: "Caducado",
+  archived: "Producto archivado",
+  unavailable: "No disponible en este local",
+};
+
+const dateLabel = (d: string) => d.split("-").reverse().join("/");
+
+/** Vigencia en palabras: «Solo el 31/10/2026», «Del … al …», «Hasta que lo quites»… */
+function validity(s: Special): string {
+  if (s.startsOn && s.endsOn) {
+    return s.startsOn === s.endsOn
+      ? `Solo el ${dateLabel(s.startsOn)}`
+      : `Del ${dateLabel(s.startsOn)} al ${dateLabel(s.endsOn)}`;
+  }
+  if (s.startsOn) return `Desde el ${dateLabel(s.startsOn)}, hasta que lo quites`;
+  if (s.endsOn) return `Hasta el ${dateLabel(s.endsOn)}`;
+  return "Hasta que lo quites";
 }

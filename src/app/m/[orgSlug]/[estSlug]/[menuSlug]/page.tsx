@@ -12,6 +12,7 @@ import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { groupOpeningHours } from "@/lib/site-hours";
 import { menuServing } from "@/server/modules/menus/availability";
 import { getPublicMenus, getPublishedMenu } from "@/server/modules/menus/menus";
+import { getPublicSpecials, withSpecials } from "@/server/modules/menus/specials";
 import { getPublicSite, localizePublicSite } from "@/server/modules/site/service";
 import { recordMenuView } from "@/server/modules/stats/service";
 import { trackView } from "@/server/modules/stats/track";
@@ -50,12 +51,17 @@ export default async function PublicMenuPage({ params, searchParams }: { params:
   if (!menu) notFound();
   await trackView(() => recordMenuView(orgSlug, estSlug, menuSlug));
   const { lang, offered } = await pageLanguage(orgSlug, estSlug, menuSlug, searchParams);
-  const snapshot = localizeSnapshot(menu.snapshot, lang);
+  const t = PUBLIC_TEXTS[lang];
+  // Platos fuera de carta de hoy como primera sección (D-037).
+  const snapshot = withSpecials(
+    localizeSnapshot(menu.snapshot, lang),
+    await getPublicSpecials(orgSlug, estSlug, lang),
+    t.offMenu,
+  );
   const base = `/m/${orgSlug.toLowerCase()}/${estSlug.toLowerCase()}`;
   const href = `${base}/${menuSlug.toLowerCase()}`;
   // Horario de esta carta y enlaces a las demás del local (D-036).
   const menus = await loadMenus(orgSlug, estSlug);
-  const t = PUBLIC_TEXTS[lang];
   const serving = menus
     ? menuServing(
         menus,
