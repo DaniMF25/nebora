@@ -39,10 +39,9 @@
 
 ## No implementado todavía
 - [ ] Envío de invitaciones por correo (hoy el enlace lo entrega quien invita; D-010).
-- [ ] Permisos por establecimiento (`establishment_memberships`).
 - [ ] MFA, verificación de correo y recuperación de contraseña (requieren proveedor de correo).
 - [ ] CSP completa con nonces para scripts.
-- [ ] Cartas: traducciones. Almacenamiento de imágenes fuera de la BD y limpieza de huérfanas. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
+- [ ] Cartas: almacenamiento de imágenes fuera de la BD y limpieza de huérfanas. (El enlace directo `/m/...` sigue cambiando si se renombra la carta; los QR usan el enlace estable.)
 - [ ] Inventario: subrecetas, devoluciones a proveedor, envío de pedidos por correo.
 - [ ] Alta en lista de espera desde la web pública, avisos al cliente (correo/SMS), cancelación por el cliente.
 - [ ] Programar `pnpm privacy:retention` a diario en el despliegue (sin ello la anonimización no es automática).
