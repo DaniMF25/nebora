@@ -1,16 +1,14 @@
 import type { NextConfig } from "next";
 
-// Cabeceras de seguridad básicas. La CSP aquí solo incluye directivas que no
-// dependen de nonces para scripts; endurecer script-src queda para la Fase 8.
+// Cabeceras de seguridad básicas. La CSP, con nonce por petición, la pone
+// src/proxy.ts (D-044).
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  {
-    key: "Content-Security-Policy",
-    value: "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
-  },
+  // Aísla la ventana de las abiertas desde otros sitios (y viceversa).
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
 const nextConfig: NextConfig = {

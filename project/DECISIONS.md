@@ -510,3 +510,19 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** paquetes `@fontsource` (34 dependencias nuevas); caché de compilación en la CI (no evita el fallo en la primera compilación ni en el despliegue).
 
+
+## D-044 — Revisión de seguridad interna: CSP con nonce y endurecimiento
+**Fecha:** 2026-11-01. **Estado:** aceptada.
+
+**Contexto:** primera revisión de seguridad orientada a OWASP ASVS (informe en `docs/SECURITY_REVIEW.md`). La CSP no limitaba los scripts, `zod` tenía un aviso alto y quedaban detalles de sesiones, cabeceras y permisos.
+
+**Decisión:**
+- CSP por petición en `src/proxy.ts`: `script-src 'self' 'nonce-…' 'strict-dynamic'` (`'unsafe-eval'` solo en desarrollo), `object-src 'none'`, `base-uri`, `form-action` y `frame-ancestors 'none'`. Next aplica el nonce a sus scripts; para ello todas las páginas se renderizan por petición (`await connection()` en el layout raíz).
+- `style-src` mantiene `'unsafe-inline'` (estilos en línea de React y del color de marca); riesgo aceptado.
+- HSTS y `upgrade-insecure-requests` solo cuando la petición llega por HTTPS (directa o con `X-Forwarded-Proto`), para no romper el acceso local por http. COOP `same-origin` en `next.config.ts`.
+- Los Route Handlers que cambian estado o exportan datos comprueban el origen con `isSameOrigin` (Origin frente a Host/X-Forwarded-Host), válido tras un proxy que termina TLS.
+- Al fijar una cookie de sesión nueva se revoca la que tuviera el navegador.
+- Ninguna función `SECURITY DEFINER` es ejecutable por PUBLIC (migración 0029); una prueba de integración lo exige junto con `search_path` fijo.
+- Dependencias: `zod` 4.6.7 y `vitest` 4.1.12. Se aceptan 2 avisos moderados de `minimatch` (solo desarrollo, vía ESLint 9).
+
+**Alternativas descartadas:** CSP estática con hashes (Next genera scripts en línea distintos en cada página); `'unsafe-inline'` en scripts (anula la protección); HSTS siempre (impide entrar en local por http).

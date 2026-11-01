@@ -91,8 +91,8 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Imágenes Docker (web sin privilegios y herramientas), comprobación de salud y manual de despliegue (`docs/DEPLOYMENT.md`, D-023); ensayo local en contenedores superado.
 - [ ] Elegir hosting, PostgreSQL gestionado, dominio y almacenamiento de fotos.
 - [x] Límites de intentos por IP en login y registro.
-- [ ] Revisar OWASP ASVS aplicable.
-- [ ] Ejecutar análisis de dependencias y secretos.
+- [x] Revisar OWASP ASVS aplicable (revisión interna, `docs/SECURITY_REVIEW.md`; falta la independiente).
+- [x] Ejecutar análisis de dependencias y secretos (manual, 2026-11-01; falta automatizarlo en la CI).
 - [ ] Pruebas de permisos, aislamiento y concurrencia.
 - [ ] Pruebas de accesibilidad y rendimiento.
 - [ ] Restauración de copia de seguridad.

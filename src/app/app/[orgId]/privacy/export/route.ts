@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/server/auth/current-user";
+import { isSameOrigin } from "@/server/same-origin";
 import { AppError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { exportCustomerData } from "@/server/modules/privacy/service";
 import { withTenant } from "@/server/tenancy/context";
@@ -14,8 +15,7 @@ function text(status: number, body: string) {
  * protección CSRF automática de las Server Actions.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ orgId: string }> }) {
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) return text(403, "Origen no permitido");
+  if (!isSameOrigin(request.headers)) return text(403, "Origen no permitido");
   const { orgId } = await params;
   const user = await getCurrentUser();
   if (!user) return text(401, "No autenticado");

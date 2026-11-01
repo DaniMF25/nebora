@@ -28,4 +28,21 @@ describe("migraciones", () => {
     expect(rows.length).toBeGreaterThan(0);
     for (const r of rows) expect(r.relrowsecurity, r.relname).toBe(true);
   });
+
+  it("las funciones SECURITY DEFINER fijan search_path y PUBLIC no puede ejecutarlas", async () => {
+    const { rows } = await withAdminClient((c) =>
+      c.query(`
+        SELECT p.oid::regprocedure::text AS fn,
+               coalesce(array_to_string(p.proconfig, ','), '') AS config,
+               has_function_privilege('public', p.oid, 'EXECUTE') AS public_exec
+          FROM pg_proc p
+          JOIN pg_namespace n ON n.oid = p.pronamespace
+         WHERE p.prosecdef AND n.nspname NOT IN ('pg_catalog', 'information_schema')`),
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      expect(r.config, r.fn).toMatch(/search_path=/);
+      expect(r.public_exec, r.fn).toBe(false);
+    }
+  });
 });

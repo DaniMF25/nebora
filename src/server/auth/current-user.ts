@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getEnv } from "@/server/config/env";
-import { validateSessionToken, type AuthUser, type SessionInfo } from "./service";
+import { revokeSession, validateSessionToken, type AuthUser, type SessionInfo } from "./service";
 
 // En producción se usa el prefijo __Host- (exige Secure, Path=/ y sin Domain).
 export function sessionCookieName(): string {
@@ -23,9 +23,16 @@ export async function requireUser(): Promise<AuthUser> {
   return user;
 }
 
-/** Solo puede llamarse desde Server Actions o Route Handlers. */
+/**
+ * Solo puede llamarse desde Server Actions o Route Handlers. Si el navegador ya
+ * tenía otra sesión (p. ej. desde otra pestaña), se revoca: la cookie
+ * sustituida no debe seguir siendo válida en el servidor (D-044).
+ */
 export async function setSessionCookie(session: SessionInfo): Promise<void> {
-  (await cookies()).set(sessionCookieName(), session.token, {
+  const jar = await cookies();
+  const previous = jar.get(sessionCookieName())?.value;
+  if (previous && previous !== session.token) await revokeSession(previous);
+  jar.set(sessionCookieName(), session.token, {
     httpOnly: true,
     secure: getEnv().NODE_ENV === "production",
     sameSite: "lax",

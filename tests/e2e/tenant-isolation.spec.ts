@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, PASSWORD, register, suffix } from "./helpers";
 
 test("una ruta privada sin sesión redirige al login", async ({ page }) => {
   await page.goto("/app");
@@ -55,6 +55,31 @@ test("cerrar sesión revoca el acceso", async ({ page }) => {
   await register(page, "Salida");
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(page).toHaveURL(/\/login$/);
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("al iniciar sesión se revoca la sesión anterior del navegador", async ({ browser }) => {
+  // Cuenta B (otro navegador), para entrar con ella después.
+  const other = await (await browser.newContext()).newPage();
+  const emailB = await register(other, "Berta");
+
+  // Mismo navegador: una pestaña con el login abierto y otra que entra como A.
+  const context = await browser.newContext();
+  const loginTab = await context.newPage();
+  await loginTab.goto("/login");
+  await register(await context.newPage(), "Ana");
+  const sessionA = (await context.cookies()).find((c) => c.name.includes("nebora_session"))!;
+
+  await loginTab.getByLabel("Correo electrónico").fill(emailB);
+  await loginTab.getByLabel("Contraseña").fill(PASSWORD);
+  await loginTab.getByRole("button", { name: "Entrar" }).click();
+  await expect(loginTab).toHaveURL(/\/app$/);
+
+  // La cookie de A, reutilizada en otro navegador, ya no da acceso.
+  const stale = await browser.newContext();
+  await stale.addCookies([sessionA]);
+  const page = await stale.newPage();
   await page.goto("/app");
   await expect(page).toHaveURL(/\/login$/);
 });

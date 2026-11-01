@@ -133,10 +133,18 @@ async function overflowIssues(page: Page): Promise<string[]> {
   });
 }
 
-test("botones separados y sin desbordamientos en móvil en las páginas del panel", async ({ browser }) => {
+test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en las páginas del panel", async ({
+  browser,
+}) => {
   test.setTimeout(180_000);
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await ctx.newPage();
+  // Ninguna página del recorrido puede provocar violaciones de la CSP (D-044).
+  const cspViolations: string[] = [];
+  page.on("console", (m) => {
+    if (/Content Security Policy|Refused to (execute|load|apply)/i.test(m.text()))
+      cspViolations.push(`${page.url()}: ${m.text()}`);
+  });
   await register(page, "Espacios");
   await page.getByLabel("Nombre").fill("Casa Espacios");
   const orgSlug = `espacios-${suffix()}`;
@@ -330,4 +338,5 @@ test("botones separados y sin desbordamientos en móvil en las páginas del pane
       problems.push(`${width}px: la barra superior cambia de alto: ${JSON.stringify([...topbars])}`);
   }
   expect(problems, problems.join("\n")).toEqual([]);
+  expect(cspViolations, cspViolations.join("\n")).toEqual([]);
 });

@@ -27,7 +27,7 @@ Usar OWASP ASVS como marco de verificación y OWASP Top 10 como guía de riesgos
 
 - Validación del servidor y consultas parametrizadas.
 - Protección frente a XSS, CSRF cuando corresponda, SSRF, traversal, asignación masiva y carga de archivos maliciosos.
-- CSP y cabeceras HTTP adecuadas.
+- CSP y cabeceras HTTP adecuadas (CSP con nonce por petición en `src/proxy.ts`; revisión en `docs/SECURITY_REVIEW.md`).
 - CORS restrictivo.
 - Rate limiting en autenticación y formularios públicos.
 - Verificar firma y antigüedad de webhooks cuando existan.
