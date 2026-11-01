@@ -1137,3 +1137,60 @@
   color: var(--s-on-accent);
 }
 
+/* Galería de la portada (D-039): cuadrícula que se adapta al ancho. */
+.galleryBlock {
+  background: var(--s-section-bg);
+  padding: 3.5rem 0 3rem;
+}
+
+.gallery {
+  list-style: none;
+  margin: 1.5rem auto 0;
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  max-width: 80rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+}
+
+.gallery figure {
+  margin: 0;
+}
+
+.gallery a {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--s-radius);
+}
+
+.gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.gallery a:hover img {
+  transform: scale(1.03);
+}
+
+.gallery figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--s-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery img {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+}
+

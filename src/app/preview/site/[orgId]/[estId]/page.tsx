@@ -9,6 +9,7 @@ import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getPublishedMenu } from "@/server/modules/menus/menus";
 import { getSitePreview } from "@/server/modules/site/service";
+import { listGallery } from "@/server/modules/site/gallery";
 import { withTenant } from "@/server/tenancy/context";
 
 export const metadata: Metadata = { title: "Vista previa", robots: { index: false, follow: false } };
@@ -25,13 +26,17 @@ export default async function SitePreviewPage({ params, searchParams }: { params
   const search = await searchParams;
   const requested = search.theme;
   const user = await requireUser();
-  let preview;
+  let data;
   try {
-    preview = await withTenant(user, orgId, (tx, ctx) => getSitePreview(tx, ctx, estId));
+    data = await withTenant(user, orgId, async (tx, ctx) => ({
+      preview: await getSitePreview(tx, ctx, estId),
+      gallery: await listGallery(tx, ctx, estId),
+    }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
+  const { preview, gallery } = data;
   const { profile } = preview;
   const theme: MenuTheme = MENU_THEMES.includes(requested as MenuTheme) ? (requested as MenuTheme) : profile.theme;
   const org = preview.organizationSlug;
@@ -44,6 +49,7 @@ export default async function SitePreviewPage({ params, searchParams }: { params
 
   return (
     <SiteHome
+      gallery={gallery.map((g) => ({ url: privateMediaUrl(orgId, g.mediaId), caption: g.caption }))}
       chrome={{
         theme,
         establishmentName: preview.establishmentName,

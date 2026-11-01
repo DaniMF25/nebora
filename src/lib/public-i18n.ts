@@ -46,6 +46,8 @@ export interface PublicTexts {
   servedNow: string;
   /** Platos fuera de carta (D-037). */
   offMenu: string;
+  /** Galería de la web (D-039). */
+  gallery: string;
   allergenNames: Record<Allergen, string>;
 }
 
@@ -88,6 +90,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "Nuestras cartas",
     servedNow: "ahora",
     offMenu: "Fuera de carta",
+    gallery: "Galería",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustáceos",
@@ -143,6 +146,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "Our menus",
     servedNow: "now",
     offMenu: "Off the menu",
+    gallery: "Gallery",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustaceans",
@@ -198,6 +202,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "Nos cartes",
     servedNow: "en ce moment",
     offMenu: "Hors carte",
+    gallery: "Galerie",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacés",
@@ -253,6 +258,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "Unsere Karten",
     servedNow: "jetzt",
     offMenu: "Außer der Karte",
+    gallery: "Galerie",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Krebstiere",
@@ -308,6 +314,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "I nostri menù",
     servedNow: "ora",
     offMenu: "Fuori menù",
+    gallery: "Galleria",
     allergenNames: {
       gluten: "Glutine",
       crustaceans: "Crostacei",
@@ -363,6 +370,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "Os nossos menus",
     servedNow: "agora",
     offMenu: "Fora da carta",
+    gallery: "Galeria",
     allergenNames: {
       gluten: "Glúten",
       crustaceans: "Crustáceos",
@@ -418,6 +426,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     ourMenus: "Les nostres cartes",
     servedNow: "ara",
     offMenu: "Fora de carta",
+    gallery: "Galeria",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacis",

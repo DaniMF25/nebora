@@ -449,3 +449,16 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** formatos por carta (multiplica la edición y los errores de precio); traducción manual de cada formato (añade mucha carga para textos casi siempre estándar).
 
+## D-039 — Galería de imágenes de la web
+**Fecha:** 2026-11-01. **Estado:** aceptada.
+
+**Contexto:** la competencia ofrece galería de fotos en la web del restaurante.
+
+**Decisión:**
+- Tabla `site_gallery_images` por local (foto, pie opcional de hasta 120 caracteres, posición), con RLS por organización y local como la web. Máximo 24 fotos.
+- Cada foto es un `media_asset` propio, procesado como el resto (WebP, sin metadatos, cupo de la organización). Al quitarla se borra el archivo (la fila se borra en cascada) y se libera cupo; es seguro porque `storeImage` siempre crea un archivo nuevo, nunca reutiliza uno existente.
+- Lectura pública mediante `app.public_site_gallery` (solo con la web publicada) y `app.public_media`, que sirve una foto de galería solo si la web de su local está publicada.
+- Se sube una foto por envío (el límite de las acciones del servidor es de 9 MB); los pies no se traducen por ahora.
+
+**Alternativas descartadas:** subir varias fotos a la vez (superaría el límite por envío o exigiría subir fuera de las acciones del servidor); visor a pantalla completa propio (cada foto se abre en su URL, sin JavaScript adicional).
+

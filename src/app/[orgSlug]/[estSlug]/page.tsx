@@ -12,6 +12,7 @@ import { getPublicMenus, getPublishedMenu } from "@/server/modules/menus/menus";
 import { getPublicSpecials, withSpecials } from "@/server/modules/menus/specials";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { getPublicSite, localizePublicSite } from "@/server/modules/site/service";
+import { getPublicGallery } from "@/server/modules/site/gallery";
 import { recordSiteView } from "@/server/modules/stats/service";
 import { trackView } from "@/server/modules/stats/track";
 
@@ -32,7 +33,8 @@ const load = cache(async (org: string, est: string) => {
     if (current) site = { ...site, featuredMenuSlug: current.slug };
   }
   const menu = site.featuredMenuSlug ? await getPublishedMenu(org, est, site.featuredMenuSlug) : null;
-  return { site, menu };
+  const gallery = await getPublicGallery(site.establishmentId);
+  return { site, menu, gallery };
 });
 
 /** Idioma de la página: `?lang=`, el del navegador si el local lo ofrece, o español. */
@@ -71,6 +73,7 @@ export default async function PublicSitePage({ params, searchParams }: { params:
       chrome={{ ...chrome, links: { ...chrome.links, menu: menuHref } }}
       site={site}
       heroImageUrl={site.heroMediaId ? publicMediaUrl(site.heroMediaId) : null}
+      gallery={data.gallery.map((g) => ({ url: publicMediaUrl(g.mediaId), caption: g.caption }))}
       menuSections={
         menu
           ? withSpecials(

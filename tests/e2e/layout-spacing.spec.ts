@@ -299,6 +299,7 @@ test("botones separados y sin desbordamientos en móvil en las páginas del pane
     `${est}/site?tab=marca`,
     `${est}/site?tab=contenido`,
     `${est}/site?tab=foto`,
+    `${est}/site?tab=galeria`,
     `${est}/stats`,
     `/${orgSlug}/puerto`,
   ];

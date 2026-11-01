@@ -10,6 +10,7 @@ import { getEstablishment } from "@/server/modules/establishments/service";
 import { listMenus } from "@/server/modules/menus/menus";
 import { getOrganization } from "@/server/modules/organizations/service";
 import { getSiteProfile } from "@/server/modules/site/service";
+import { listGallery, MAX_CAPTION_LENGTH, MAX_GALLERY_IMAGES } from "@/server/modules/site/gallery";
 import { withTenant } from "@/server/tenancy/context";
 import { TranslationInput, TranslationStatusBadge } from "@/components/panel/translation-field";
 import { LANGUAGE_LABELS } from "@/lib/languages";
@@ -17,6 +18,10 @@ import { getSiteTranslationForm } from "@/server/modules/translations/service";
 import { BrandSettings } from "@/components/panel/brand-settings";
 import { PublishSwitch } from "@/components/panel/publish-switch";
 import {
+  addGalleryImageAction,
+  moveGalleryImageAction,
+  removeGalleryImageAction,
+  setGalleryCaptionAction,
   removeHeroImageAction,
   removeLogoAction,
   setBrandingAction,
@@ -29,7 +34,7 @@ import {
   updateSiteAction,
 } from "./actions";
 
-const TABS = ["estilo", "marca", "contenido", "foto", "traducciones"] as const;
+const TABS = ["estilo", "marca", "contenido", "foto", "galeria", "traducciones"] as const;
 
 export default async function SiteProfilePage({
   params,
@@ -51,17 +56,19 @@ export default async function SiteProfilePage({
       menus: ctx.permissions.has("menus.read") ? await listMenus(tx, ctx, estId) : [],
       canEdit: ctx.permissions.has("establishments.update"),
       translations: tab === "traducciones" ? await getSiteTranslationForm(tx, ctx, estId, search.lang) : null,
+      gallery: tab === "galeria" ? await listGallery(tx, ctx, estId) : [],
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, profile: p, menus, canEdit, orgSlug, translations: tr } = data;
+  const { establishment: est, profile: p, menus, canEdit, orgSlug, translations: tr, gallery } = data;
   const TAB_LIST = [
     { id: "estilo", label: "Estilo" },
     { id: "marca", label: "Marca" },
     { id: "contenido", label: "Contenido" },
     { id: "foto", label: "Foto principal" },
+    { id: "galeria", label: "Galería" },
     ...(est.languages.length > 0 ? [{ id: "traducciones", label: "Traducciones" }] : []),
   ];
   const slots = Array.from({ length: MAX_HIGHLIGHTS }, (_, n) => p.highlights[n]);
@@ -275,6 +282,75 @@ export default async function SiteProfilePage({
                 />
               )}
             </>
+          )}
+        </section>
+      )}
+      {tab === "galeria" && (
+        <section>
+          <h3>Galería</h3>
+          <p className="muted">
+            Fotos del local, los platos o el equipo. Salen en la portada de la web, en este orden, con su pie si lo
+            tiene. Hasta {MAX_GALLERY_IMAGES} fotos; solo se ven con la web publicada.
+          </p>
+          {gallery.length === 0 ? (
+            <p className="muted">Todavía no hay fotos en la galería.</p>
+          ) : (
+            <ul className="gallery-grid">
+              {gallery.map((g, n) => (
+                <li key={g.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada */}
+                  <img src={privateMediaUrl(orgId, g.mediaId)} alt={g.caption ?? `Foto ${n + 1} de la galería`} />
+                  {canEdit ? (
+                    <>
+                      <ActionForm
+                        action={setGalleryCaptionAction.bind(null, orgId, est.id, g.id)}
+                        submitLabel="Guardar pie"
+                        resetOnSuccess={false}
+                        secondary={{
+                          action: removeGalleryImageAction.bind(null, orgId, est.id, g.id),
+                          label: `Quitar foto ${n + 1}`,
+                        }}
+                      >
+                        <label>
+                          Pie de la foto {n + 1} (opcional)
+                          <input name="caption" defaultValue={g.caption ?? ""} maxLength={MAX_CAPTION_LENGTH} />
+                        </label>
+                      </ActionForm>
+                      <div className="inline-form">
+                        {n > 0 && (
+                          <ActionForm
+                            action={moveGalleryImageAction.bind(null, orgId, est.id, g.id, "up")}
+                            submitLabel={`← Mover foto ${n + 1} antes`}
+                            className="inline-form"
+                          />
+                        )}
+                        {n < gallery.length - 1 && (
+                          <ActionForm
+                            action={moveGalleryImageAction.bind(null, orgId, est.id, g.id, "down")}
+                            submitLabel={`Mover foto ${n + 1} después →`}
+                            className="inline-form"
+                          />
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    g.caption && <p className="muted">{g.caption}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {canEdit && gallery.length < MAX_GALLERY_IMAGES && (
+            <ActionForm action={addGalleryImageAction.bind(null, orgId, est.id)} submitLabel="Añadir a la galería">
+              <label>
+                Foto (JPEG, PNG o WebP, hasta 8 MB)
+                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required />
+              </label>
+              <label>
+                Pie de foto (opcional)
+                <input name="caption" maxLength={MAX_CAPTION_LENGTH} placeholder="Nuestra terraza" />
+              </label>
+            </ActionForm>
           )}
         </section>
       )}

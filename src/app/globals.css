@@ -349,6 +349,12 @@ button.switch-button[aria-checked="true"] .switch-track { background: var(--ok);
 button.switch-button[aria-checked="true"] .switch-thumb { transform: translateX(1.1rem); }
 button.switch-button:hover .switch-track { filter: brightness(0.95); }
 
+/* Galería de la web en el panel: miniaturas con su pie y acciones. */
+.gallery-grid { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+.gallery-grid li { display: grid; gap: 0.6rem; align-content: start; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.gallery-grid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: var(--bg); }
+.gallery-grid .form { max-width: none; }
+
 /* Estado del local (abierto/cerrado) con un punto que late. */
 .live-status {
   display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.3rem 0.85rem 0.3rem 0.7rem;

@@ -23,12 +23,15 @@ export function SiteHome({
   site,
   heroImageUrl,
   menuSections,
+  gallery = [],
   banner,
 }: {
   chrome: SiteChrome;
   site: SiteHomeContent;
   heroImageUrl: string | null;
   menuSections: MenuSnapshot["sections"] | null;
+  /** Galería (D-039): URL de cada foto (pública o privada en la vista previa) y su pie. */
+  gallery?: { url: string; caption: string | null }[];
   banner?: React.ReactNode;
 }) {
   const menuHref = menuSections ? chrome.links.menu : null;
@@ -84,6 +87,29 @@ export function SiteHome({
                     <h2>{h.title}</h2>
                     {h.text && <p>{h.text}</p>}
                   </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {gallery.length > 0 && (
+          <section id="galeria" className={styles.galleryBlock} aria-labelledby="galeria-titulo">
+            <div className={styles.blockHead}>
+              <h2 id="galeria-titulo" className={styles.blockTitle}>
+                {t.gallery}
+              </h2>
+            </div>
+            <ul className={styles.gallery}>
+              {gallery.map((g, n) => (
+                <li key={g.url}>
+                  <figure>
+                    <a href={g.url} target="_blank" rel="noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- imagen ya reducida y servida por la app */}
+                      <img src={g.url} alt={g.caption ?? `${t.gallery} ${n + 1}`} loading="lazy" />
+                    </a>
+                    {g.caption && <figcaption>{g.caption}</figcaption>}
+                  </figure>
                 </li>
               ))}
             </ul>

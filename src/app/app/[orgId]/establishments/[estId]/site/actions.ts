@@ -13,6 +13,12 @@ import {
   setSiteTheme,
   updateSiteProfile,
 } from "@/server/modules/site/service";
+import {
+  addGalleryImage,
+  moveGalleryImage,
+  removeGalleryImage,
+  setGalleryCaption,
+} from "@/server/modules/site/gallery";
 import { saveSiteTranslations } from "@/server/modules/translations/service";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/site`;
@@ -159,5 +165,58 @@ export async function setPublishedAction(orgId: string, estId: string, _p: FormS
     path(orgId, estId),
     (tx, ctx) => setSitePublished(tx, ctx, estId, { published }),
     published ? "Web publicada" : "Web retirada",
+  );
+}
+
+// Galería (D-039). Los ids ligados llegan del cliente: el servicio comprueba local y organización.
+
+export async function addGalleryImageAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    async (tx, ctx) =>
+      addGalleryImage(tx, ctx, estId, await readImageField(fd), { caption: formString(fd, "caption") }),
+    "Foto añadida a la galería",
+  );
+}
+
+export async function setGalleryCaptionAction(
+  orgId: string,
+  estId: string,
+  imageId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => setGalleryCaption(tx, ctx, estId, imageId, { caption: formString(fd, "caption") }),
+    "Pie de foto guardado",
+  );
+}
+
+export async function moveGalleryImageAction(
+  orgId: string,
+  estId: string,
+  imageId: string,
+  direction: "up" | "down",
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => moveGalleryImage(tx, ctx, estId, imageId, direction));
+}
+
+export async function removeGalleryImageAction(
+  orgId: string,
+  estId: string,
+  imageId: string,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => removeGalleryImage(tx, ctx, estId, imageId),
+    "Foto quitada de la galería",
   );
 }
