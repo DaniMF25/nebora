@@ -104,7 +104,13 @@ export default async function PublicBookingPage({ params, searchParams }: { para
           ) : (
             <PublicBookingForm
               action={publicBookingAction.bind(null, orgSlug, estSlug, lang)}
-              texts={{ submit: t.submit, sending: t.sending, another: t.another }}
+              texts={{
+                submit: t.submit,
+                sending: t.sending,
+                another: t.another,
+                cancelLink: t.cancelLink,
+                cancelNote: t.cancelNote,
+              }}
               anotherHref={multilingual ? withLang(selfPath, lang) : selfPath}
             >
               <input type="hidden" name="idempotencyKey" value={randomUUID()} readOnly />

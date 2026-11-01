@@ -2,7 +2,7 @@
 
 import { BOOKING_TEXTS, translateBookingMessage } from "@/lib/booking-i18n";
 import type { FormState } from "@/lib/form-state";
-import { isLanguage, type PublicLanguage } from "@/lib/languages";
+import { isLanguage, withLang, type PublicLanguage } from "@/lib/languages";
 import { formString } from "@/server/actions/run";
 import { toFormState } from "@/server/actions/form-state";
 import { bookPublic, getPublicBookingInfo } from "@/server/modules/public-booking/service";
@@ -63,7 +63,13 @@ export async function publicBookingAction(
       minute: "2-digit",
     }).format(result.startsAt);
     const head = result.status === "confirmed" ? t.confirmed : t.pending;
-    return { ok: true, message: `${head} ${t.summary(t.people(result.partySize), when, result.code)}` };
+    // Enlace de cancelación (D-041): se muestra una sola vez; no se guarda en claro.
+    const cancelPath = `/r/${orgSlug.toLowerCase()}/${estSlug.toLowerCase()}/cancelar/${result.cancelToken}`;
+    return {
+      ok: true,
+      message: `${head} ${t.summary(t.people(result.partySize), when, result.code)}`,
+      cancelPath: info.languages.length > 0 ? withLang(cancelPath, lang) : cancelPath,
+    };
   } catch (err) {
     return translated(toFormState(err), lang);
   }

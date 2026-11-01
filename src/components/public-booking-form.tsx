@@ -7,7 +7,7 @@ interface Props {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   children: ReactNode;
   /** Textos del botón y de la confirmación en el idioma de la página (D-040). */
-  texts: { submit: string; sending: string; another: string };
+  texts: { submit: string; sending: string; another: string; cancelLink: string; cancelNote: string };
   /** Enlace para hacer otra reserva (conserva el idioma). */
   anotherHref: string;
 }
@@ -29,6 +29,11 @@ export function PublicBookingForm({ action, children, texts, anotherHref }: Prop
     return (
       <div role="status" className="notice confirmation">
         <p>{state.message}</p>
+        {state.cancelPath && (
+          <p>
+            <a href={state.cancelPath}>{texts.cancelLink}</a>. {texts.cancelNote}
+          </p>
+        )}
         <p>
           <a href={anotherHref}>{texts.another}</a>
         </p>

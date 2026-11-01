@@ -34,6 +34,17 @@ export interface BookingTexts {
   errors: Record<string, string>;
   /** «Online se admiten de X a Y comensales». */
   partyRange: (min: number, max: number) => string;
+  /** Cancelación por el cliente (D-041). */
+  cancelLink: string;
+  cancelNote: string;
+  cancelTitle: string;
+  cancelSummary: (code: string, people: string, when: string) => string;
+  cancelButton: string;
+  cancelConfirm: string;
+  cancelled: string;
+  alreadyCancelled: string;
+  notCancellable: string;
+  backToBooking: string;
 }
 
 export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
@@ -64,9 +75,19 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "¡Reserva confirmada!",
     pending: "Solicitud recibida: el restaurante la revisará y te contactará para confirmarla.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Código de reserva: ${code}. Para cambios o cancelaciones, contacta con el restaurante indicando este código.`,
+      `${people}, ${when}. Código de reserva: ${code}. Para otros cambios, contacta con el restaurante indicando este código.`,
     errors: {},
     partyRange: (min, max) => `Online se admiten de ${min} a ${max} comensales`,
+    cancelLink: "Cancelar esta reserva",
+    cancelNote: "Guarda este enlace: con él puedes cancelar la reserva sin llamar.",
+    cancelTitle: "Cancelar reserva",
+    cancelSummary: (code, people, when) => `Reserva ${code}: ${people}, ${when}.`,
+    cancelButton: "Cancelar la reserva",
+    cancelConfirm: "Si cancelas, la mesa quedará libre para otros clientes.",
+    cancelled: "Reserva cancelada. Gracias por avisar.",
+    alreadyCancelled: "Esta reserva ya estaba cancelada.",
+    notCancellable: "Esta reserva ya no se puede cancelar online. Si necesitas algo, llama al restaurante.",
+    backToBooking: "Hacer una reserva",
   },
   en: {
     locale: "en-GB",
@@ -95,7 +116,7 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "Booking confirmed!",
     pending: "Request received: the restaurant will review it and contact you to confirm it.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Booking code: ${code}. For changes or cancellations, contact the restaurant quoting this code.`,
+      `${people}, ${when}. Booking code: ${code}. For other changes, contact the restaurant quoting this code.`,
     errors: {
       "Este establecimiento no acepta reservas online": "This restaurant does not take online bookings",
       "Número de comensales no admitido online": "That number of guests cannot be booked online",
@@ -122,6 +143,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
       "Se ha producido un error inesperado": "An unexpected error occurred",
     },
     partyRange: (min, max) => `Online bookings are for ${min} to ${max} guests`,
+    cancelLink: "Cancel this booking",
+    cancelNote: "Keep this link: you can use it to cancel the booking without calling.",
+    cancelTitle: "Cancel booking",
+    cancelSummary: (code, people, when) => `Booking ${code}: ${people}, ${when}.`,
+    cancelButton: "Cancel the booking",
+    cancelConfirm: "If you cancel, the table will be freed for other guests.",
+    cancelled: "Booking cancelled. Thank you for letting us know.",
+    alreadyCancelled: "This booking was already cancelled.",
+    notCancellable: "This booking can no longer be cancelled online. If you need anything, please call the restaurant.",
+    backToBooking: "Make a booking",
   },
   fr: {
     locale: "fr-FR",
@@ -150,7 +181,7 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "Réservation confirmée !",
     pending: "Demande reçue : le restaurant va l’examiner et vous contactera pour la confirmer.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Code de réservation : ${code}. Pour toute modification ou annulation, contactez le restaurant en indiquant ce code.`,
+      `${people}, ${when}. Code de réservation : ${code}. Pour toute autre modification, contactez le restaurant en indiquant ce code.`,
     errors: {
       "Este establecimiento no acepta reservas online": "Ce restaurant n’accepte pas les réservations en ligne",
       "Número de comensales no admitido online": "Ce nombre de couverts n’est pas accepté en ligne",
@@ -178,6 +209,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
       "Se ha producido un error inesperado": "Une erreur inattendue s’est produite",
     },
     partyRange: (min, max) => `En ligne, de ${min} à ${max} couverts`,
+    cancelLink: "Annuler cette réservation",
+    cancelNote: "Conservez ce lien : il vous permet d’annuler la réservation sans appeler.",
+    cancelTitle: "Annuler la réservation",
+    cancelSummary: (code, people, when) => `Réservation ${code} : ${people}, ${when}.`,
+    cancelButton: "Annuler la réservation",
+    cancelConfirm: "Si vous annulez, la table sera libérée pour d’autres clients.",
+    cancelled: "Réservation annulée. Merci de nous avoir prévenus.",
+    alreadyCancelled: "Cette réservation était déjà annulée.",
+    notCancellable: "Cette réservation ne peut plus être annulée en ligne. Pour toute demande, appelez le restaurant.",
+    backToBooking: "Faire une réservation",
   },
   de: {
     locale: "de-DE",
@@ -206,7 +247,7 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "Reservierung bestätigt!",
     pending: "Anfrage erhalten: Das Restaurant prüft sie und meldet sich zur Bestätigung.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Reservierungscode: ${code}. Für Änderungen oder Stornierungen wenden Sie sich bitte unter Angabe dieses Codes an das Restaurant.`,
+      `${people}, ${when}. Reservierungscode: ${code}. Für andere Änderungen wenden Sie sich bitte unter Angabe dieses Codes an das Restaurant.`,
     errors: {
       "Este establecimiento no acepta reservas online": "Dieses Restaurant nimmt keine Online-Reservierungen an",
       "Número de comensales no admitido online": "Diese Personenzahl ist online nicht möglich",
@@ -234,6 +275,17 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
       "Se ha producido un error inesperado": "Ein unerwarteter Fehler ist aufgetreten",
     },
     partyRange: (min, max) => `Online sind ${min} bis ${max} Personen möglich`,
+    cancelLink: "Diese Reservierung stornieren",
+    cancelNote: "Bewahren Sie diesen Link auf: Damit können Sie die Reservierung ohne Anruf stornieren.",
+    cancelTitle: "Reservierung stornieren",
+    cancelSummary: (code, people, when) => `Reservierung ${code}: ${people}, ${when}.`,
+    cancelButton: "Reservierung stornieren",
+    cancelConfirm: "Wenn Sie stornieren, wird der Tisch für andere Gäste frei.",
+    cancelled: "Reservierung storniert. Danke für Ihre Nachricht.",
+    alreadyCancelled: "Diese Reservierung war bereits storniert.",
+    notCancellable:
+      "Diese Reservierung kann online nicht mehr storniert werden. Bitte rufen Sie bei Fragen das Restaurant an.",
+    backToBooking: "Reservieren",
   },
   it: {
     locale: "it-IT",
@@ -262,7 +314,7 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "Prenotazione confermata!",
     pending: "Richiesta ricevuta: il ristorante la esaminerà e ti contatterà per confermarla.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Codice di prenotazione: ${code}. Per modifiche o cancellazioni, contatta il ristorante indicando questo codice.`,
+      `${people}, ${when}. Codice di prenotazione: ${code}. Per altre modifiche, contatta il ristorante indicando questo codice.`,
     errors: {
       "Este establecimiento no acepta reservas online": "Questo ristorante non accetta prenotazioni online",
       "Número de comensales no admitido online": "Questo numero di persone non è prenotabile online",
@@ -288,6 +340,17 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
       "Se ha producido un error inesperado": "Si è verificato un errore imprevisto",
     },
     partyRange: (min, max) => `Online si accettano da ${min} a ${max} persone`,
+    cancelLink: "Annulla questa prenotazione",
+    cancelNote: "Conserva questo link: ti permette di annullare la prenotazione senza chiamare.",
+    cancelTitle: "Annulla prenotazione",
+    cancelSummary: (code, people, when) => `Prenotazione ${code}: ${people}, ${when}.`,
+    cancelButton: "Annulla la prenotazione",
+    cancelConfirm: "Se annulli, il tavolo sarà libero per altri clienti.",
+    cancelled: "Prenotazione annullata. Grazie per averci avvisato.",
+    alreadyCancelled: "Questa prenotazione era già annullata.",
+    notCancellable:
+      "Questa prenotazione non può più essere annullata online. Per qualsiasi cosa, chiama il ristorante.",
+    backToBooking: "Fai una prenotazione",
   },
   pt: {
     locale: "pt-PT",
@@ -316,7 +379,7 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "Reserva confirmada!",
     pending: "Pedido recebido: o restaurante vai analisá-lo e contactá-lo para o confirmar.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Código da reserva: ${code}. Para alterações ou cancelamentos, contacte o restaurante indicando este código.`,
+      `${people}, ${when}. Código da reserva: ${code}. Para outras alterações, contacte o restaurante indicando este código.`,
     errors: {
       "Este establecimiento no acepta reservas online": "Este restaurante não aceita reservas online",
       "Número de comensales no admitido online": "Esse número de pessoas não é admitido online",
@@ -343,6 +406,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
       "Se ha producido un error inesperado": "Ocorreu um erro inesperado",
     },
     partyRange: (min, max) => `Online aceitam-se de ${min} a ${max} pessoas`,
+    cancelLink: "Cancelar esta reserva",
+    cancelNote: "Guarde este link: com ele pode cancelar a reserva sem ligar.",
+    cancelTitle: "Cancelar reserva",
+    cancelSummary: (code, people, when) => `Reserva ${code}: ${people}, ${when}.`,
+    cancelButton: "Cancelar a reserva",
+    cancelConfirm: "Se cancelar, a mesa ficará livre para outros clientes.",
+    cancelled: "Reserva cancelada. Obrigado por avisar.",
+    alreadyCancelled: "Esta reserva já estava cancelada.",
+    notCancellable: "Esta reserva já não pode ser cancelada online. Se precisar de algo, ligue para o restaurante.",
+    backToBooking: "Fazer uma reserva",
   },
   ca: {
     locale: "ca-ES",
@@ -371,7 +444,7 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     confirmed: "Reserva confirmada!",
     pending: "Sol·licitud rebuda: el restaurant la revisarà i et contactarà per confirmar-la.",
     summary: (people, when, code) =>
-      `${people}, ${when}. Codi de reserva: ${code}. Per a canvis o cancel·lacions, contacta amb el restaurant indicant aquest codi.`,
+      `${people}, ${when}. Codi de reserva: ${code}. Per a altres canvis, contacta amb el restaurant indicant aquest codi.`,
     errors: {
       "Este establecimiento no acepta reservas online": "Aquest restaurant no accepta reserves en línia",
       "Número de comensales no admitido online": "Aquest nombre de comensals no s’admet en línia",
@@ -399,6 +472,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
       "Se ha producido un error inesperado": "S’ha produït un error inesperat",
     },
     partyRange: (min, max) => `En línia s’admeten de ${min} a ${max} comensals`,
+    cancelLink: "Cancel·la aquesta reserva",
+    cancelNote: "Desa aquest enllaç: et permet cancel·lar la reserva sense trucar.",
+    cancelTitle: "Cancel·la la reserva",
+    cancelSummary: (code, people, when) => `Reserva ${code}: ${people}, ${when}.`,
+    cancelButton: "Cancel·la la reserva",
+    cancelConfirm: "Si cancel·les, la taula quedarà lliure per a altres clients.",
+    cancelled: "Reserva cancel·lada. Gràcies per avisar.",
+    alreadyCancelled: "Aquesta reserva ja estava cancel·lada.",
+    notCancellable: "Aquesta reserva ja no es pot cancel·lar en línia. Si necessites alguna cosa, truca al restaurant.",
+    backToBooking: "Fes una reserva",
   },
 };
 

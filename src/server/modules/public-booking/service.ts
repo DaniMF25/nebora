@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { getPool, isUniqueViolation, withTransaction, type Tx } from "@/server/db/pool";
 
@@ -219,6 +219,11 @@ export interface PublicBookingResult {
   startsAt: Date;
   partySize: number;
   replayed: boolean;
+  /**
+   * Token del enlace de cancelación (D-041). Solo se guarda su huella; un
+   * reenvío del mismo formulario genera uno nuevo y el anterior deja de valer.
+   */
+  cancelToken: string;
 }
 
 /**
@@ -227,12 +232,12 @@ export interface PublicBookingResult {
  * `clientId` identifica al cliente para el límite (p. ej. su IP); solo se
  * guarda su hash.
  */
-export async function bookPublic(
+async function bookPublicReservation(
   info: PublicBookingInfo,
   input: unknown,
   clientId: string,
   now = new Date(),
-): Promise<PublicBookingResult> {
+): Promise<Omit<PublicBookingResult, "cancelToken">> {
   const d = parseInput(publicBookingSchema, input);
   if (!partyAllowed(info, d.partySize)) {
     throw new ValidationError(`Online se admiten de ${info.minParty} a ${info.maxParty} comensales`);
@@ -286,3 +291,73 @@ export async function bookPublic(
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// Cancelación por el cliente (D-041)
+// ---------------------------------------------------------------------------
+
+const CANCEL_TOKEN = /^[A-Za-z0-9_-]{43}$/;
+const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
+
+/** Crea la reserva online y le asigna un token de cancelación nuevo. */
+export async function bookPublic(
+  info: PublicBookingInfo,
+  input: unknown,
+  clientId: string,
+  now = new Date(),
+): Promise<PublicBookingResult> {
+  const result = await bookPublicReservation(info, input, clientId, now);
+  const cancelToken = randomBytes(32).toString("base64url");
+  const key = (input as { idempotencyKey: string }).idempotencyKey;
+  await getPool().query("SELECT app.public_set_cancel_token($1, $2, $3)", [
+    info.establishmentId,
+    key,
+    tokenHash(cancelToken),
+  ]);
+  return { ...result, cancelToken };
+}
+
+export interface PublicCancellation {
+  code: string;
+  startsAt: Date;
+  partySize: number;
+  status: string;
+  timezone: string;
+}
+
+/** Reserva del enlace de cancelación, o null si el token no es de ese local. */
+export async function getPublicCancellation(
+  orgSlug: string,
+  establishmentSlug: string,
+  token: string,
+): Promise<PublicCancellation | null> {
+  const slugs = [orgSlug, establishmentSlug].map((s) => s.toLowerCase());
+  if (!slugs.every((s) => slugPattern.test(s)) || !CANCEL_TOKEN.test(token)) return null;
+  const { rows } = await getPool().query<{
+    public_code: string;
+    starts_at: Date;
+    party_size: number;
+    status: string;
+    timezone: string;
+  }>("SELECT * FROM app.public_cancellation($1, $2, $3)", [...slugs, tokenHash(token)]);
+  const r = rows[0];
+  return r ? { code: r.public_code, startsAt: r.starts_at, partySize: r.party_size, status: r.status, timezone: r.timezone } : null;
+}
+
+export type CancelOutcome = "cancelled" | "already_cancelled" | "not_cancellable" | "too_late" | "not_found";
+
+/** Cancela la reserva del enlace (hasta su hora de inicio). */
+export async function cancelPublicReservation(
+  orgSlug: string,
+  establishmentSlug: string,
+  token: string,
+): Promise<CancelOutcome> {
+  const slugs = [orgSlug, establishmentSlug].map((s) => s.toLowerCase());
+  if (!slugs.every((s) => slugPattern.test(s)) || !CANCEL_TOKEN.test(token)) return "not_found";
+  const { rows } = await getPool().query<{ outcome: CancelOutcome }>(
+    "SELECT app.public_cancel($1, $2, $3) AS outcome",
+    [...slugs, tokenHash(token)],
+  );
+  return rows[0]!.outcome;
+}
+

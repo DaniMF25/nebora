@@ -474,3 +474,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** códigos de error en lugar de mensajes (cambio grande en el servicio y en el panel, que usa los mismos mensajes); traducir solo la página y dejar los errores en español.
 
+## D-041 — Cancelación de reservas por el cliente
+**Fecha:** 2026-11-01. **Estado:** aceptada.
+
+**Contexto:** los clientes solo podían cancelar llamando al restaurante; no hay cuentas de cliente ni proveedor de correo.
+
+**Decisión:**
+- Cada reserva online recibe un token aleatorio de 256 bits (base64url) que solo ve el cliente, en el enlace de la confirmación. En la BD se guarda únicamente su huella sha256 (índice único). El código de reserva (10 caracteres) no basta para cancelar.
+- Funciones SECURITY DEFINER: `app.public_set_cancel_token` (por clave de idempotencia, que solo conoce quien envió el formulario; un reenvío renueva el token), `app.public_cancellation` (datos mínimos: código, fecha, comensales, estado) y `app.public_cancel` (bloquea la fila, solo pendientes o confirmadas y antes de su hora; el trigger existente libera la mesa; auditoría sin actor).
+- La cancelación funciona aunque el local desactive después la reserva online. La página no se indexa y usa `referrer: no-referrer`.
+
+**Alternativas descartadas:** firmar el enlace con un secreto del servidor (exigiría una variable de entorno nueva en el despliegue); cancelar con código + teléfono o correo (adivinable o filtrable con menos esfuerzo).
+

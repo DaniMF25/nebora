@@ -48,6 +48,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Formatos de precio por plato (D-038).
 - [x] Galería de imágenes en la web del local (D-039).
 - [x] Reserva online traducida (D-040).
+- [x] Cancelación de reservas online por el cliente con su enlace (D-041).
 - [x] Carta en papel: página para imprimir o guardar como PDF (publicada o borrador, alérgenos, descripciones, QR, 1 o 2 columnas).
 - [x] Pruebas de aislamiento y publicación (integración, concurrencia y E2E).
 - [x] Fotos de platos y marca «recomendado» (migración 0013, D-021).

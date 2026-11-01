@@ -59,6 +59,8 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   // Tras confirmar, el formulario desaparece para no inducir a reservar dos veces.
   await expect(client.getByRole("button", { name: "Reservar" })).toHaveCount(0);
   await expect(client.getByRole("link", { name: "Hacer otra reserva" })).toBeVisible();
+  const cancelHref = (await client.getByRole("link", { name: "Cancelar esta reserva" }).getAttribute("href"))!;
+  expect(cancelHref).toMatch(/^\/r\/[a-z0-9-]+\/online-[0-9a-f]+\/cancelar\/[A-Za-z0-9_-]{43}$/);
 
   // Esa hora deja de ofrecerse (solo había una mesa).
   await client.goto(`${publicHref}?date=${date}&party=2`);
@@ -71,7 +73,23 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   await expect(list.getByText(/21:00–22:30 · Carmen Web · 2 pers\. · Mesa T1/)).toBeVisible();
   await expect(list.locator(".badge", { hasText: "Web" })).toBeVisible();
 
-  // Un local inexistente o sin reservas online responde 404.
+  // El cliente cancela con su enlace: la reserva queda cancelada y la hora vuelve a ofrecerse.
+  await client.goto(cancelHref);
+  await expect(client.getByRole("heading", { name: "Cancelar reserva" })).toBeVisible();
+  await expect(client.getByText(/^Reserva [0-9A-F]{10}: 2 personas, /)).toBeVisible();
+  await client.getByRole("button", { name: "Cancelar la reserva" }).click();
+  await expect(client.getByText("Reserva cancelada. Gracias por avisar.")).toBeVisible();
+  await expect(client.getByRole("button", { name: "Cancelar la reserva" })).toHaveCount(0);
+  await client.goto(cancelHref);
+  await expect(client.getByText("Esta reserva ya estaba cancelada.")).toBeVisible();
+  await client.goto(`${publicHref}?date=${date}&party=2`);
+  await expect(client.getByLabel("21:00")).toBeVisible();
+  await page.goto(`${estUrl}/reservations?date=${date}`);
+  await expect(list.getByText(/Carmen Web/).locator("..").getByText("Cancelada")).toBeVisible();
+  // Un enlace inventado no lleva a ninguna parte.
+  expect((await client.goto(cancelHref.replace(/[^/]+$/, "A".repeat(43))))?.status()).toBe(404);
+
+    // Un local inexistente o sin reservas online responde 404.
   expect((await client.goto(`${publicHref}-otro`))?.status()).toBe(404);
   await anon.close();
 });

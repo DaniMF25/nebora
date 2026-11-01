@@ -7,4 +7,6 @@ export interface FormState {
   message?: string;
   /** Ruta de invitación generada (se muestra una sola vez a quien invita). */
   invitePath?: string;
+  /** Enlace de cancelación de una reserva online (se muestra una sola vez al cliente). */
+  cancelPath?: string;
 }
