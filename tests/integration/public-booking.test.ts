@@ -100,6 +100,13 @@ describe("reserva pública", () => {
     expect(await info(f)).toMatchObject({ establishmentName: "Local", maxParty: 6, durationMinutes: 90 });
   });
 
+  it("incluye los idiomas del local para traducir la página (D-040)", async () => {
+    expect((await info(f)).languages).toEqual([]);
+    await withAdminClient((c) => c.query("UPDATE establishments SET languages = '{en,fr}' WHERE slug = $1", [f.estSlug]));
+    expect((await info(f)).languages).toEqual(["en", "fr"]);
+    await withAdminClient((c) => c.query("UPDATE establishments SET languages = '{}' WHERE slug = $1", [f.estSlug]));
+  });
+
   it("ofrece horas que caben en el horario de apertura", async () => {
     const { slots } = await listPublicSlots(await info(f), DATE, 2);
     expect(slots).toEqual(["13:00", "13:30", "14:00", "14:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30"]);

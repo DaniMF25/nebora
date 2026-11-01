@@ -17,6 +17,7 @@ import {
 } from "@/server/modules/schedules/time";
 import { parseInput } from "@/server/validation";
 import { availableStarts, freeTables, rankTables, type Busy, type TableCapacity } from "./slots";
+import type { Language } from "@/lib/languages";
 
 export interface PublicBookingInfo {
   establishmentId: string;
@@ -32,6 +33,8 @@ export interface PublicBookingInfo {
   autoConfirm: boolean;
   /** Días que se conservan los datos del cliente tras la reserva. */
   customerRetentionDays: number;
+  /** Idiomas adicionales del local para la página de reserva (D-040). */
+  languages: Language[];
 }
 
 /** Límites de peticiones de alta pública. */
@@ -60,6 +63,7 @@ export async function getPublicBookingInfo(orgSlug: string, establishmentSlug: s
     max_days_ahead: number;
     auto_confirm: boolean;
     customer_retention_days: number;
+    languages: Language[];
   }>("SELECT * FROM app.public_booking_info($1, $2)", slugs);
   const r = rows[0];
   if (!r) return null;
@@ -76,6 +80,7 @@ export async function getPublicBookingInfo(orgSlug: string, establishmentSlug: s
     maxDaysAhead: r.max_days_ahead,
     autoConfirm: r.auto_confirm,
     customerRetentionDays: r.customer_retention_days,
+    languages: r.languages,
   };
 }
 

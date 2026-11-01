@@ -29,8 +29,7 @@ export function siteChrome(
     links: {
       home: link(`/${org}/${est}`),
       menu: menu ? link(menu) : null,
-      // La reserva online aún no está traducida: se enlaza sin idioma.
-      booking: site.bookingEnabled ? `/r/${org}/${est}` : null,
+      booking: site.bookingEnabled ? link(`/r/${org}/${est}`) : null,
     },
   };
 }

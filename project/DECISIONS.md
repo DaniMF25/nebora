@@ -462,3 +462,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** subir varias fotos a la vez (superaría el límite por envío o exigiría subir fuera de las acciones del servidor); visor a pantalla completa propio (cada foto se abre en su URL, sin JavaScript adicional).
 
+## D-040 — Reserva online traducida
+**Fecha:** 2026-11-01. **Estado:** aceptada.
+
+**Contexto:** la web y las cartas ya se ofrecían en varios idiomas (D-033), pero la página de reserva seguía en español.
+
+**Decisión:**
+- `app.public_booking_info` devuelve los idiomas del local, así la reserva se traduce aunque la web no esté publicada. El idioma se elige como en el resto de páginas públicas (`?lang=`, navegador, español) y la acción solo acepta un idioma que el local ofrezca.
+- Textos de la página en `src/lib/booking-i18n.ts`. Los mensajes del servicio se siguen escribiendo en español y se traducen en la acción con un diccionario (con un patrón para el mensaje con números); lo desconocido se muestra en español. Una prueba unitaria extrae los mensajes del código y exige su traducción en todos los idiomas.
+- El formulario de reserva se envía a mano con JavaScript (como el del panel) para que un error del servidor no borre lo escrito; sin JavaScript sigue funcionando.
+
+**Alternativas descartadas:** códigos de error en lugar de mensajes (cambio grande en el servicio y en el panel, que usa los mismos mensajes); traducir solo la página y dejar los errores en español.
+
