@@ -361,3 +361,110 @@ export async function cancelPublicReservation(
   return rows[0]!.outcome;
 }
 
+
+// ---------------------------------------------------------------------------
+// Lista de espera desde la web (D-042)
+// ---------------------------------------------------------------------------
+
+export const publicWaitlistSchema = z
+  .object({
+    date: z.string().refine(isValidLocalDate, { message: "Fecha no válida" }),
+    from: z.string().refine((v) => parseTime(v) !== null, { message: "Hora no válida" }),
+    to: z.string().refine((v) => parseTime(v, true) !== null, { message: "Hora no válida" }),
+    partySize: z.number().int().min(1).max(50),
+    customerName: z.string().trim().min(1, "Indica tu nombre").max(120),
+    customerPhone: z.string().trim().max(40).regex(/^[+0-9 ()-]*$/, { message: "Teléfono no válido" }),
+    customerEmail: z
+      .string()
+      .trim()
+      .max(254)
+      .refine((v) => v === "" || z.email().safeParse(v).success, { message: "Correo no válido" }),
+    notes: z.string().trim().max(300),
+    consent: z.literal(true, { message: "Debes aceptar el tratamiento de datos para gestionar la reserva" }),
+    website: z.string().max(0, { message: "No se pudo procesar la solicitud" }),
+    idempotencyKey: z.string().regex(/^[A-Za-z0-9_-]{8,100}$/),
+  })
+  .strict()
+  .refine((v) => v.customerPhone !== "" || v.customerEmail !== "", {
+    message: "Indica un teléfono o un correo para poder contactarte",
+    path: ["customerPhone"],
+  })
+  .refine((v) => parseTime(v.to, true)! > parseTime(v.from)!, {
+    message: "La franja debe terminar después de empezar",
+    path: ["to"],
+  });
+
+/**
+ * Franja que se propone para la lista de espera de un día: de la primera
+ * apertura al último cierre de ese día (hora local), o null si no abre.
+ */
+export async function waitlistWindow(
+  info: PublicBookingInfo,
+  date: string,
+): Promise<{ from: string; to: string } | null> {
+  const a = await loadAvailability(getPool(), info, date);
+  const intervals = a.intervals.filter((iv) => iv.start < a.dayEnd && iv.end > a.dayStart);
+  if (intervals.length === 0) return null;
+  const start = Math.max(a.dayStart, Math.min(...intervals.map((iv) => iv.start)));
+  const end = Math.min(a.dayEnd, Math.max(...intervals.map((iv) => iv.end)));
+  // «24:00» no cabe en un campo de hora: el fin del día se propone como 23:59.
+  return { from: hhmm(start, info.timezone), to: end >= a.dayEnd ? "23:59" : hhmm(end, info.timezone) };
+}
+
+export interface PublicWaitlistResult {
+  date: string;
+  from: string;
+  to: string;
+  partySize: number;
+  replayed: boolean;
+}
+
+/** Apunta al cliente en la lista de espera del día (con la reserva online activada). */
+export async function joinPublicWaitlist(
+  info: PublicBookingInfo,
+  input: unknown,
+  clientId: string,
+  now = new Date(),
+): Promise<PublicWaitlistResult> {
+  const d = parseInput(publicWaitlistSchema, input);
+  if (!partyAllowed(info, d.partySize)) {
+    throw new ValidationError(`Online se admiten de ${info.minParty} a ${info.maxParty} comensales`);
+  }
+  const range = bookableDateRange(info, now);
+  if (d.date < range.first || d.date > range.last) {
+    throw new ValidationError("Elige una fecha dentro de los días que admite el restaurante");
+  }
+  // La franja tiene que coincidir con alguna apertura de ese día.
+  const a = await loadAvailability(getPool(), info, d.date);
+  const from = localToUtc(d.date, parseTime(d.from)!, info.timezone).getTime();
+  const to = localToUtc(d.date, parseTime(d.to, true)!, info.timezone).getTime();
+  if (!a.intervals.some((iv) => iv.start < to && iv.end > from)) {
+    throw new ValidationError("El restaurante no abre en esa franja");
+  }
+  await enforceRateLimits(info, clientId, d.customerEmail || d.customerPhone);
+  try {
+    const { rows } = await getPool().query<{ replayed: boolean }>(
+      "SELECT * FROM app.public_join_waitlist($1, $2::date, $3, $4, $5, $6, $7, $8, $9, $10)",
+      [
+        info.establishmentId,
+        d.date,
+        parseTime(d.from)!,
+        parseTime(d.to, true)!,
+        d.partySize,
+        d.customerName,
+        d.customerPhone || null,
+        d.customerEmail ? d.customerEmail.toLowerCase() : null,
+        d.notes || null,
+        d.idempotencyKey,
+      ],
+    );
+    return { date: d.date, from: d.from, to: d.to, partySize: d.partySize, replayed: rows[0]!.replayed };
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    if (e.code === "P0001" && e.message && PUBLIC_ERRORS[e.message]) throw PUBLIC_ERRORS[e.message]!();
+    if (isUniqueViolation(err, "waitlist_idempotency_unique")) {
+      throw new ConflictError("Tu solicitud ya se está procesando. Revisa en unos segundos.");
+    }
+    throw err;
+  }
+}

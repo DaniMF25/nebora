@@ -13,11 +13,12 @@ import {
   bookableDateRange,
   getPublicBookingInfo,
   listPublicSlots,
+  waitlistWindow,
   type PublicBookingInfo,
 } from "@/server/modules/public-booking/service";
 import { isValidLocalDate } from "@/server/modules/schedules/time";
 import { getPublicSite, localizePublicSite } from "@/server/modules/site/service";
-import { publicBookingAction } from "./actions";
+import { joinWaitlistAction, publicBookingAction } from "./actions";
 
 type Params = Promise<{ orgSlug: string; estSlug: string }>;
 type Search = Promise<{ date?: string; party?: string; lang?: string | string[] }>;
@@ -55,6 +56,10 @@ export default async function PublicBookingPage({ params, searchParams }: { para
   const party = Number(typeof sp.party === "string" ? sp.party : NaN);
   const searched = date !== null && Number.isInteger(party);
   const { slots } = searched ? await listPublicSlots(info, date, party) : { slots: [] as string[] };
+  // Sin horas libres en un día que abre, se ofrece la lista de espera (D-042).
+  const partyOk = Number.isInteger(party) && party >= info.minParty && party <= info.maxParty;
+  const inRange = date !== null && date >= range.first && date <= range.last;
+  const waitWindow = searched && slots.length === 0 && partyOk && inRange ? await waitlistWindow(info, date) : null;
   const longDate = new Intl.DateTimeFormat(t.locale, {
     timeZone: "UTC",
     weekday: "long",
@@ -100,7 +105,70 @@ export default async function PublicBookingPage({ params, searchParams }: { para
             {longDate.format(new Date(`${date}T12:00:00Z`))} · {t.people(party)}
           </h2>
           {slots.length === 0 ? (
-            <p className="notice">{t.noSlots}</p>
+            <>
+              <p className="notice">{t.noSlots}</p>
+              {waitWindow && (
+                <>
+                  <h3>{t.waitlistTitle}</h3>
+                  <p className="muted">{t.waitlistIntro}</p>
+                  <PublicBookingForm
+                    action={joinWaitlistAction.bind(null, orgSlug, estSlug, lang)}
+                    texts={{
+                      submit: t.joinWaitlist,
+                      sending: t.sending,
+                      another: t.another,
+                      cancelLink: t.cancelLink,
+                      cancelNote: t.cancelNote,
+                    }}
+                    anotherHref={multilingual ? withLang(selfPath, lang) : selfPath}
+                  >
+                    <input type="hidden" name="idempotencyKey" value={randomUUID()} readOnly />
+                    <input type="hidden" name="date" value={date} readOnly />
+                    <input type="hidden" name="partySize" value={party} readOnly />
+                    <div className="inline-form">
+                      <label>
+                        {t.from}
+                        <input type="time" name="from" required defaultValue={waitWindow.from} />
+                      </label>
+                      <label>
+                        {t.to}
+                        <input type="time" name="to" required defaultValue={waitWindow.to} />
+                      </label>
+                    </div>
+                    <label>
+                      {t.name}
+                      <input name="customerName" required maxLength={120} autoComplete="name" />
+                    </label>
+                    <div className="inline-form">
+                      <label>
+                        {t.phone}
+                        <input name="customerPhone" type="tel" maxLength={40} autoComplete="tel" />
+                      </label>
+                      <label>
+                        {t.email}
+                        <input name="customerEmail" type="email" maxLength={254} autoComplete="email" />
+                      </label>
+                    </div>
+                    <p className="muted">{t.contactNote}</p>
+                    <label>
+                      {t.notes}
+                      <input name="notes" maxLength={300} placeholder={t.notesPlaceholder} />
+                    </label>
+                    {/* Campo trampa contra bots: oculto para personas y para lectores de pantalla. */}
+                    <div aria-hidden="true" className="hp">
+                      <label>
+                        No rellenar
+                        <input name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+                      </label>
+                    </div>
+                    <label className="check">
+                      <input type="checkbox" name="consent" required />
+                      <span>{t.waitlistConsent(info.organizationName, info.customerRetentionDays)}</span>
+                    </label>
+                  </PublicBookingForm>
+                </>
+              )}
+            </>
           ) : (
             <PublicBookingForm
               action={publicBookingAction.bind(null, orgSlug, estSlug, lang)}

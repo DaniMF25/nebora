@@ -309,6 +309,7 @@ export default async function ReservationsPage({
               <li key={w.id} className={w.status === "waiting" ? "" : "status-cancelled"}>
                 <strong>{w.customerName}</strong> · {w.partySize} {w.partySize === 1 ? "persona" : "personas"} · entre{" "}
                 {w.windowStart} y {w.windowEnd}
+                {w.source === "public" && <span className="badge"> Web</span>}
                 {w.status === "converted" && <span className="badge"> Convertida en reserva</span>}
                 {w.status === "cancelled" && <span className="badge"> Cancelada</span>}
                 <div className="muted">

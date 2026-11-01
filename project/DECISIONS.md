@@ -486,3 +486,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** firmar el enlace con un secreto del servidor (exigiría una variable de entorno nueva en el despliegue); cancelar con código + teléfono o correo (adivinable o filtrable con menos esfuerzo).
 
+## D-042 — Lista de espera desde la web
+**Fecha:** 2026-11-01. **Estado:** aceptada.
+
+**Contexto:** cuando no quedaban horas online, el cliente solo podía llamar; la lista de espera solo la gestionaba el personal.
+
+**Decisión:**
+- `waitlist_entries` gana `source` (staff/public), `consent_at` (obligatorio si es pública) e `idempotency_key` (única por organización). Alta mediante `app.public_join_waitlist` (SECURITY DEFINER): solo con la reserva online activa, comensales dentro de los límites del local y fecha entre hoy y los días vista (fecha local); auditada sin actor.
+- El servidor exige además que la franja coincida con alguna apertura de ese día y aplica los mismos límites de peticiones, campo trampa y consentimiento que la reserva online. El formulario solo se ofrece si ese día abre y no quedan horas para ese número de personas.
+- Mensajes en español en el servicio y traducidos en la acción (D-040); la prueba de cobertura de traducciones los incluye.
+
+**Alternativas descartadas:** apuntarse aunque haya horas libres (llenaría la lista de solicitudes que ya se pueden reservar); avisar automáticamente al liberarse mesa (requiere proveedor de correo o SMS).
+

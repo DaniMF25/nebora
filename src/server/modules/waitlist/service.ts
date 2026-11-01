@@ -25,6 +25,8 @@ export interface WaitlistEntry {
   status: "waiting" | "converted" | "cancelled";
   reservationId: string | null;
   createdAt: Date;
+  /** Apuntada por el personal o por el cliente desde la web (D-042). */
+  source: "staff" | "public";
   /** Primera hora de la franja con mesa libre (solo entradas en espera), o null. */
   availableAt: string | null;
 }
@@ -83,7 +85,7 @@ const ENTRY_SQL = `
   SELECT id, desired_date::text AS "desiredDate", window_start_minute AS ws, window_end_minute AS we,
          party_size AS "partySize", customer_name AS "customerName", customer_phone AS "customerPhone",
          customer_email AS "customerEmail", notes, status, reservation_id AS "reservationId",
-         created_at AS "createdAt"
+         created_at AS "createdAt", source
     FROM waitlist_entries`;
 
 type EntryRow = Omit<WaitlistEntry, "windowStart" | "windowEnd" | "availableAt"> & { ws: number; we: number };

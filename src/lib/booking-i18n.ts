@@ -45,6 +45,14 @@ export interface BookingTexts {
   alreadyCancelled: string;
   notCancellable: string;
   backToBooking: string;
+  /** Lista de espera desde la web (D-042). */
+  waitlistTitle: string;
+  waitlistIntro: string;
+  from: string;
+  to: string;
+  joinWaitlist: string;
+  waitlistConsent: (organization: string, days: number) => string;
+  joined: (people: string, date: string, from: string, to: string) => string;
 }
 
 export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
@@ -88,6 +96,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     alreadyCancelled: "Esta reserva ya estaba cancelada.",
     notCancellable: "Esta reserva ya no se puede cancelar online. Si necesitas algo, llama al restaurante.",
     backToBooking: "Hacer una reserva",
+    waitlistTitle: "Apúntate a la lista de espera",
+    waitlistIntro:
+      "Si se libera una mesa en la franja que elijas, el restaurante te avisará por teléfono o correo. Apuntarte no garantiza mesa.",
+    from: "Desde",
+    to: "Hasta",
+    joinWaitlist: "Apuntarme a la lista de espera",
+    waitlistConsent: (org, days) =>
+      `Acepto que ${org} trate estos datos únicamente para gestionar mi solicitud en la lista de espera y avisarme. Se conservan ${days} días después de la fecha y después se anonimizan. Puedes pedir una copia o su borrado al restaurante.`,
+    joined: (people, date, from, to) =>
+      `Te hemos apuntado a la lista de espera: ${people}, ${date}, de ${from} a ${to}. Si se libera una mesa, el restaurante te avisará.`,
   },
   en: {
     locale: "en-GB",
@@ -118,6 +136,11 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     summary: (people, when, code) =>
       `${people}, ${when}. Booking code: ${code}. For other changes, contact the restaurant quoting this code.`,
     errors: {
+      "Hora no válida": "Invalid time",
+      "La franja debe terminar después de empezar": "The time window must end after it starts",
+      "Elige una fecha dentro de los días que admite el restaurante":
+        "Choose a date within the days the restaurant accepts",
+      "El restaurante no abre en esa franja": "The restaurant is not open in that time window",
       "Este establecimiento no acepta reservas online": "This restaurant does not take online bookings",
       "Número de comensales no admitido online": "That number of guests cannot be booked online",
       "Duración no válida": "Invalid duration",
@@ -153,6 +176,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     alreadyCancelled: "This booking was already cancelled.",
     notCancellable: "This booking can no longer be cancelled online. If you need anything, please call the restaurant.",
     backToBooking: "Make a booking",
+    waitlistTitle: "Join the waiting list",
+    waitlistIntro:
+      "If a table becomes free in the time window you choose, the restaurant will let you know by phone or email. Joining does not guarantee a table.",
+    from: "From",
+    to: "To",
+    joinWaitlist: "Join the waiting list",
+    waitlistConsent: (org, days) =>
+      `I agree that ${org} may process this data solely to manage my waiting-list request and notify me. It is kept for ${days} days after the date and then anonymised. You can ask the restaurant for a copy or for its deletion.`,
+    joined: (people, date, from, to) =>
+      `You are on the waiting list: ${people}, ${date}, from ${from} to ${to}. If a table becomes free, the restaurant will let you know.`,
   },
   fr: {
     locale: "fr-FR",
@@ -183,6 +216,11 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     summary: (people, when, code) =>
       `${people}, ${when}. Code de réservation : ${code}. Pour toute autre modification, contactez le restaurant en indiquant ce code.`,
     errors: {
+      "Hora no válida": "Heure non valide",
+      "La franja debe terminar después de empezar": "Le créneau doit se terminer après son début",
+      "Elige una fecha dentro de los días que admite el restaurante":
+        "Choisissez une date parmi les jours acceptés par le restaurant",
+      "El restaurante no abre en esa franja": "Le restaurant n’est pas ouvert sur ce créneau",
       "Este establecimiento no acepta reservas online": "Ce restaurant n’accepte pas les réservations en ligne",
       "Número de comensales no admitido online": "Ce nombre de couverts n’est pas accepté en ligne",
       "Duración no válida": "Durée non valide",
@@ -219,6 +257,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     alreadyCancelled: "Cette réservation était déjà annulée.",
     notCancellable: "Cette réservation ne peut plus être annulée en ligne. Pour toute demande, appelez le restaurant.",
     backToBooking: "Faire une réservation",
+    waitlistTitle: "Inscrivez-vous sur la liste d’attente",
+    waitlistIntro:
+      "Si une table se libère dans le créneau choisi, le restaurant vous préviendra par téléphone ou par e-mail. L’inscription ne garantit pas de table.",
+    from: "De",
+    to: "À",
+    joinWaitlist: "M’inscrire sur la liste d’attente",
+    waitlistConsent: (org, days) =>
+      `J’accepte que ${org} traite ces données uniquement pour gérer ma demande sur la liste d’attente et me prévenir. Elles sont conservées ${days} jours après la date, puis anonymisées. Vous pouvez en demander une copie ou leur suppression au restaurant.`,
+    joined: (people, date, from, to) =>
+      `Vous êtes inscrit sur la liste d’attente : ${people}, ${date}, de ${from} à ${to}. Si une table se libère, le restaurant vous préviendra.`,
   },
   de: {
     locale: "de-DE",
@@ -249,6 +297,11 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     summary: (people, when, code) =>
       `${people}, ${when}. Reservierungscode: ${code}. Für andere Änderungen wenden Sie sich bitte unter Angabe dieses Codes an das Restaurant.`,
     errors: {
+      "Hora no válida": "Ungültige Uhrzeit",
+      "La franja debe terminar después de empezar": "Der Zeitraum muss nach seinem Beginn enden",
+      "Elige una fecha dentro de los días que admite el restaurante":
+        "Wählen Sie ein Datum innerhalb der Tage, die das Restaurant annimmt",
+      "El restaurante no abre en esa franja": "Das Restaurant ist in diesem Zeitraum nicht geöffnet",
       "Este establecimiento no acepta reservas online": "Dieses Restaurant nimmt keine Online-Reservierungen an",
       "Número de comensales no admitido online": "Diese Personenzahl ist online nicht möglich",
       "Duración no válida": "Ungültige Dauer",
@@ -286,6 +339,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     notCancellable:
       "Diese Reservierung kann online nicht mehr storniert werden. Bitte rufen Sie bei Fragen das Restaurant an.",
     backToBooking: "Reservieren",
+    waitlistTitle: "Auf die Warteliste setzen",
+    waitlistIntro:
+      "Wenn im gewählten Zeitraum ein Tisch frei wird, meldet sich das Restaurant telefonisch oder per E-Mail. Ein Platz auf der Warteliste garantiert keinen Tisch.",
+    from: "Von",
+    to: "Bis",
+    joinWaitlist: "Auf die Warteliste setzen",
+    waitlistConsent: (org, days) =>
+      `Ich bin damit einverstanden, dass ${org} diese Daten ausschließlich zur Bearbeitung meiner Wartelisten-Anfrage und zur Benachrichtigung verarbeitet. Sie werden ${days} Tage nach dem Datum aufbewahrt und danach anonymisiert. Sie können beim Restaurant eine Kopie oder die Löschung verlangen.`,
+    joined: (people, date, from, to) =>
+      `Sie stehen auf der Warteliste: ${people}, ${date}, von ${from} bis ${to}. Wenn ein Tisch frei wird, meldet sich das Restaurant.`,
   },
   it: {
     locale: "it-IT",
@@ -316,6 +379,11 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     summary: (people, when, code) =>
       `${people}, ${when}. Codice di prenotazione: ${code}. Per altre modifiche, contatta il ristorante indicando questo codice.`,
     errors: {
+      "Hora no válida": "Orario non valido",
+      "La franja debe terminar después de empezar": "La fascia deve terminare dopo l’inizio",
+      "Elige una fecha dentro de los días que admite el restaurante":
+        "Scegli una data tra i giorni accettati dal ristorante",
+      "El restaurante no abre en esa franja": "Il ristorante non è aperto in quella fascia",
       "Este establecimiento no acepta reservas online": "Questo ristorante non accetta prenotazioni online",
       "Número de comensales no admitido online": "Questo numero di persone non è prenotabile online",
       "Duración no válida": "Durata non valida",
@@ -351,6 +419,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     notCancellable:
       "Questa prenotazione non può più essere annullata online. Per qualsiasi cosa, chiama il ristorante.",
     backToBooking: "Fai una prenotazione",
+    waitlistTitle: "Iscriviti alla lista d’attesa",
+    waitlistIntro:
+      "Se si libera un tavolo nella fascia che scegli, il ristorante ti avviserà per telefono o e-mail. L’iscrizione non garantisce un tavolo.",
+    from: "Dalle",
+    to: "Alle",
+    joinWaitlist: "Iscrivimi alla lista d’attesa",
+    waitlistConsent: (org, days) =>
+      `Accetto che ${org} tratti questi dati esclusivamente per gestire la mia richiesta in lista d’attesa e avvisarmi. Sono conservati per ${days} giorni dopo la data e poi anonimizzati. Puoi chiederne una copia o la cancellazione al ristorante.`,
+    joined: (people, date, from, to) =>
+      `Sei in lista d’attesa: ${people}, ${date}, dalle ${from} alle ${to}. Se si libera un tavolo, il ristorante ti avviserà.`,
   },
   pt: {
     locale: "pt-PT",
@@ -381,6 +459,11 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     summary: (people, when, code) =>
       `${people}, ${when}. Código da reserva: ${code}. Para outras alterações, contacte o restaurante indicando este código.`,
     errors: {
+      "Hora no válida": "Hora inválida",
+      "La franja debe terminar después de empezar": "O intervalo deve terminar depois de começar",
+      "Elige una fecha dentro de los días que admite el restaurante":
+        "Escolha uma data dentro dos dias que o restaurante aceita",
+      "El restaurante no abre en esa franja": "O restaurante não abre nesse intervalo",
       "Este establecimiento no acepta reservas online": "Este restaurante não aceita reservas online",
       "Número de comensales no admitido online": "Esse número de pessoas não é admitido online",
       "Duración no válida": "Duração inválida",
@@ -416,6 +499,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     alreadyCancelled: "Esta reserva já estava cancelada.",
     notCancellable: "Esta reserva já não pode ser cancelada online. Se precisar de algo, ligue para o restaurante.",
     backToBooking: "Fazer uma reserva",
+    waitlistTitle: "Inscreva-se na lista de espera",
+    waitlistIntro:
+      "Se ficar livre uma mesa no intervalo que escolher, o restaurante avisa-o por telefone ou e-mail. A inscrição não garante mesa.",
+    from: "Das",
+    to: "Até",
+    joinWaitlist: "Inscrever-me na lista de espera",
+    waitlistConsent: (org, days) =>
+      `Aceito que ${org} trate estes dados apenas para gerir o meu pedido na lista de espera e avisar-me. São conservados durante ${days} dias após a data e depois anonimizados. Pode pedir uma cópia ou a sua eliminação ao restaurante.`,
+    joined: (people, date, from, to) =>
+      `Ficou inscrito na lista de espera: ${people}, ${date}, das ${from} às ${to}. Se ficar livre uma mesa, o restaurante avisa-o.`,
   },
   ca: {
     locale: "ca-ES",
@@ -446,6 +539,11 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     summary: (people, when, code) =>
       `${people}, ${when}. Codi de reserva: ${code}. Per a altres canvis, contacta amb el restaurant indicant aquest codi.`,
     errors: {
+      "Hora no válida": "Hora no vàlida",
+      "La franja debe terminar después de empezar": "La franja ha d’acabar després de començar",
+      "Elige una fecha dentro de los días que admite el restaurante":
+        "Tria una data dins dels dies que admet el restaurant",
+      "El restaurante no abre en esa franja": "El restaurant no obre en aquesta franja",
       "Este establecimiento no acepta reservas online": "Aquest restaurant no accepta reserves en línia",
       "Número de comensales no admitido online": "Aquest nombre de comensals no s’admet en línia",
       "Duración no válida": "Durada no vàlida",
@@ -482,6 +580,16 @@ export const BOOKING_TEXTS: Record<PublicLanguage, BookingTexts> = {
     alreadyCancelled: "Aquesta reserva ja estava cancel·lada.",
     notCancellable: "Aquesta reserva ja no es pot cancel·lar en línia. Si necessites alguna cosa, truca al restaurant.",
     backToBooking: "Fes una reserva",
+    waitlistTitle: "Apunta’t a la llista d’espera",
+    waitlistIntro:
+      "Si s’allibera una taula en la franja que triïs, el restaurant t’avisarà per telèfon o correu. Apuntar-t’hi no garanteix taula.",
+    from: "Des de",
+    to: "Fins a",
+    joinWaitlist: "Apunta’m a la llista d’espera",
+    waitlistConsent: (org, days) =>
+      `Accepto que ${org} tracti aquestes dades únicament per gestionar la meva sol·licitud a la llista d’espera i avisar-me. Es conserven ${days} dies després de la data i després s’anonimitzen. Pots demanar-ne una còpia o l’esborrament al restaurant.`,
+    joined: (people, date, from, to) =>
+      `T’hem apuntat a la llista d’espera: ${people}, ${date}, de ${from} a ${to}. Si s’allibera una taula, el restaurant t’avisarà.`,
   },
 };
 

@@ -89,7 +89,25 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   // Un enlace inventado no lleva a ninguna parte.
   expect((await client.goto(cancelHref.replace(/[^/]+$/, "A".repeat(43))))?.status()).toBe(404);
 
-    // Un local inexistente o sin reservas online responde 404.
+    // Sin horas libres (6 personas y la única mesa es de 4): el cliente se apunta a la lista de espera.
+  await client.goto(`${publicHref}?date=${date}&party=6`);
+  await expect(client.getByText("No quedan horas disponibles online para ese día.")).toBeVisible();
+  await expect(client.getByRole("heading", { name: "Apúntate a la lista de espera" })).toBeVisible();
+  await expect(client.getByLabel("Desde")).toHaveValue("13:00");
+  await client.getByLabel("Desde").fill("20:30");
+  await client.getByLabel("Hasta").fill("22:00");
+  await client.getByLabel("Nombre", { exact: true }).fill("Luis Espera");
+  await client.getByLabel("Teléfono").fill("600 111 222");
+  await client.getByLabel(/Acepto que Casa Online trate estos datos únicamente para gestionar mi solicitud/).check();
+  await client.getByRole("button", { name: "Apuntarme a la lista de espera" }).click();
+  await expect(client.getByText(/^Te hemos apuntado a la lista de espera: 6 personas, .*, de 20:30 a 22:00\./)).toBeVisible();
+  await page.goto(`${estUrl}/reservations?date=${date}`);
+  const waitlist = page.locator("section", { has: page.getByRole("heading", { name: /Lista de espera/ }) });
+  const entry = waitlist.locator("li", { hasText: "Luis Espera" });
+  await expect(entry.getByText(/6 personas · entre 20:30 y 22:00/)).toBeVisible();
+  await expect(entry.locator(".badge", { hasText: "Web" })).toBeVisible();
+
+  // Un local inexistente o sin reservas online responde 404.
   expect((await client.goto(`${publicHref}-otro`))?.status()).toBe(404);
   await anon.close();
 });
