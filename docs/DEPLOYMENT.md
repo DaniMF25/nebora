@@ -41,7 +41,7 @@ docker build --target runtime -t nebora-web .
 docker build --target tools   -t nebora-tools .
 ```
 
-La compilación descarga las fuentes de Google Fonts (se sirven después desde la propia aplicación). Detrás de un proxy con inspección TLS: `--secret id=extra_ca,src=/ruta/ca.crt` (y `--network host` si el proxy es local).
+Las fuentes están en el repositorio (`src/fonts`, D-043): la compilación no descarga nada de Google Fonts. Detrás de un proxy con inspección TLS (p. ej. para instalar dependencias): `--secret id=extra_ca,src=/ruta/ca.crt` (y `--network host` si el proxy es local).
 
 ## Preparación inicial de la base de datos (una sola vez)
 

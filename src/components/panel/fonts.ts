@@ -1,12 +1,6 @@
-import { Fraunces, Inter } from "next/font/google";
+import { panelsans, panelserif } from "@/fonts";
 
-// Tipografías del panel, alojadas por la propia aplicación (next/font). Sin
+// Tipografías del panel, alojadas en el repositorio (src/fonts, D-043). Sin
 // precarga: la web pública del local no las usa y no debe descargarlas.
-export const panelSans = Inter({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-panel-sans" });
-export const panelSerif = Fraunces({
-  subsets: ["latin"],
-  display: "swap",
-  preload: false,
-  weight: ["500", "600"],
-  variable: "--font-panel-serif",
-});
+export const panelSans = panelsans;
+export const panelSerif = panelserif;

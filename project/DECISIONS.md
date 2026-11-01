@@ -498,3 +498,15 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Alternativas descartadas:** apuntarse aunque haya horas libres (llenaría la lista de solicitudes que ya se pueden reservar); avisar automáticamente al liberarse mesa (requiere proveedor de correo o SMS).
 
+## D-043 — Fuentes alojadas en el repositorio
+**Fecha:** 2026-11-01. **Estado:** aceptada.
+
+**Contexto:** `next/font/google` descargaba de Google Fonts las 34 familias en cada compilación; una ejecución de la CI falló porque una descarga no respondió, y desplegar dependía de la disponibilidad de Google.
+
+**Decisión:**
+- Las fuentes se guardan en `src/fonts` (woff2, subconjunto latino, mismos pesos o ejes variables que antes) y se cargan con `next/font/local` desde `src/fonts/index.ts`. Ni la compilación ni el visitante hacen peticiones a Google; el navegador sigue bajando solo las que usa la página (sin precarga).
+- `scripts/fetch-fonts.mjs` las descarga una vez (mediante curl, que respeta el proxy) junto con el texto de su licencia de `google/fonts` y genera `index.ts`. Se ejecuta a mano; su resultado se guarda en el repositorio.
+- Licencias: SIL Open Font License 1.1 (32 familias) y Apache 2.0 (Satisfy y Syncopate), que permiten redistribuirlas con la aplicación; los textos van en `src/fonts/licenses` y el índice en `src/fonts/LICENSES.md`.
+
+**Alternativas descartadas:** paquetes `@fontsource` (34 dependencias nuevas); caché de compilación en la CI (no evita el fallo en la primera compilación ni en el despliegue).
+

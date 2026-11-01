@@ -75,7 +75,14 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
   expect((await visitor.request.get(logoSrc)).headers()["content-type"]).toBe("image/webp");
   const title = visitor.getByRole("heading", { level: 1, name: "Cocina junto al mar" });
   await expect(title).toBeVisible();
-  expect(await title.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/Playfair/);
+  expect(await title.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/playfair/i);
+  // La fuente se descarga de la propia aplicación y el navegador la usa (no la de reserva).
+  expect(
+    await visitor.evaluate(async () => {
+      await document.fonts.load("32px playfair");
+      return [...document.fonts].some((f) => f.family.includes("playfair") && f.status === "loaded");
+    }),
+  ).toBe(true);
   expect(
     await visitor
       .locator("body div[lang]")
