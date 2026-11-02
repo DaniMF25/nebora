@@ -115,6 +115,24 @@ export function SiteHome({
             </ul>
           </section>
         )}
+
+        {/* Contacto (D-049): llamada a la acción hacia la página de contacto. */}
+        <section className={styles.contactCta} aria-labelledby="contacto-cta">
+          <h2 id="contacto-cta" className={styles.blockTitle}>
+            {t.contactCtaTitle}
+          </h2>
+          <p>{t.contactCtaText}</p>
+          <div className={styles.heroActions}>
+            <Link href={chrome.links.contact} className={styles.buttonPrimary}>
+              {t.contactCta} <Icon name="arrow" className={styles.buttonIcon} />
+            </Link>
+            {chrome.phone && (
+              <a href={`tel:${chrome.phone.replace(/[^0-9+]/g, "")}`} className={styles.buttonGhost}>
+                {chrome.phone}
+              </a>
+            )}
+          </div>
+        </section>
       </SiteShell>
     </>
   );

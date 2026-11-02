@@ -48,6 +48,11 @@ export interface PublicTexts {
   offMenu: string;
   /** Galería de la web (D-039). */
   gallery: string;
+  /** Página de contacto y bloque de la portada (D-049). */
+  contact: string;
+  contactCtaTitle: string;
+  contactCtaText: string;
+  contactCta: string;
   allergenNames: Record<Allergen, string>;
 }
 
@@ -91,6 +96,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "ahora",
     offMenu: "Fuera de carta",
     gallery: "Galería",
+    contact: "Contacto",
+    contactCtaTitle: "¿Hablamos?",
+    contactCtaText: "Reservas de grupo, celebraciones o cualquier duda: escríbenos, llámanos o ven a vernos.",
+    contactCta: "Contactar",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustáceos",
@@ -147,6 +156,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "now",
     offMenu: "Off the menu",
     gallery: "Gallery",
+    contact: "Contact",
+    contactCtaTitle: "Let's talk",
+    contactCtaText: "Group bookings, celebrations or any question: write to us, call us or come and see us.",
+    contactCta: "Get in touch",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustaceans",
@@ -203,6 +216,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "en ce moment",
     offMenu: "Hors carte",
     gallery: "Galerie",
+    contact: "Contact",
+    contactCtaTitle: "Parlons-en",
+    contactCtaText: "Groupes, célébrations ou toute question : écrivez-nous, appelez-nous ou venez nous voir.",
+    contactCta: "Nous contacter",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacés",
@@ -259,6 +276,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "jetzt",
     offMenu: "Außer der Karte",
     gallery: "Galerie",
+    contact: "Kontakt",
+    contactCtaTitle: "Sprechen wir",
+    contactCtaText: "Gruppen, Feiern oder Fragen: Schreiben Sie uns, rufen Sie an oder besuchen Sie uns.",
+    contactCta: "Kontakt aufnehmen",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Krebstiere",
@@ -315,6 +336,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "ora",
     offMenu: "Fuori menù",
     gallery: "Galleria",
+    contact: "Contatti",
+    contactCtaTitle: "Parliamone",
+    contactCtaText: "Gruppi, feste o qualsiasi domanda: scrivici, chiamaci o vieni a trovarci.",
+    contactCta: "Contattaci",
     allergenNames: {
       gluten: "Glutine",
       crustaceans: "Crostacei",
@@ -371,6 +396,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "agora",
     offMenu: "Fora da carta",
     gallery: "Galeria",
+    contact: "Contacto",
+    contactCtaTitle: "Vamos falar?",
+    contactCtaText: "Grupos, celebrações ou qualquer dúvida: escreva-nos, ligue-nos ou venha visitar-nos.",
+    contactCta: "Contactar",
     allergenNames: {
       gluten: "Glúten",
       crustaceans: "Crustáceos",
@@ -427,6 +456,10 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     servedNow: "ara",
     offMenu: "Fora de carta",
     gallery: "Galeria",
+    contact: "Contacte",
+    contactCtaTitle: "En parlem?",
+    contactCtaText: "Grups, celebracions o qualsevol dubte: escriu-nos, truca'ns o vine a veure'ns.",
+    contactCta: "Contacta",
     allergenNames: {
       gluten: "Gluten",
       crustaceans: "Crustacis",

@@ -67,7 +67,7 @@ export function PrivacyLookup({ searchAction, eraseAction, exportUrl }: Props) {
                     <td data-label="Local">{r.establishment}</td>
                     <td data-label="Nombre">{r.name}</td>
                     <td data-label="Contacto">{[r.phone, r.email].filter(Boolean).join(" · ")}</td>
-                    <td data-label="Pers.">{r.partySize}</td>
+                    <td data-label="Pers.">{r.partySize > 0 ? r.partySize : "—"}</td>
                     <td data-label="Estado">{r.status}</td>
                     <td data-label="Canal">{r.channel}</td>
                   </tr>

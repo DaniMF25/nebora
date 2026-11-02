@@ -145,17 +145,48 @@ export async function findCustomerWaitlist(
   return rows;
 }
 
+/** Mensajes del formulario de contacto (todos los locales) de un contacto (D-049). */
+export async function findCustomerMessages(tx: Tx, ctx: TenantContext, contactInput: unknown) {
+  requirePermission(ctx, "privacy.manage");
+  const c = normalizeContact(contactInput);
+  const { rows } = await tx.query<{
+    id: string;
+    establishmentName: string;
+    customerName: string;
+    customerPhone: string | null;
+    customerEmail: string | null;
+    message: string | null;
+    createdAt: Date;
+  }>(
+    `SELECT r.id, e.name AS "establishmentName", r.customer_name AS "customerName",
+            r.customer_phone AS "customerPhone", r.customer_email AS "customerEmail", r.message,
+            r.created_at AS "createdAt"
+       FROM contact_messages r
+       JOIN establishments e ON e.organization_id = r.organization_id AND e.id = r.establishment_id
+      WHERE r.organization_id = $1 AND r.anonymized_at IS NULL AND ${MATCH_SQL}
+      ORDER BY r.created_at DESC`,
+    [ctx.organizationId, c.kind, c.value],
+  );
+  return rows;
+}
+
 /** Copia de los datos de un cliente (derecho de acceso/portabilidad). */
 export async function exportCustomerData(tx: Tx, ctx: TenantContext, contactInput: unknown) {
   const reservations = await findCustomerData(tx, ctx, contactInput);
   const waitlist = await findCustomerWaitlist(tx, ctx, contactInput);
+  const messages = await findCustomerMessages(tx, ctx, contactInput);
   const c = normalizeContact(contactInput);
   const org = await tx.query<{ name: string }>("SELECT name FROM organizations WHERE id = $1", [ctx.organizationId]);
   await recordAudit(tx, ctx, {
     action: "privacy.exported",
     entityType: "organization",
     entityId: ctx.organizationId,
-    metadata: { contact: contactFingerprint(c), reservations: reservations.length, waitlist: waitlist.length },
+    metadata: {
+      contact: contactFingerprint(c),
+      reservations: reservations.length,
+      waitlist: waitlist.length,
+      messages: messages.length,
+    },
   });
   return {
     generatedAt: new Date().toISOString(),
@@ -185,6 +216,14 @@ export async function exportCustomerData(tx: Tx, ctx: TenantContext, contactInpu
       email: w.customerEmail,
       notes: w.notes,
       createdAt: w.createdAt.toISOString(),
+    })),
+    messages: messages.map((m) => ({
+      establishment: m.establishmentName,
+      name: m.customerName,
+      phone: m.customerPhone,
+      email: m.customerEmail,
+      message: m.message,
+      createdAt: m.createdAt.toISOString(),
     })),
   };
 }
@@ -223,11 +262,24 @@ export async function eraseCustomerData(tx: Tx, ctx: TenantContext, contactInput
       WHERE r.organization_id = $1 AND r.anonymized_at IS NULL AND ${MATCH_SQL}`,
     [ctx.organizationId, c.kind, c.value],
   );
+  // Mensajes de contacto (D-049): se anonimizan.
+  const msg = await tx.query(
+    `UPDATE contact_messages r
+        SET customer_name = 'Cliente anonimizado', customer_phone = NULL, customer_email = NULL, message = NULL,
+            anonymized_at = now()
+      WHERE r.organization_id = $1 AND r.anonymized_at IS NULL AND ${MATCH_SQL}`,
+    [ctx.organizationId, c.kind, c.value],
+  );
   await recordAudit(tx, ctx, {
     action: "privacy.erased",
     entityType: "organization",
     entityId: ctx.organizationId,
-    metadata: { contact: contactFingerprint(c), reservations: res.rowCount ?? 0, waitlist: wl.rowCount ?? 0 },
+    metadata: {
+      contact: contactFingerprint(c),
+      reservations: res.rowCount ?? 0,
+      waitlist: wl.rowCount ?? 0,
+      messages: msg.rowCount ?? 0,
+    },
   });
   return res.rowCount ?? 0;
 }

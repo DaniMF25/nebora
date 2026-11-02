@@ -20,7 +20,8 @@ export interface SiteChrome {
   whatsapp: string | null;
   instagram: string | null;
   openingHours: WeeklySlot[];
-  links: { home: string; menu: string | null; booking: string | null };
+  /** `contact`: página de contacto (D-049), en todos los planes. */
+  links: { home: string; menu: string | null; booking: string | null; contact: string };
   /** Marca (D-034): logotipo, color de acento y combinación tipográfica. */
   logoUrl?: string | null;
   logoSize?: LogoSize;
@@ -31,7 +32,7 @@ export interface SiteChrome {
   languageLinks?: { lang: PublicLanguage; label: string; href: string }[];
 }
 
-type Current = "home" | "menu" | "booking";
+type Current = "home" | "menu" | "booking" | "contact";
 
 function mapsUrl(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
@@ -42,16 +43,26 @@ function mapsUrl(address: string): string {
  * horario reales y navegación inferior en móvil. Solo enlaza a páginas que
  * existen (la carta si hay una publicada, reservas si están activadas).
  */
-export function SiteShell({ site, current, children }: { site: SiteChrome; current: Current; children: React.ReactNode }) {
+export function SiteShell({
+  site,
+  current,
+  children,
+}: {
+  site: SiteChrome;
+  current: Current;
+  children: React.ReactNode;
+}) {
   const { links } = site;
   const lang = site.lang ?? "es";
   const t = PUBLIC_TEXTS[lang];
-  const nav: { key: Current; href: string; label: string; icon: "home" | "menu" | "calendar" }[] = [
+  const nav: { key: Current; href: string; label: string; icon: "home" | "menu" | "calendar" | "mail" }[] = [
     { key: "home", href: links.home, label: t.home, icon: "home" },
     ...(links.menu ? [{ key: "menu" as const, href: links.menu, label: t.menu, icon: "menu" as const }] : []),
-    ...(links.booking ? [{ key: "booking" as const, href: links.booking, label: t.book, icon: "calendar" as const }] : []),
+    ...(links.booking
+      ? [{ key: "booking" as const, href: links.booking, label: t.book, icon: "calendar" as const }]
+      : []),
+    { key: "contact", href: links.contact, label: t.contact, icon: "mail" },
   ];
-  const hours = groupOpeningHours(site.openingHours, t);
   const languages = site.languageLinks ?? [];
   // La marca sustituye variables del tema; el CSS del tema no cambia.
   const brandStyle: Record<string, string> = {
@@ -84,7 +95,6 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
                 {n.label}
               </Link>
             ))}
-            <a href={`${links.home}#contacto`}>{t.hoursAndContact}</a>
           </nav>
         </details>
         <Link href={links.home} className={styles.brand}>
@@ -109,7 +119,12 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
               <ul>
                 {languages.map((l) => (
                   <li key={l.lang}>
-                    <a href={l.href} hrefLang={l.lang} lang={l.lang} aria-current={l.lang === lang ? "true" : undefined}>
+                    <a
+                      href={l.href}
+                      hrefLang={l.lang}
+                      lang={l.lang}
+                      aria-current={l.lang === lang ? "true" : undefined}
+                    >
                       {l.label}
                     </a>
                   </li>
@@ -128,67 +143,7 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
       {children}
 
       <footer className={styles.contact} id="contacto">
-        <div className={styles.contactGrid}>
-          {site.address && (
-            <div className={styles.contactItem}>
-              <Icon name="pin" className={styles.contactIcon} />
-              <h2>{t.whereWeAre}</h2>
-              <p>{site.address}</p>
-              <a href={mapsUrl(site.address)} target="_blank" rel="noopener noreferrer">
-                {t.directions}
-              </a>
-            </div>
-          )}
-          {site.phone && (
-            <div className={styles.contactItem}>
-              <Icon name="phone" className={styles.contactIcon} />
-              <h2>{t.callUs}</h2>
-              <p>
-                <a href={`tel:${site.phone.replace(/[^0-9+]/g, "")}`}>{site.phone}</a>
-              </p>
-            </div>
-          )}
-          <div className={styles.contactItem}>
-            <Icon name="clock" className={styles.contactIcon} />
-            <h2>{t.hours}</h2>
-            {hours.length === 0 ? (
-              <p>{t.askAvailability}</p>
-            ) : (
-              <dl className={styles.hours}>
-                {hours.map((h) => (
-                  <div key={h.days}>
-                    <dt>{h.days}</dt>
-                    {h.slots.map((s) => (
-                      <dd key={s}>{s}</dd>
-                    ))}
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-          {site.instagram && (
-            <div className={styles.contactItem}>
-              <Icon name="instagram" className={styles.contactIcon} />
-              <h2>{t.followUs}</h2>
-              <p>
-                <a href={`https://www.instagram.com/${site.instagram}/`} target="_blank" rel="noopener noreferrer">
-                  @{site.instagram}
-                </a>
-              </p>
-            </div>
-          )}
-          {site.whatsapp && (
-            <div className={styles.contactItem}>
-              <Icon name="whatsapp" className={styles.contactIcon} />
-              <h2>WhatsApp</h2>
-              <p>
-                <a href={`https://wa.me/${site.whatsapp}`} target="_blank" rel="noopener noreferrer">
-                  {t.writeUs}
-                </a>
-              </p>
-            </div>
-          )}
-        </div>
+        {current !== "contact" && <ContactDetails site={site} />}
         <p className={styles.legal}>{t.legal}</p>
       </footer>
 
@@ -201,6 +156,78 @@ export function SiteShell({ site, current, children }: { site: SiteChrome; curre
             </Link>
           ))}
         </nav>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Dirección, teléfono, horario, Instagram y WhatsApp del local. Va en el pie
+ * de todas las páginas y, en la de contacto, en el cuerpo (D-049).
+ */
+export function ContactDetails({ site }: { site: SiteChrome }) {
+  const t = PUBLIC_TEXTS[site.lang ?? "es"];
+  const hours = groupOpeningHours(site.openingHours, t);
+  return (
+    <div className={styles.contactGrid}>
+      {site.address && (
+        <div className={styles.contactItem}>
+          <Icon name="pin" className={styles.contactIcon} />
+          <h2>{t.whereWeAre}</h2>
+          <p>{site.address}</p>
+          <a href={mapsUrl(site.address)} target="_blank" rel="noopener noreferrer">
+            {t.directions}
+          </a>
+        </div>
+      )}
+      {site.phone && (
+        <div className={styles.contactItem}>
+          <Icon name="phone" className={styles.contactIcon} />
+          <h2>{t.callUs}</h2>
+          <p>
+            <a href={`tel:${site.phone.replace(/[^0-9+]/g, "")}`}>{site.phone}</a>
+          </p>
+        </div>
+      )}
+      <div className={styles.contactItem}>
+        <Icon name="clock" className={styles.contactIcon} />
+        <h2>{t.hours}</h2>
+        {hours.length === 0 ? (
+          <p>{t.askAvailability}</p>
+        ) : (
+          <dl className={styles.hours}>
+            {hours.map((h) => (
+              <div key={h.days}>
+                <dt>{h.days}</dt>
+                {h.slots.map((s) => (
+                  <dd key={s}>{s}</dd>
+                ))}
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+      {site.instagram && (
+        <div className={styles.contactItem}>
+          <Icon name="instagram" className={styles.contactIcon} />
+          <h2>{t.followUs}</h2>
+          <p>
+            <a href={`https://www.instagram.com/${site.instagram}/`} target="_blank" rel="noopener noreferrer">
+              @{site.instagram}
+            </a>
+          </p>
+        </div>
+      )}
+      {site.whatsapp && (
+        <div className={styles.contactItem}>
+          <Icon name="whatsapp" className={styles.contactIcon} />
+          <h2>WhatsApp</h2>
+          <p>
+            <a href={`https://wa.me/${site.whatsapp}`} target="_blank" rel="noopener noreferrer">
+              {t.writeUs}
+            </a>
+          </p>
+        </div>
       )}
     </div>
   );

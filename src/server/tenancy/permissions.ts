@@ -42,6 +42,9 @@ export const PERMISSIONS = [
   "staff.manage",
   // Estilo, color, tipografía y galería de la web (D-047): desde el plan Avanzado.
   "site.customize",
+  // Mensajes del formulario de contacto de la web (D-049): todos los leen; los encargados los archivan y borran.
+  "messages.read",
+  "messages.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -72,6 +75,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "staff.read",
     "staff.manage",
     "site.customize",
+    "messages.read",
+    "messages.manage",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -89,6 +94,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reservations.manage",
     // Consulta el cuadrante de turnos de sus locales.
     "staff.read",
+    // Lee los mensajes de contacto de la web.
+    "messages.read",
   ],
 };
 
@@ -122,6 +129,8 @@ const PERMISSION_PLAN: Partial<Record<Permission, Plan>> = {
   "staff.read": "advanced",
   "staff.manage": "advanced",
   "site.customize": "advanced",
+  "messages.read": "advanced",
+  "messages.manage": "advanced",
   // PRO: gestión (costes y recetas, inventario, proveedores y compras).
   "costs.read": "pro",
   "inventory.read": "pro",

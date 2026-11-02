@@ -47,6 +47,7 @@ export default async function OrganizationLayout({
         reservations: ctx.permissions.has("reservations.read"),
         tables: ctx.permissions.has("tables.read"),
         members: ctx.permissions.has("members.read"),
+        messages: ctx.permissions.has("messages.read"),
         // Gestión (catálogo con costes, inventario, proveedores): plan PRO (D-046).
         management: ctx.plan === "pro",
         plan: ctx.role === "owner" || ctx.role === "admin",
@@ -131,6 +132,7 @@ export default async function OrganizationLayout({
             ...(can.reservations ? [{ path: "/reservations", label: "Reservas", icon: "calendar" as const }] : []),
             ...(can.tables ? [{ path: "/floor", label: "Sala", icon: "floor" as const }] : []),
             { path: "/site", label: "Web pública", icon: "globe" },
+            ...(can.messages ? [{ path: "/messages", label: "Mensajes", icon: "mail" as const }] : []),
             ...(can.stats ? [{ path: "/stats", label: "Estadísticas", icon: "summary" as const }] : []),
           ],
         };

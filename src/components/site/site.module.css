@@ -847,6 +847,13 @@
   padding: 3rem clamp(1.25rem, 5vw, 4rem) 2rem;
 }
 
+/* Datos de contacto dentro de la página de contacto (D-049). */
+.contactPanel {
+  border-radius: var(--s-radius);
+  padding: 2rem clamp(1.25rem, 3vw, 2rem);
+  margin: 1.5rem 0 2rem;
+}
+
 .contactGrid {
   max-width: 72rem;
   margin: 0 auto;
@@ -1152,6 +1159,26 @@
 }
 
 /* Galería de la portada (D-039): cuadrícula que se adapta al ancho. */
+/* Llamada a la acción de contacto en la portada (D-049). */
+.contactCta {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 3.5rem clamp(1.25rem, 5vw, 4rem);
+}
+
+.contactCta p {
+  margin: 0;
+  max-width: 34rem;
+  opacity: 0.85;
+}
+
+.contactCta .heroActions {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
 .galleryBlock {
   background: var(--s-section-bg);
   padding: 3.5rem 0 3rem;

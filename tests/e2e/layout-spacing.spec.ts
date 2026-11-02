@@ -324,6 +324,7 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
     `${est}/floor`,
     `${est}/reservations?date=2030-06-17`,
     `${est}/staff?week=2030-06-17`,
+    `${est}/messages`,
     `${est}/site`,
     `${est}/site?tab=marca`,
     `${est}/site?tab=contenido`,
@@ -331,6 +332,7 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
     `${est}/site?tab=galeria`,
     `${est}/stats`,
     `/${orgSlug}/puerto`,
+    `/${orgSlug}/puerto/contacto`,
   ];
   const problems: string[] = [];
   for (const viewport of [

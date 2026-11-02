@@ -625,3 +625,30 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Un botón «Publicar» tras cada cambio, que era el problema de partida.
 
 **Consecuencia:** se generan más versiones (una por cambio visible); la lista de versiones crece con el uso.
+
+## D-049 — Página de contacto, formulario y bandeja de mensajes
+**Fecha:** 2026-11-02. **Estado:** aceptada.
+
+**Contexto:** el contacto solo estaba en el pie de la web. El titular quiere una página de contacto con formulario y una llamada a la acción en la portada. No hay proveedor de correo.
+
+**Decisión:**
+- **En todos los planes:**
+  - la portada tiene un bloque «¿Hablamos?» con «Contactar» (y el teléfono si lo hay);
+  - la cabecera, el menú y la barra inferior del móvil enlazan a `/<org>/<local>/contacto`;
+  - esa página muestra los datos del local (dirección, teléfono, horario, Instagram, WhatsApp) en un panel con los colores del pie, que no se repite debajo.
+- **Desde el plan Avanzado:**
+  - formulario (nombre, teléfono o correo, mensaje, consentimiento, campo trampa, clave de idempotencia);
+  - los mensajes llegan a «Mensajes» de cada local en el panel, con aviso de no leídos en Inicio;
+  - todos los roles los leen y marcan como leídos; los encargados o superiores los archivan y borran (`messages.read` y `messages.manage`).
+- **Integridad (migración 0033):**
+  - `contact_messages` con RLS por local;
+  - la aplicación no puede insertar directamente: el alta solo pasa por `app.public_contact`, que exige web publicada y plan Avanzado o superior;
+  - límites por cliente, local y contacto.
+- **Privacidad:** los mensajes entran en la retención (anonimización tras el plazo), la exportación y el borrado de datos de clientes. El consentimiento muestra el plazo real (`app.public_retention_days`).
+- Textos públicos y errores traducidos a los 7 idiomas (`contact-i18n.ts`), con una prueba que exige traducción de cada mensaje del servicio.
+
+**Alternativas descartadas:**
+- Enviar por correo: no hay proveedor.
+- Formulario en Básico: el titular lo prefiere desde Avanzado.
+
+**Pendiente:** aviso por correo al restaurante cuando haya proveedor.

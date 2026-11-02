@@ -4,6 +4,7 @@ import { ActionForm } from "@/components/action-form";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
 import { formatQuantity } from "@/lib/quantity";
+import { unreadMessageCounts } from "@/server/modules/contact/service";
 import { getDashboard, type Dashboard } from "@/server/modules/dashboard/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createEstablishmentAction } from "./actions";
@@ -17,6 +18,8 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       dashboard: await getDashboard(tx, ctx),
+      // Mensajes de contacto sin leer por local (D-049); vacío sin permiso.
+      unread: Object.fromEntries(await unreadMessageCounts(tx, ctx)),
       // Solo controla qué se muestra; el servidor vuelve a comprobarlo en la acción.
       canCreate: ctx.permissions.has("establishments.create"),
     }));
@@ -27,7 +30,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
 
   return (
     <>
-      <Today orgId={orgId} dashboard={data.dashboard} />
+      <Today orgId={orgId} dashboard={data.dashboard} unread={data.unread} />
       <Alerts orgId={orgId} dashboard={data.dashboard} />
       {data.canCreate && (
         <section>
@@ -59,7 +62,15 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
 const MAX_LISTED = 5;
 
 /** Locales de la organización con su resumen del día (es también la lista de locales). */
-function Today({ orgId, dashboard }: { orgId: string; dashboard: Dashboard }) {
+function Today({
+  orgId,
+  dashboard,
+  unread,
+}: {
+  orgId: string;
+  dashboard: Dashboard;
+  unread: Record<string, number>;
+}) {
   return (
     <section aria-labelledby="hoy" className="bare">
       <h2 id="hoy">Hoy</h2>
@@ -78,6 +89,13 @@ function Today({ orgId, dashboard }: { orgId: string; dashboard: Dashboard }) {
                 <OpenStatus open={e.openNow} label={e.openNow ? "Abierto" : "Cerrado"} small />
                 {e.nextOpening && <span className="muted"> · abre a las {time.format(e.nextOpening)}</span>}
               </p>
+              {(unread[e.id] ?? 0) > 0 && (
+                <p>
+                  <Link href={`/app/${orgId}/establishments/${e.id}/messages`}>
+                    {unread[e.id] === 1 ? "1 mensaje sin leer" : `${unread[e.id]} mensajes sin leer`}
+                  </Link>
+                </p>
+              )}
               {r && (
                 <>
                   <dl className="kpis">

@@ -71,6 +71,7 @@ export default async function SitePreviewPage({ params, searchParams }: { params
           home: self,
           menu: menu && preview.featuredMenuSlug ? `/m/${org}/${est}/${preview.featuredMenuSlug}` : null,
           booking: preview.bookingEnabled ? `/r/${org}/${est}` : null,
+          contact: `/${org}/${est}/contacto`,
         },
       }}
       site={{ ...profile, heroTitle: profile.heroTitle ?? preview.establishmentName }}

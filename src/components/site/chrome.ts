@@ -30,6 +30,7 @@ export function siteChrome(
       home: link(`/${org}/${est}`),
       menu: menu ? link(menu) : null,
       booking: site.bookingEnabled ? link(`/r/${org}/${est}`) : null,
+      contact: link(`/${org}/${est}/contacto`),
     },
   };
 }

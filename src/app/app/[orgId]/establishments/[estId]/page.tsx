@@ -70,6 +70,7 @@ export default async function EstablishmentPage({
         canReservations: ctx.permissions.has("reservations.read"),
         canTables: ctx.permissions.has("tables.read"),
         canStaff: ctx.permissions.has("staff.read"),
+        canMessages: ctx.permissions.has("messages.read"),
       };
     });
   } catch (err) {
@@ -78,7 +79,7 @@ export default async function EstablishmentPage({
   }
 
   const { establishment: est, schedule, today, canEdit, menus, canInventory, canPurchasing } = data;
-  const { canReservations, canTables, canStaff } = data;
+  const { canReservations, canTables, canStaff, canMessages } = data;
   const tz = est.timezone;
   const now = new Date();
   const openNow = isOpenAt(schedule, tz, now);
@@ -140,6 +141,14 @@ export default async function EstablishmentPage({
                   <Link href={`${base}/staff`} aria-label="Cuadrante de turnos del personal">
                     <strong>Turnos</strong>
                     <span>Cuadrante semanal del personal</span>
+                  </Link>
+                </li>
+              )}
+              {canMessages && (
+                <li>
+                  <Link href={`${base}/messages`} aria-label="Mensajes de la web">
+                    <strong>Mensajes</strong>
+                    <span>Lo que te escriben desde el formulario de contacto</span>
                   </Link>
                 </li>
               )}

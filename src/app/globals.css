@@ -392,3 +392,7 @@ button.switch-button:hover .switch-track { filter: brightness(0.95); }
   input::-webkit-date-and-time-value { text-align: left; }
 }
 
+
+/* Bandeja de mensajes de contacto (D-049). */
+.message-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0.5rem 0; }
+ul.cards li.message-new { border-color: var(--accent); }

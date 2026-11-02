@@ -25,6 +25,7 @@ describe("matriz de permisos", () => {
       "inventory.move",
       "inventory.read",
       "menus.read",
+      "messages.read",
       "organization.read",
       "purchasing.read",
       "purchasing.receive",

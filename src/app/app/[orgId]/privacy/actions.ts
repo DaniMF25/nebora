@@ -9,6 +9,7 @@ import {
   applyRetention,
   eraseCustomerData,
   findCustomerData,
+  findCustomerMessages,
   findCustomerWaitlist,
   updatePrivacySettings,
 } from "@/server/modules/privacy/service";
@@ -54,9 +55,10 @@ export async function searchCustomerAction(orgId: string, _p: LookupState, fd: F
   const user = await requireUser();
   const contact = formString(fd, "contact");
   try {
-    const { rows, waitlist } = await withTenant(user, orgId, async (tx, ctx) => ({
+    const { rows, waitlist, messages } = await withTenant(user, orgId, async (tx, ctx) => ({
       rows: await findCustomerData(tx, ctx, contact),
       waitlist: await findCustomerWaitlist(tx, ctx, contact),
+      messages: await findCustomerMessages(tx, ctx, contact),
     }));
     const fmt = new Intl.DateTimeFormat("es-ES", {
       dateStyle: "medium",
@@ -87,6 +89,17 @@ export async function searchCustomerAction(orgId: string, _p: LookupState, fd: F
           name: w.customerName,
           phone: w.customerPhone,
           email: w.customerEmail,
+        })),
+        ...messages.map((m) => ({
+          id: m.id,
+          when: fmt.format(m.createdAt),
+          establishment: m.establishmentName,
+          partySize: 0,
+          status: "Recibido",
+          channel: "Mensaje de contacto",
+          name: m.customerName,
+          phone: m.customerPhone,
+          email: m.customerEmail,
         })),
       ],
     };
