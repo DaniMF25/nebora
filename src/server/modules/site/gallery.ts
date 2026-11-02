@@ -7,6 +7,7 @@ import { getEstablishment } from "@/server/modules/establishments/service";
 import { storeImage } from "@/server/modules/media/service";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
+import { planAllowsCustomLook, publicEstablishmentPlan } from "./plan-look";
 
 /**
  * Galería de la web del local (D-039): fotos con pie opcional y orden. Cada
@@ -52,6 +53,8 @@ export async function addGalleryImage(
   input: unknown,
 ): Promise<string> {
   requirePermission(ctx, "establishments.update");
+  // La galería es del plan Avanzado (D-047).
+  requirePermission(ctx, "site.customize");
   const { caption } = parseInput(z.object({ caption: captionSchema.optional() }).strict(), input);
   const est = await getEstablishment(tx, ctx, establishmentId);
   await lockGallery(tx, est.id);
@@ -96,6 +99,8 @@ export async function setGalleryCaption(
   input: unknown,
 ): Promise<void> {
   requirePermission(ctx, "establishments.update");
+  // La galería es del plan Avanzado (D-047).
+  requirePermission(ctx, "site.customize");
   const { caption } = parseInput(z.object({ caption: captionSchema }).strict(), input);
   const est = await getEstablishment(tx, ctx, establishmentId);
   await requireImage(tx, ctx, est.id, imageId);
@@ -115,6 +120,8 @@ export async function moveGalleryImage(
   direction: unknown,
 ): Promise<void> {
   requirePermission(ctx, "establishments.update");
+  // La galería es del plan Avanzado (D-047).
+  requirePermission(ctx, "site.customize");
   const dir = parseInput(z.enum(["up", "down"]), direction);
   const est = await getEstablishment(tx, ctx, establishmentId);
   await lockGallery(tx, est.id);
@@ -144,6 +151,8 @@ export async function removeGalleryImage(
   imageId: string,
 ): Promise<void> {
   requirePermission(ctx, "establishments.update");
+  // La galería es del plan Avanzado (D-047).
+  requirePermission(ctx, "site.customize");
   const est = await getEstablishment(tx, ctx, establishmentId);
   const { mediaId } = await requireImage(tx, ctx, est.id, imageId);
   // El archivo es solo de esta foto; borrarlo elimina también la fila (ON DELETE CASCADE).
@@ -156,6 +165,8 @@ export async function getPublicGallery(
   establishmentId: string,
 ): Promise<{ mediaId: string; caption: string | null }[]> {
   if (!isUuid(establishmentId)) return [];
+  // En Básico no hay galería (D-047); las fotos guardadas vuelven al subir de plan.
+  if (!planAllowsCustomLook(await publicEstablishmentPlan(establishmentId))) return [];
   const { rows } = await getPool().query<{ media_id: string; caption: string | null }>(
     "SELECT * FROM app.public_site_gallery($1)",
     [establishmentId],

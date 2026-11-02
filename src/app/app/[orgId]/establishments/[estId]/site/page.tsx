@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
 import { ThemePicker } from "@/components/panel/theme-picker";
+import { effectiveLook, planAllowsCustomLook } from "@/server/modules/site/plan-look";
 import { HIGHLIGHT_ICON_LABELS, HIGHLIGHT_ICONS, MAX_HIGHLIGHTS, privateMediaUrl } from "@/lib/site";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
@@ -57,12 +58,25 @@ export default async function SiteProfilePage({
       canEdit: ctx.permissions.has("establishments.update"),
       translations: tab === "traducciones" ? await getSiteTranslationForm(tx, ctx, estId, search.lang) : null,
       gallery: tab === "galeria" ? await listGallery(tx, ctx, estId) : [],
+      // Estilo, color, tipografía y galería: desde el plan Avanzado (D-047).
+      customLook: planAllowsCustomLook(ctx.plan),
+      canChangePlan: ctx.role === "owner" || ctx.role === "admin",
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, profile: p, menus, canEdit, orgSlug, translations: tr, gallery } = data;
+  const { establishment: est, profile: saved, menus, canEdit, orgSlug, translations: tr, gallery } = data;
+  const { customLook, canChangePlan } = data;
+  // En Básico se muestra (y se publica) el aspecto del plan, sin perder lo guardado.
+  const p = effectiveLook(saved, customLook ? "advanced" : "basic");
+  const canCustomize = canEdit && customLook;
+  const planNote = (what: string) => (
+    <p>
+      {what} está disponible desde el plan <strong>Avanzado</strong>.{" "}
+      {canChangePlan ? <Link href={`/app/${orgId}/plan`}>Cambiar de plan</Link> : "Pídeselo al propietario."}
+    </p>
+  );
   const TAB_LIST = [
     { id: "estilo", label: "Estilo" },
     { id: "marca", label: "Marca" },
@@ -123,7 +137,8 @@ export default async function SiteProfilePage({
             title={p.heroTitle ?? est.name}
             heroImageUrl={p.heroMediaId ? privateMediaUrl(orgId, p.heroMediaId) : null}
             previewHref={(theme) => `/preview/site/${orgId}/${est.id}?theme=${theme}`}
-            choose={canEdit ? (theme) => setThemeAction.bind(null, orgId, est.id, theme) : undefined}
+            choose={canCustomize ? (theme) => setThemeAction.bind(null, orgId, est.id, theme) : undefined}
+            locked={customLook ? undefined : planNote("Elegir otro estilo")}
           />
         </section>
       )}
@@ -144,6 +159,7 @@ export default async function SiteProfilePage({
           removeLogo={removeLogoAction.bind(null, orgId, est.id)}
           setLogoSize={setLogoSizeAction.bind(null, orgId, est.id)}
           setBranding={setBrandingAction.bind(null, orgId, est.id)}
+          brandingLocked={customLook ? undefined : planNote("Personalizar el color y la tipografía")}
         />
       )}
 
@@ -288,6 +304,7 @@ export default async function SiteProfilePage({
       {tab === "galeria" && (
         <section>
           <h3>Galería</h3>
+          {!customLook && <div className="notice">{planNote("La galería de fotos")}</div>}
           <p className="muted">
             Fotos del local, los platos o el equipo. Salen en la portada de la web, en este orden, con su pie si lo
             tiene. Hasta {MAX_GALLERY_IMAGES} fotos; solo se ven con la web publicada.
@@ -300,7 +317,7 @@ export default async function SiteProfilePage({
                 <li key={g.id}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada */}
                   <img src={privateMediaUrl(orgId, g.mediaId)} alt={g.caption ?? `Foto ${n + 1} de la galería`} />
-                  {canEdit ? (
+                  {canCustomize ? (
                     <>
                       <ActionForm
                         action={setGalleryCaptionAction.bind(null, orgId, est.id, g.id)}
@@ -340,7 +357,7 @@ export default async function SiteProfilePage({
               ))}
             </ul>
           )}
-          {canEdit && gallery.length < MAX_GALLERY_IMAGES && (
+          {canCustomize && gallery.length < MAX_GALLERY_IMAGES && (
             <ActionForm action={addGalleryImageAction.bind(null, orgId, est.id)} submitLabel="Añadir a la galería">
               <label>
                 Foto (JPEG, PNG o WebP, hasta 8 MB)

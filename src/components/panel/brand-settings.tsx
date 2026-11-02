@@ -28,6 +28,7 @@ export function BrandSettings({
   removeLogo,
   setLogoSize,
   setBranding,
+  brandingLocked,
 }: {
   theme: MenuTheme;
   establishmentName: string;
@@ -41,6 +42,8 @@ export function BrandSettings({
   removeLogo: Action;
   setLogoSize: Action;
   setBranding: Action;
+  /** Aviso del plan (D-047): color y tipografía deshabilitados con este texto. */
+  brandingLocked?: React.ReactNode;
 }) {
   const info = THEME_INFO[theme];
   const current = resolvePairing(theme, fontPairing);
@@ -106,6 +109,61 @@ export function BrandSettings({
           <p className="muted">
             Color {accentColor ?? "del estilo"} · letra «{current.name}» ({current.description}).
           </p>
+        ) : brandingLocked ? (
+          <>
+            <div className="notice">{brandingLocked}</div>
+            {/* Deshabilitado: el plan no incluye color ni tipografía propios. El servidor también lo impide. */}
+            <fieldset disabled className={styles.lockedFields}>
+              <fieldset className={styles.colorField}>
+                <legend>Color de marca</legend>
+                <p className="muted">
+                  Se usa en botones, enlaces y detalles. El del estilo {info.name} es{" "}
+                  <span className={styles.swatch} style={{ background: info.accent }} aria-hidden="true" />{" "}
+                  {info.accent}.
+                </p>
+                <label className="check">
+                  <input type="checkbox" name="customAccent" value="1" defaultChecked={accentColor !== null} />
+                  Usar mi color de marca
+                </label>
+                <label className={styles.colorInput}>
+                  Color
+                  <input type="color" name="accentColor" defaultValue={color} />
+                </label>
+                {accentColor && contrast < 3 && (
+                  <p className="notice" role="status">
+                    Este color contrasta poco con el fondo del estilo ({contrast.toFixed(1)}:1): los enlaces y botones
+                    pueden costar de leer. Prueba uno más {info.pageBg === "#0a0a14" ? "claro" : "oscuro"}.
+                  </p>
+                )}
+              </fieldset>
+
+              <fieldset>
+                <legend className={styles.legend}>Tipografía del estilo {info.name}</legend>
+                <div className={styles.pairings}>
+                  {pairingsFor(theme).map((p) => (
+                    <label key={p.id} className={`${styles.pairing} ${fontClasses(p.fonts)}`}>
+                      <input type="radio" name="fontPairing" value={p.id} defaultChecked={p.id === current.id} />
+                      <span className={styles.sample} style={{ fontFamily: p.brand ?? p.display }}>
+                        {establishmentName}
+                      </span>
+                      <span className={styles.sampleBody} style={{ fontFamily: p.body }}>
+                        Pulpo a la brasa con parmentier · 16,50 €
+                      </span>
+                      <span className={styles.pairingName}>
+                        {p.name} <span className="muted">· {p.description}</span>
+                      </span>
+                      <Link href={previewHref(p.id)} target="_blank" rel="noopener" className={styles.previewLink}>
+                        Vista previa
+                      </Link>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <button type="button" disabled>
+                Guardar color y tipografía
+              </button>
+            </fieldset>
+          </>
         ) : (
           <ActionForm action={setBranding} submitLabel="Guardar color y tipografía">
             <fieldset className={styles.colorField}>

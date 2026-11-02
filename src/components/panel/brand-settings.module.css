@@ -198,3 +198,14 @@
     max-width: 4.6rem;
   }
 }
+
+/* Color y tipografía fuera del plan (D-047). */
+.lockedFields {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  opacity: 0.6;
+  display: grid;
+  gap: 1rem;
+}

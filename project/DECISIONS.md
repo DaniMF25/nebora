@@ -579,3 +579,23 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Módulos sueltos activables por separado: el titular prefirió planes cerrados.
 - Que cualquiera eligiera plan sin control: el cambio queda limitado al propietario y se sustituirá por el pago.
 - Borrar los datos al bajar de plan.
+
+## D-047 — Web en el plan Básico: estilo Clásico, solo logotipo y sin galería
+**Fecha:** 2026-11-02. **Estado:** aceptada.
+
+**Contexto:** el titular quiere que el plan Básico tenga una web sencilla y que la personalización sea un motivo para pasar a Avanzado.
+
+**Decisión:**
+- Permiso `site.customize` (plan mínimo Avanzado; propietario, administrador y encargado). Lo exigen elegir estilo, el color de marca y la tipografía, y añadir, editar, ordenar y quitar fotos de la galería. El logotipo, su tamaño, el contenido y la foto principal siguen en todos los planes.
+- El formulario de contenido también guardaba el estilo: sin `site.customize` se conserva el guardado, para que no se pueda cambiar por esa vía ni se sustituya por el Clásico.
+- **Aspecto efectivo** (`effectiveLook`): en Básico, estilo Clásico sin color ni tipografía propios y sin galería.
+  - Se aplica en la web pública, en las cartas que usan la marca de la web y en la vista previa.
+  - Las páginas públicas obtienen el plan con `app.public_establishment_plan` (migración 0032).
+  - No se borra nada: al subir de plan vuelve lo elegido.
+- **Panel:** los demás estilos, el color, las tipografías y la galería se muestran deshabilitados con el aviso «… está disponible desde el plan Avanzado» y un enlace a «Plan» (o «pídeselo al propietario»).
+
+**Alternativas descartadas:**
+- Borrar o reescribir la personalización al bajar de plan: se perdería al volver a subir.
+- Ocultar las opciones: el titular prefiere verlas deshabilitadas, como reclamo.
+
+**Límite conocido:** una foto de la galería cuyo enlace directo ya se conocía sigue sirviéndose (`app.public_media` no mira el plan), aunque la web ya no la muestra.

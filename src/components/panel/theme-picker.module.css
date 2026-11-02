@@ -164,3 +164,12 @@
 .preview:hover {
   background: var(--bg);
 }
+
+/* Estilos no incluidos en el plan (D-047). */
+.locked {
+  opacity: 0.6;
+}
+
+.lockedNote {
+  margin-bottom: 1rem;
+}

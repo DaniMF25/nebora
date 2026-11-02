@@ -10,6 +10,7 @@ import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getPublishedMenu } from "@/server/modules/menus/menus";
 import { getSitePreview } from "@/server/modules/site/service";
 import { listGallery } from "@/server/modules/site/gallery";
+import { effectiveLook, planAllowsCustomLook } from "@/server/modules/site/plan-look";
 import { withTenant } from "@/server/tenancy/context";
 
 export const metadata: Metadata = { title: "Vista previa", robots: { index: false, follow: false } };
@@ -31,13 +32,16 @@ export default async function SitePreviewPage({ params, searchParams }: { params
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       preview: await getSitePreview(tx, ctx, estId),
       gallery: await listGallery(tx, ctx, estId),
+      plan: ctx.plan,
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { preview, gallery } = data;
-  const { profile } = preview;
+  const { preview, plan } = data;
+  // Lo que se publicaría con el plan actual (D-047). Con ?theme= o ?font= se prueba sin guardar.
+  const profile = effectiveLook(preview.profile, plan);
+  const gallery = planAllowsCustomLook(plan) ? data.gallery : [];
   const theme: MenuTheme = MENU_THEMES.includes(requested as MenuTheme) ? (requested as MenuTheme) : profile.theme;
   const org = preview.organizationSlug;
   const est = preview.establishmentSlug;

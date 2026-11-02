@@ -72,6 +72,21 @@ test("planes: Básico con web, cartas y platos en la carta; Avanzado y PRO añad
   await expect(page).toHaveURL(menu);
   await expect(page.getByText("10,00 €")).toBeVisible();
 
+  // Web en Básico (D-047): estilo Clásico fijo, solo logotipo en la marca y sin galería.
+  await page.goto(`${est}/site?tab=estilo`);
+  await expect(page.getByText("Elegir otro estilo está disponible desde el plan Avanzado")).toBeVisible();
+  await expect(page.getByRole("article", { name: "Estilo Clásico" }).getByText("Actual")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Usar Moderno" })).toBeDisabled();
+  await page.goto(`${est}/site?tab=marca`);
+  await expect(
+    page.getByText("Personalizar el color y la tipografía está disponible desde el plan Avanzado"),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Guardar color y tipografía" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Subir logotipo" })).toBeEnabled();
+  await page.goto(`${est}/site?tab=galeria`);
+  await expect(page.getByText("La galería de fotos está disponible desde el plan Avanzado")).toBeVisible();
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+
   // Avanzado: reservas, sala, miembros y turnos.
   await page.goto(org);
   await choosePlan(page, "advanced");
@@ -80,6 +95,9 @@ test("planes: Básico con web, cartas y platos en la carta; Avanzado y PRO añad
   for (const l of ["Reservas", "Sala", "Miembros", "Turnos y horarios"]) expect(links, l).toContain(l);
   for (const l of ["Productos", "Inventario", "Proveedores"]) expect(links, l).not.toContain(l);
   expect((await page.goto(`${est}/reservations`))!.status()).toBe(200);
+  // Y ya se puede elegir estilo.
+  await page.goto(`${est}/site?tab=estilo`);
+  await expect(page.getByRole("button", { name: "Usar Moderno" })).toBeEnabled();
   expect((await page.goto(`${org}/products`))!.status()).toBe(404);
 
   // PRO: gestión.

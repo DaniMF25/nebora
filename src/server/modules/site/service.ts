@@ -12,6 +12,7 @@ import { parseInput } from "@/server/validation";
 import type { Language, PublicLanguage } from "@/lib/languages";
 import { normalizeHex } from "@/lib/color";
 import { FONT_PAIRING_IDS } from "@/lib/site-fonts";
+import { effectiveLook, publicEstablishmentPlan } from "./plan-look";
 
 /** Contenido de la página pública del local, tal como lo edita el restaurante. */
 export interface SiteProfile {
@@ -162,10 +163,13 @@ export async function updateSiteProfile(
     }
   }
   await lockProfile(tx, ctx, establishmentId);
-  const current = await tx.query<{ published: boolean }>(
-    "SELECT published FROM establishment_profiles WHERE organization_id = $1 AND establishment_id = $2",
+  const current = await tx.query<{ published: boolean; theme: string }>(
+    "SELECT published, theme FROM establishment_profiles WHERE organization_id = $1 AND establishment_id = $2",
     [ctx.organizationId, establishmentId],
   );
+  // Sin el plan que permite elegir estilo (D-047) se conserva el guardado: el
+  // formulario de contenido no puede cambiarlo ni sustituirlo por el Clásico.
+  const theme = ctx.permissions.has("site.customize") ? data.theme : (current.rows[0]?.theme ?? data.theme);
   const published = data.published ?? current.rows[0]?.published ?? false;
   if (published && !data.heroTitle) {
     throw new ValidationError("Falta el titular", {
@@ -181,7 +185,7 @@ export async function updateSiteProfile(
     [
       ctx.organizationId,
       establishmentId,
-      data.theme,
+      theme,
       data.tagline,
       data.heroEyebrow,
       data.heroTitle,
@@ -238,6 +242,8 @@ export async function setSitePublished(
 /** Cambia solo el estilo de la página (el contenido no se toca). */
 export async function setSiteTheme(tx: Tx, ctx: TenantContext, establishmentId: string, input: unknown): Promise<void> {
   requirePermission(ctx, "establishments.update");
+  // Elegir estilo es del plan Avanzado (D-047).
+  requirePermission(ctx, "site.customize");
   const { theme } = parseInput(z.object({ theme: z.enum(MENU_THEMES) }).strict(), input);
   await getEstablishment(tx, ctx, establishmentId);
   await lockProfile(tx, ctx, establishmentId);
@@ -338,6 +344,8 @@ const brandingSchema = z
 /** Color de marca y tipografía de la web (el estilo y el contenido no cambian). */
 export async function setSiteBranding(tx: Tx, ctx: TenantContext, establishmentId: string, input: unknown): Promise<void> {
   requirePermission(ctx, "establishments.update");
+  // Color y tipografía son del plan Avanzado (D-047); el logotipo, de todos.
+  requirePermission(ctx, "site.customize");
   const data = parseInput(brandingSchema, input);
   await getEstablishment(tx, ctx, establishmentId);
   await lockProfile(tx, ctx, establishmentId);
@@ -451,7 +459,9 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     "SELECT * FROM app.public_site_hours($1)",
     [r.establishment_id],
   );
-  return {
+  const plan = await publicEstablishmentPlan(r.establishment_id);
+  // En Básico, estilo Clásico sin color ni tipografía propios (D-047).
+  return effectiveLook({
     organizationName: r.organization_name,
     establishmentName: r.establishment_name,
     establishmentId: r.establishment_id,
@@ -481,7 +491,7 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
       opensMinute: h.opens_minute,
       durationMinutes: h.duration_minutes,
     })),
-  };
+  }, plan);
 }
 
 // ---------------------------------------------------------------------------

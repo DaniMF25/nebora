@@ -40,6 +40,8 @@ export const PERMISSIONS = [
   // Personal y cuadrante de turnos (D-045): todos lo ven; lo editan los encargados.
   "staff.read",
   "staff.manage",
+  // Estilo, color, tipografía y galería de la web (D-047): desde el plan Avanzado.
+  "site.customize",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -69,6 +71,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "catalog.manage",
     "staff.read",
     "staff.manage",
+    "site.customize",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -118,6 +121,7 @@ const PERMISSION_PLAN: Partial<Record<Permission, Plan>> = {
   "reservations.manage": "advanced",
   "staff.read": "advanced",
   "staff.manage": "advanced",
+  "site.customize": "advanced",
   // PRO: gestión (costes y recetas, inventario, proveedores y compras).
   "costs.read": "pro",
   "inventory.read": "pro",
