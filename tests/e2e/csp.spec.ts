@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 /** Recoge las violaciones de CSP que el navegador notifica en la página. */
 async function watchViolations(page: Page): Promise<string[]> {
@@ -64,6 +64,7 @@ test("CSP estricta: solo scripts con nonce y la aplicación funciona sin violaci
   await page.getByLabel("Nombre").fill("Casa Csp");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Csp" })).toBeVisible();
   await page.getByLabel("Nombre").fill("Puerto");
   await page.getByLabel("Identificador (URL)").fill("puerto");

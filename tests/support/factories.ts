@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { registerUser, type AuthUser } from "@/server/auth/service";
 import { createOrganization } from "@/server/modules/organizations/service";
 import { withUser } from "@/server/tenancy/context";
-import type { Role } from "@/server/tenancy/permissions";
+import type { Plan, Role } from "@/server/tenancy/permissions";
 import { withAdminClient } from "./db";
 
 export const TEST_PASSWORD = "contraseña-de-prueba-larga";
@@ -18,10 +18,18 @@ export async function createTestUser(label = "user"): Promise<AuthUser> {
   );
 }
 
-export async function createTestOrganization(owner: AuthUser, label = "org"): Promise<string> {
-  return withUser(owner, (tx, ctx) =>
+/**
+ * Crea una organización. Las pruebas existentes cubren funciones de todos los
+ * planes: por defecto queda en PRO (una organización nueva real empieza en
+ * Básico, D-046; las pruebas de planes lo indican expresamente).
+ */
+export async function createTestOrganization(owner: AuthUser, label = "org", plan: Plan = "pro"): Promise<string> {
+  const id = await withUser(owner, (tx, ctx) =>
     createOrganization(tx, ctx, { name: `Restaurante ${label}`, slug: `${label}-${uniqueSuffix()}` }),
   );
+  if (plan !== "basic")
+    await withAdminClient((c) => c.query("UPDATE organizations SET plan = $2 WHERE id = $1", [id, plan]));
+  return id;
 }
 
 /** Añade un miembro directamente (aún no hay flujo de invitaciones). */

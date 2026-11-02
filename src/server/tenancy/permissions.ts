@@ -96,13 +96,55 @@ export function isRole(value: unknown): value is Role {
 /** Permisos que exigen acceso a todos los locales (afectan a toda la organización). */
 export const ORG_WIDE_PERMISSIONS: readonly Permission[] = ["catalog.manage"];
 
+/** Planes de la organización (D-046), de menos a más. */
+export const PLANS = ["basic", "advanced", "pro"] as const;
+export type Plan = (typeof PLANS)[number];
+
+export function isPlan(value: unknown): value is Plan {
+  return typeof value === "string" && (PLANS as readonly string[]).includes(value);
+}
+
 /**
- * Permisos efectivos de una membresía. Quien solo accede a algunos locales
- * pierde los permisos que afectan a toda la organización.
+ * Plan mínimo de cada permiso. Lo que no aparece está en todos los planes
+ * (Básico: web, cartas con sus platos, estadísticas y privacidad).
  */
-export function permissionsFor(role: Role, allEstablishments = true): ReadonlySet<Permission> {
-  const perms = ROLE_PERMISSIONS[role];
-  return new Set(allEstablishments ? perms : perms.filter((p) => !ORG_WIDE_PERMISSIONS.includes(p)));
+const PERMISSION_PLAN: Partial<Record<Permission, Plan>> = {
+  // Avanzado: reservas, sala, miembros, personal y turnos.
+  "members.read": "advanced",
+  "members.manage": "advanced",
+  "tables.read": "advanced",
+  "tables.manage": "advanced",
+  "reservations.read": "advanced",
+  "reservations.manage": "advanced",
+  "staff.read": "advanced",
+  "staff.manage": "advanced",
+  // PRO: gestión (costes y recetas, inventario, proveedores y compras).
+  "costs.read": "pro",
+  "inventory.read": "pro",
+  "inventory.move": "pro",
+  "inventory.manage": "pro",
+  "purchasing.read": "pro",
+  "purchasing.manage": "pro",
+  "purchasing.receive": "pro",
+};
+
+/** ¿Incluye `plan` lo que exige `required`? */
+export function planIncludes(plan: Plan, required: Plan): boolean {
+  return PLANS.indexOf(plan) >= PLANS.indexOf(required);
+}
+
+/**
+ * Permisos efectivos de una membresía: los de su rol que incluye el plan de
+ * la organización. Quien solo accede a algunos locales pierde además los
+ * permisos que afectan a toda la organización.
+ */
+export function permissionsFor(role: Role, allEstablishments = true, plan: Plan = "pro"): ReadonlySet<Permission> {
+  return new Set(
+    ROLE_PERMISSIONS[role].filter(
+      (p) =>
+        (allEstablishments || !ORG_WIDE_PERMISSIONS.includes(p)) && planIncludes(plan, PERMISSION_PLAN[p] ?? "basic"),
+    ),
+  );
 }
 
 export function roleHasPermission(role: Role, permission: Permission): boolean {

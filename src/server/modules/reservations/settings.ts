@@ -72,6 +72,8 @@ export async function updateReservationSettings(
   input: unknown,
 ): Promise<ReservationSettings> {
   requirePermission(ctx, "establishments.update");
+  // Las reservas son del plan Avanzado (D-046); la BD también lo impide.
+  requirePermission(ctx, "reservations.manage");
   const d = parseInput(settingsSchema, input);
   await establishmentExists(tx, ctx, establishmentId);
   const values = [

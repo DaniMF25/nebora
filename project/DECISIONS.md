@@ -547,3 +547,35 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Límites conocidos:**
 - Un encargado limitado a un local ve las fichas de toda la organización (nombre y puesto). Si una persona ya tiene un turno en otro local al que el encargado no accede, este solo sabe que «se solapa».
 - Las horas son las planificadas, no las trabajadas: no hay fichaje.
+
+## D-046 — Planes Básico, Avanzado y PRO
+**Fecha:** 2026-11-02. **Estado:** aceptada.
+
+**Contexto:** el producto se centra en montar rápido web, carta, contacto y reservas. La gestión de cocina (recetas, escandallos, inventario, proveedores) exige mucho trabajo de alta y generaba avisos («plato sin receta») que no interesan a un bar pequeño. El titular definió tres planes y la estructura del menú de cada uno.
+
+**Decisión:**
+- `organizations.plan` (`basic`, `advanced`, `pro`; migración 0031). Las organizaciones nuevas empiezan en Básico; las existentes pasaron a PRO para no ocultarles nada.
+- Cada permiso tiene un plan mínimo (`PERMISSION_PLAN` en `permissions.ts`). Los permisos efectivos son los del rol que incluye el plan, calculados en el servidor en cada petición (`TenantContext.plan`).
+  - **Básico:** web, cartas con sus platos, estadísticas y privacidad.
+  - **Avanzado:** añade reservas, sala, miembros, personal y turnos.
+  - **PRO:** añade costes y recetas, inventario, proveedores y compras.
+- Las páginas y servicios de cada sección comprueban su permiso: en un plan sin la sección responden 404 o rechazan la operación. Los servicios de ingredientes, proveedores y recetas, que solo pedían el permiso del catálogo de platos, exigen ahora además el de gestión.
+- **Platos:**
+  - En todos los planes se crean desde el editor de cada carta («Nuevo plato en …»), que crea el producto y lo añade a la categoría en una transacción.
+  - La ficha del plato (`/products/<id>`) está en todos los planes, con datos, foto y locales. Receta y escandallo solo en PRO.
+  - La página «Productos» (catálogo con costes) es PRO.
+- **Reservas online:** al bajar a Básico se desactivan en todos los locales, y un trigger impide activarlas con plan Básico (`app.check_booking_plan`). Así la web, la reserva y la lista de espera dejan de ofrecerlas también en la base de datos.
+- **Bajar a Básico** exige no tener más miembros ni invitaciones abiertas: el Básico es para una persona y sin plan Avanzado no habría forma de gestionarlos.
+- **Bajar de plan no borra datos**; vuelven al subir.
+- **Cambio de plan:** lo hace solo el propietario en «Plan», con aviso de que aún no se cobra (no hay proveedor de pagos). Queda auditado.
+- **Menú:**
+  - Inicio.
+  - Restaurante: Resumen, Cartas, (Reservas, Sala), Web pública, Estadísticas.
+  - Gestión (PRO): Productos, Inventario, Proveedores.
+  - Organización: (Miembros, Turnos y horarios), Privacidad, Plan.
+  - Inventario reúne ingredientes, todos los locales y cada local; Proveedores, los proveedores y los pedidos de cada local; Turnos y horarios, el personal y el cuadrante de cada local. Cada uno tiene un selector de apartado y queda marcado en el menú en todas sus páginas.
+
+**Alternativas descartadas:**
+- Módulos sueltos activables por separado: el titular prefirió planes cerrados.
+- Que cualquiera eligiera plan sin control: el cambio queda limitado al propietario y se sustituirá por el pago.
+- Borrar los datos al bajar de plan.

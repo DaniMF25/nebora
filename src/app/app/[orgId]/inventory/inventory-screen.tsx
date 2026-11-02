@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
+import { SectionSwitch } from "@/components/panel/section-switch";
+import { inventoryLinks } from "../sections";
 import { BASE_UNIT_LABELS, formatQuantity, INPUT_UNITS, type InputUnit } from "@/lib/quantity";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
@@ -75,7 +77,7 @@ export async function InventoryScreen({
         ingredients: await listIngredients(tx, ctx),
         // Los traspasos pueden ir a cualquier almacén visible del grupo.
         allWarehouses: await listWarehouses(tx, ctx),
-        establishments: establishmentId ? [] : await listEstablishments(tx, ctx),
+        establishments: await listEstablishments(tx, ctx),
         canMove: ctx.permissions.has("inventory.move"),
         canManage,
       };
@@ -109,12 +111,15 @@ export async function InventoryScreen({
 
   return (
     <>
-      {establishment && (
-        <p>
-          <Link href={`/app/${orgId}/establishments/${establishment.id}`}>← {establishment.name}</Link>
-        </p>
-      )}
-      <h2>{establishment ? "Inventario" : "Inventario del grupo"}</h2>
+      <h2>{establishment ? `Inventario · ${establishment.name}` : "Inventario del grupo"}</h2>
+      <SectionSwitch
+        label="Apartados del inventario"
+        links={inventoryLinks(
+          orgId,
+          establishments.map((e) => ({ id: e.id, name: e.name })),
+          establishment?.id ?? "group",
+        )}
+      />
       {group && (
         <p className="muted">
           Todos los locales juntos. Para trabajar con uno solo, entra en el inventario de ese local.

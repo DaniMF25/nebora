@@ -10,7 +10,11 @@ test("traspaso entre almacenes y recuento físico con ajuste de diferencias", as
   await expect(page.getByRole("link", { name: "Local Recuento" })).toBeVisible();
 
   const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
-  await nav.getByRole("link", { name: "Ingredientes" }).click();
+  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Apartados del inventario" })
+    .getByRole("link", { name: "Ingredientes" })
+    .click();
   await page.getByText("Nuevo ingrediente").click();
   await page.getByLabel("Nombre del ingrediente").fill("Harina");
   await page.getByRole("button", { name: "Crear ingrediente" }).click();

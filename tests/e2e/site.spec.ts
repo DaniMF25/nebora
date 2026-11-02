@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 async function jpeg(color: string): Promise<Buffer> {
   return sharp({
@@ -18,6 +18,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByLabel("Nombre").fill("Casa Sitio");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Sitio" })).toBeVisible();
   const orgPath = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Altamar");

@@ -10,6 +10,8 @@ import { listOrders, listSuppliers } from "@/server/modules/purchasing/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createOrderAction } from "./actions";
 import { ORDER_STATUS_LABELS } from "./order-status";
+import { SectionSwitch } from "@/components/panel/section-switch";
+import { supplierLinks } from "../sections";
 
 /**
  * Pedidos de compra de un local (los que van a sus almacenes) o de todo el
@@ -21,7 +23,7 @@ export async function PurchasingScreen({ orgId, establishmentId }: { orgId: stri
   try {
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       establishment: establishmentId ? await getEstablishment(tx, ctx, establishmentId) : null,
-      establishments: establishmentId ? [] : await listEstablishments(tx, ctx),
+      establishments: await listEstablishments(tx, ctx),
       suppliers: await listSuppliers(tx, ctx),
       orders: await listOrders(tx, ctx, establishmentId),
       warehouses: ctx.permissions.has("inventory.read") ? await listWarehouses(tx, ctx, establishmentId) : [],
@@ -42,12 +44,15 @@ export async function PurchasingScreen({ orgId, establishmentId }: { orgId: stri
 
   return (
     <>
-      {establishment && (
-        <p>
-          <Link href={`/app/${orgId}/establishments/${establishment.id}`}>← {establishment.name}</Link>
-        </p>
-      )}
-      <h2>{establishment ? "Compras" : "Compras del grupo"}</h2>
+      <h2>{establishment ? `Compras · ${establishment.name}` : "Compras del grupo"}</h2>
+      <SectionSwitch
+        label="Apartados de proveedores"
+        links={supplierLinks(
+          orgId,
+          establishments.map((e) => ({ id: e.id, name: e.name })),
+          establishment?.id ?? "group",
+        )}
+      />
       <section>
         <h2>Pedidos de compra</h2>
         {orders.length === 0 ? (

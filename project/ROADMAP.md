@@ -81,7 +81,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [ ] Exportaciones seguras.
 
 ## Fase 7 — Suscripciones e integraciones
-- [ ] Evaluar proveedor de suscripción.
+- [ ] Evaluar proveedor de suscripción (los planes Básico, Avanzado y PRO ya existen, D-046; falta cobrarlos).
 - [ ] Configurar correo u otros proveedores necesarios.
 - [ ] Implementar y verificar integraciones reales.
 - [ ] Mantener desactivadas funciones no configuradas.

@@ -17,12 +17,16 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
   const user = await requireUser();
   let data;
   try {
-    data = await withTenant(user, orgId, async (tx, ctx) => ({
-      products: await listProducts(tx, ctx),
-      costings: ctx.permissions.has("costs.read") ? await listProductCostings(tx, ctx) : null,
-      canEdit: ctx.permissions.has("catalog.manage"),
-      establishmentNames: new Map((await listEstablishments(tx, ctx)).map((e) => [e.id, e.name])),
-    }));
+    data = await withTenant(user, orgId, async (tx, ctx) => {
+      // El catálogo completo es del plan PRO (D-046); en los demás, los platos se gestionan desde cada carta.
+      if (ctx.plan !== "pro") throw new NotFoundError();
+      return {
+        products: await listProducts(tx, ctx),
+        costings: ctx.permissions.has("costs.read") ? await listProductCostings(tx, ctx) : null,
+        canEdit: ctx.permissions.has("catalog.manage"),
+        establishmentNames: new Map((await listEstablishments(tx, ctx)).map((e) => [e.id, e.name])),
+      };
+    });
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
@@ -59,7 +63,8 @@ export default async function ProductsPage({ params }: { params: Promise<{ orgId
                 {!p.allEstablishments && (
                   <span className="muted">
                     {" "}
-                    · solo en {p.establishmentIds.map((id) => data.establishmentNames.get(id) ?? "otro local").join(", ")}
+                    · solo en{" "}
+                    {p.establishmentIds.map((id) => data.establishmentNames.get(id) ?? "otro local").join(", ")}
                   </span>
                 )}
                 {p.description && <div className="muted">{p.description}</div>}

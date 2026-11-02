@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/form-state";
 import { parseEuroAmount } from "@/lib/money";
+import { readProductForm } from "@/server/actions/product-form";
 import { formString, runTenantAction } from "@/server/actions/run";
 import { ValidationError } from "@/server/errors";
 import {
@@ -22,6 +23,7 @@ import {
   unpublishMenu,
   updateMenu,
 } from "@/server/modules/menus/menus";
+import { createProduct } from "@/server/modules/menus/products";
 import { saveMenuTranslations } from "@/server/modules/translations/service";
 
 // Todos los ids ligados (orgId, menuId, sectionId…) llegan del cliente: los
@@ -115,6 +117,29 @@ export async function addItemAction(
       productId: formString(fd, "productId"),
       priceOverrideCents: optionalPrice(formString(fd, "price")),
     }),
+  );
+}
+
+/**
+ * Plato nuevo directamente en una categoría (D-046): crea el producto y lo
+ * añade a la carta en la misma transacción. Sin la página «Productos» (PRO),
+ * es la forma de crear platos.
+ */
+export async function createDishAction(
+  orgId: string,
+  menuId: string,
+  sectionId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    `/app/${orgId}`,
+    async (tx, ctx) => {
+      const product = await createProduct(tx, ctx, readProductForm(fd));
+      await addItem(tx, ctx, menuId, sectionId, { productId: product.id, priceOverrideCents: null });
+    },
+    "Plato añadido",
   );
 }
 

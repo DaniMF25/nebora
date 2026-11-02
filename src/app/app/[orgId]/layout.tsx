@@ -44,6 +44,12 @@ export default async function OrganizationLayout({
         inventory: ctx.permissions.has("inventory.read"),
         purchasing: ctx.permissions.has("purchasing.read"),
         staff: ctx.permissions.has("staff.read"),
+        reservations: ctx.permissions.has("reservations.read"),
+        tables: ctx.permissions.has("tables.read"),
+        members: ctx.permissions.has("members.read"),
+        // Gestión (catálogo con costes, inventario, proveedores): plan PRO (D-046).
+        management: ctx.plan === "pro",
+        plan: ctx.role === "owner" || ctx.role === "admin",
       },
       // Solo organizaciones en las que el usuario es miembro activo.
       hasOthers: (await listMyOrganizations(tx, ctx)).some((o) => o.id !== orgId),
@@ -55,25 +61,39 @@ export default async function OrganizationLayout({
   const { org, role, establishments, can, hasOthers } = data;
   const base = `/app/${orgId}`;
 
-  // Catálogo común (productos, ingredientes, proveedores), operativa de cada
-  // local (selector si hay varios) y, con varios locales, vistas del grupo.
+  // Menú según el plan (D-046): Básico (web, cartas, estadísticas), Avanzado
+  // (+ reservas, sala, miembros, turnos) y PRO (+ gestión). Ocultar enlaces es
+  // cosmético: cada página y servicio comprueba el permiso en el servidor.
   const groups: NavGroup[] = [
     { title: "", items: [{ href: base, label: "Inicio", icon: "home", exact: true }] },
-    {
-      title: "Catálogo",
-      items: [
-        { href: `${base}/products`, label: "Productos", icon: "products" },
-        ...(can.inventory ? [{ href: `${base}/ingredients`, label: "Ingredientes", icon: "inventory" as const }] : []),
-        ...(can.purchasing ? [{ href: `${base}/suppliers`, label: "Proveedores", icon: "team" as const }] : []),
-      ],
-    },
-    ...(establishments.length > 1 && (can.inventory || can.purchasing)
+    ...(can.management
       ? [
           {
-            title: "Todo el grupo",
+            title: "Gestión",
             items: [
-              ...(can.inventory ? [{ href: `${base}/inventory`, label: "Inventario del grupo", icon: "inventory" as const }] : []),
-              ...(can.purchasing ? [{ href: `${base}/purchasing`, label: "Compras del grupo", icon: "purchasing" as const }] : []),
+              { href: `${base}/products`, label: "Productos", icon: "products" as const },
+              // Inventario: ingredientes, todo el grupo y cada local.
+              ...(can.inventory
+                ? [
+                    {
+                      href: `${base}/inventory`,
+                      label: "Inventario",
+                      icon: "inventory" as const,
+                      also: `^${base}/(ingredients|establishments/[^/]+/inventory)(/|$)`,
+                    },
+                  ]
+                : []),
+              // Proveedores: proveedores y pedidos de compra (del grupo y de cada local).
+              ...(can.purchasing
+                ? [
+                    {
+                      href: `${base}/suppliers`,
+                      label: "Proveedores",
+                      icon: "purchasing" as const,
+                      also: `^${base}/(purchasing|establishments/[^/]+/purchasing)(/|$)`,
+                    },
+                  ]
+                : []),
             ],
           },
         ]
@@ -81,9 +101,19 @@ export default async function OrganizationLayout({
     {
       title: "Organización",
       items: [
-        { href: `${base}/members`, label: "Miembros", icon: "team" },
-        ...(can.staff ? [{ href: `${base}/staff`, label: "Personal", icon: "person" as const }] : []),
+        ...(can.members ? [{ href: `${base}/members`, label: "Miembros", icon: "team" as const }] : []),
+        ...(can.staff
+          ? [
+              {
+                href: `${base}/staff`,
+                label: "Turnos y horarios",
+                icon: "clock" as const,
+                also: `^${base}/establishments/[^/]+/staff(/|$)`,
+              },
+            ]
+          : []),
         ...(can.privacy ? [{ href: `${base}/privacy`, label: "Privacidad", icon: "shield" as const }] : []),
+        ...(can.plan ? [{ href: `${base}/plan`, label: "Plan", icon: "summary" as const }] : []),
       ],
     },
   ];
@@ -98,11 +128,8 @@ export default async function OrganizationLayout({
           items: [
             { path: "", label: "Resumen", icon: "store", exact: true },
             ...(can.menus ? [{ path: "/menus", label: "Cartas", icon: "products" as const }] : []),
-            { path: "/reservations", label: "Reservas", icon: "calendar" },
-            { path: "/floor", label: "Sala", icon: "floor" },
-            ...(can.staff ? [{ path: "/staff", label: "Turnos", icon: "clock" as const }] : []),
-            ...(can.inventory ? [{ path: "/inventory", label: "Inventario", icon: "inventory" as const }] : []),
-            ...(can.purchasing ? [{ path: "/purchasing", label: "Compras", icon: "purchasing" as const }] : []),
+            ...(can.reservations ? [{ path: "/reservations", label: "Reservas", icon: "calendar" as const }] : []),
+            ...(can.tables ? [{ path: "/floor", label: "Sala", icon: "floor" as const }] : []),
             { path: "/site", label: "Web pública", icon: "globe" },
             ...(can.stats ? [{ path: "/stats", label: "Estadísticas", icon: "summary" as const }] : []),
           ],

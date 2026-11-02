@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { ORG_WIDE_PERMISSIONS, PERMISSIONS, ROLES, isRole, permissionsFor, roleHasPermission } from "@/server/tenancy/permissions";
+import {
+  ORG_WIDE_PERMISSIONS,
+  PERMISSIONS,
+  PLANS,
+  ROLES,
+  isPlan,
+  isRole,
+  permissionsFor,
+  planIncludes,
+  roleHasPermission,
+} from "@/server/tenancy/permissions";
 
 describe("matriz de permisos", () => {
   it("owner y admin tienen todos los permisos definidos", () => {
@@ -68,5 +78,29 @@ describe("matriz de permisos", () => {
     expect(isRole("owner")).toBe(true);
     expect(isRole("superadmin")).toBe(false);
     expect(isRole(undefined)).toBe(false);
+  });
+
+  it("planes (D-046): Básico sin reservas ni gestión, Avanzado sin gestión, PRO con todo", () => {
+    const basic = permissionsFor("owner", true, "basic");
+    for (const p of ["menus.edit", "catalog.manage", "stats.read", "privacy.manage", "establishments.update"] as const) {
+      expect(basic.has(p), p).toBe(true);
+    }
+    for (const p of ["reservations.read", "tables.read", "members.read", "staff.read", "inventory.read", "costs.read", "purchasing.read"] as const) {
+      expect(basic.has(p), p).toBe(false);
+    }
+    const advanced = permissionsFor("owner", true, "advanced");
+    for (const p of ["reservations.manage", "tables.manage", "members.manage", "staff.manage"] as const) {
+      expect(advanced.has(p), p).toBe(true);
+    }
+    for (const p of ["inventory.read", "costs.read", "purchasing.read"] as const) expect(advanced.has(p), p).toBe(false);
+    expect(permissionsFor("owner", true, "pro")).toEqual(new Set(PERMISSIONS));
+    // El plan solo quita: nunca da a un rol lo que no tiene.
+    for (const r of ROLES) for (const plan of PLANS) {
+      for (const p of permissionsFor(r, true, plan)) expect(roleHasPermission(r, p)).toBe(true);
+    }
+    expect(planIncludes("pro", "advanced")).toBe(true);
+    expect(planIncludes("basic", "advanced")).toBe(false);
+    expect(isPlan("pro")).toBe(true);
+    expect(isPlan("gratis")).toBe(false);
   });
 });

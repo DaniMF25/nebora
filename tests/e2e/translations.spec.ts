@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 test("traducciones: el local activa inglés, traduce web y carta, y el cliente las ve en su idioma", async ({
   browser,
@@ -11,6 +11,7 @@ test("traducciones: el local activa inglés, traduce web y carta, y el cliente l
   await page.getByLabel("Nombre").fill("Casa Idiomas");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Idiomas" })).toBeVisible();
   const orgPath = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Puerto");

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import sharp from "sharp";
-import { PASSWORD, register, suffix } from "./helpers";
+import { choosePlan, PASSWORD, register, suffix } from "./helpers";
 
 /**
  * Botones pegados: recorre las páginas del panel con datos reales y comprueba
@@ -150,6 +150,7 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
   const orgSlug = `espacios-${suffix()}`;
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Espacios" })).toBeVisible();
   const org = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Puerto");
@@ -306,6 +307,7 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
     `${org}/members`,
     `${org}/staff`,
     `${org}/privacy`,
+    `${org}/plan`,
     est,
     `${est}?tab=horario`,
     `${est}?tab=datos`,

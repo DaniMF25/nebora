@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { requireUser } from "@/server/auth/current-user";
@@ -8,6 +7,8 @@ import { listMembers } from "@/server/modules/members/service";
 import { listStaffMembers, type StaffMember } from "@/server/modules/staff/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createStaffMemberAction, deleteStaffMemberAction, updateStaffMemberAction } from "./actions";
+import { SectionSwitch } from "@/components/panel/section-switch";
+import { staffLinks } from "../sections";
 
 /** Campos de una ficha. Las cuentas que se ofrecen son las de miembros sin ficha (o la suya). */
 function MemberFields({
@@ -97,23 +98,21 @@ export default async function StaffPage({ params }: { params: Promise<{ orgId: s
   return (
     <>
       <section>
-        <h2>Personal</h2>
+        <h2>Turnos y horarios</h2>
+        <SectionSwitch
+          label="Apartados de turnos y horarios"
+          links={staffLinks(
+            orgId,
+            establishments.map((e) => ({ id: e.id, name: e.name })),
+            "people",
+          )}
+        />
+        <h3>Personal</h3>
         <p className="muted">
           Fichas del personal de todos los locales para el cuadrante de turnos. No hace falta que tengan cuenta en
           Nébora; si la persona es miembro, vincula su cuenta para que vea sus turnos destacados. Solo se guarda el
           nombre y el puesto.
         </p>
-        {establishments.length > 0 && (
-          <p>
-            Cuadrantes:{" "}
-            {establishments.map((e, i) => (
-              <span key={e.id}>
-                {i > 0 && " · "}
-                <Link href={`/app/${orgId}/establishments/${e.id}/staff`}>Turnos de {e.name}</Link>
-              </span>
-            ))}
-          </p>
-        )}
         {staff.length === 0 ? (
           <p className="muted">Todavía no hay nadie en el personal.</p>
         ) : (

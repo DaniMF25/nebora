@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
-import { getEstablishment } from "@/server/modules/establishments/service";
+import { getEstablishment, listEstablishments } from "@/server/modules/establishments/service";
 import { addDays, isValidLocalDate, localDateOf } from "@/server/modules/schedules/time";
 import { getWeekRota, listStaffMembers, type Shift, type StaffMember } from "@/server/modules/staff/service";
 import { withTenant } from "@/server/tenancy/context";
 import { copyPreviousWeekAction, createShiftAction, deleteShiftAction, updateShiftAction } from "./actions";
+import { SectionSwitch } from "@/components/panel/section-switch";
+import { staffLinks } from "../../../sections";
 
 /** «6 h», «6 h 30 min». */
 function hours(minutes: number): string {
@@ -97,6 +99,7 @@ export default async function StaffRotaPage({
         today,
         rota: await getWeekRota(tx, ctx, estId, week),
         staff: await listStaffMembers(tx, ctx, { includeInactive: true }),
+        locals: (await listEstablishments(tx, ctx)).map((e) => ({ id: e.id, name: e.name })),
         canManage: ctx.permissions.has("staff.manage"),
       };
     });
@@ -104,7 +107,7 @@ export default async function StaffRotaPage({
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment, today, rota, staff, canManage } = data;
+  const { establishment, today, rota, staff, canManage, locals } = data;
   const base = `/app/${orgId}/establishments/${estId}/staff`;
   const byId = new Map(staff.map((m) => [m.id, m]));
   const active = staff.filter((m) => m.active);
@@ -120,10 +123,10 @@ export default async function StaffRotaPage({
 
   return (
     <>
-      <p>
-        <Link href={`/app/${orgId}/establishments/${estId}`}>← {establishment.name}</Link>
-      </p>
-      <h2>Turnos · {weekRange(rota.days[0]!, rota.days[6]!)}</h2>
+      <h2>
+        Turnos{locals.length > 1 ? ` de ${establishment.name}` : ""} · {weekRange(rota.days[0]!, rota.days[6]!)}
+      </h2>
+      <SectionSwitch label="Apartados de turnos y horarios" links={staffLinks(orgId, locals, estId)} />
       <nav className="inline-form" aria-label="Cambiar de semana">
         <Link href={`${base}?week=${addDays(rota.weekStart, -7)}`}>← Semana anterior</Link>
         {!thisWeek && <Link href={base}>Esta semana</Link>}

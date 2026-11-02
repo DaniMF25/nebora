@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 const GOOGLEBOT_UA = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 const MOBILE_UA =
@@ -15,6 +15,7 @@ test("estadísticas: cuenta visitas reales a la web, la carta y el QR, y no las 
   await page.getByLabel("Nombre").fill("Casa Visitas");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Visitas" })).toBeVisible();
   const orgPath = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Puerto");

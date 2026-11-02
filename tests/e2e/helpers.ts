@@ -19,12 +19,30 @@ export async function register(page: Page, name: string): Promise<string> {
   return email;
 }
 
-export async function createOrganization(page: Page, name: string): Promise<string> {
+export async function createOrganization(page: Page, name: string, plan: PlanId = "pro"): Promise<string> {
   await page.getByLabel("Nombre").fill(name);
   await page.getByLabel("Identificador (URL)").fill(`${name.toLowerCase().replace(/\s+/g, "-")}-${suffix()}`);
   await page.getByRole("button", { name: "Crear organización" }).click();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+  if (plan !== "basic") await choosePlan(page, plan);
   return page.url();
+}
+
+export type PlanId = "basic" | "advanced" | "pro";
+
+/**
+ * Cambia el plan de la organización recién abierta desde la página «Plan»
+ * (D-046) y vuelve a su inicio. Las organizaciones nuevas empiezan en Básico;
+ * las pruebas que usan reservas, sala, inventario… eligen el plan que necesitan.
+ */
+export async function choosePlan(page: Page, plan: PlanId): Promise<void> {
+  await page.waitForURL(/\/app\/[0-9a-f-]{36}$/);
+  const home = page.url();
+  await page.goto(`${home}/plan`);
+  await page.locator(`input[name="plan"][value="${plan}"]`).check();
+  await page.getByRole("button", { name: "Cambiar de plan" }).click();
+  await expect(page.getByText("Plan cambiado")).toBeVisible();
+  await page.goto(home);
 }
 
 /** Abre una pestaña de la página actual del panel (enlaces `?tab=`). */

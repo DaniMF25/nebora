@@ -24,7 +24,11 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await expect(page.getByRole("button", { name: "Archivar Arroz" })).toBeVisible();
 
   const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
-  await nav.getByRole("link", { name: "Compras", exact: true }).click();
+  await nav.getByRole("link", { name: "Proveedores", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Apartados de proveedores" })
+    .getByRole("link", { name: "Pedidos de compra" })
+    .click();
   await expect(page.getByText("necesitas un proveedor activo")).toBeVisible();
   await page.getByRole("link", { name: "Crear un proveedor" }).click();
   await page.getByText("Nuevo proveedor").click();
@@ -33,7 +37,11 @@ test("compras: proveedor, pedido, recepción parcial y total que actualiza stock
   await page.getByRole("button", { name: "Crear proveedor" }).click();
   await expect(page.getByRole("button", { name: "Archivar Distribuciones Levante" })).toBeVisible();
 
-  await nav.getByRole("link", { name: "Compras", exact: true }).click();
+  await nav.getByRole("link", { name: "Proveedores", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Apartados de proveedores" })
+    .getByRole("link", { name: "Pedidos de compra" })
+    .click();
   await page.getByText("Nuevo pedido").click();
   await page.getByRole("button", { name: "Crear pedido" }).click();
   await expect(page.getByRole("heading", { name: "Pedido 1 · Distribuciones Levante" })).toBeVisible();

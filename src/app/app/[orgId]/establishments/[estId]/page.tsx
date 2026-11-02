@@ -67,6 +67,9 @@ export default async function EstablishmentPage({
           : [],
         canInventory: ctx.permissions.has("inventory.read"),
         canPurchasing: ctx.permissions.has("purchasing.read"),
+        canReservations: ctx.permissions.has("reservations.read"),
+        canTables: ctx.permissions.has("tables.read"),
+        canStaff: ctx.permissions.has("staff.read"),
       };
     });
   } catch (err) {
@@ -75,6 +78,7 @@ export default async function EstablishmentPage({
   }
 
   const { establishment: est, schedule, today, canEdit, menus, canInventory, canPurchasing } = data;
+  const { canReservations, canTables, canStaff } = data;
   const tz = est.timezone;
   const now = new Date();
   const openNow = isOpenAt(schedule, tz, now);
@@ -115,24 +119,30 @@ export default async function EstablishmentPage({
         <>
           <section className="bare" aria-label="Accesos rápidos">
             <ul className="quick-links">
-              <li>
-                <Link href={`${base}/reservations`}>
-                  <strong>Reservas</strong>
-                  <span>Reservas del día, lista de espera y reservas online</span>
-                </Link>
-              </li>
-              <li>
-                <Link href={`${base}/floor`} aria-label="Plano de sala (zonas y mesas)">
-                  <strong>Sala</strong>
-                  <span>Plano de sala (zonas y mesas)</span>
-                </Link>
-              </li>
-              <li>
-                <Link href={`${base}/staff`} aria-label="Cuadrante de turnos del personal">
-                  <strong>Turnos</strong>
-                  <span>Cuadrante semanal del personal</span>
-                </Link>
-              </li>
+              {canReservations && (
+                <li>
+                  <Link href={`${base}/reservations`}>
+                    <strong>Reservas</strong>
+                    <span>Reservas del día, lista de espera y reservas online</span>
+                  </Link>
+                </li>
+              )}
+              {canTables && (
+                <li>
+                  <Link href={`${base}/floor`} aria-label="Plano de sala (zonas y mesas)">
+                    <strong>Sala</strong>
+                    <span>Plano de sala (zonas y mesas)</span>
+                  </Link>
+                </li>
+              )}
+              {canStaff && (
+                <li>
+                  <Link href={`${base}/staff`} aria-label="Cuadrante de turnos del personal">
+                    <strong>Turnos</strong>
+                    <span>Cuadrante semanal del personal</span>
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href={`${base}/site`} aria-label="Página pública">
                   <strong>Web pública</strong>

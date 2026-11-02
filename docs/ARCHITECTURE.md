@@ -56,7 +56,7 @@ tests/e2e                 Playwright contra `next start` y una BD recreada
 - Escrituras en `memberships` y `organizations` exigen además rol owner/admin en la propia política.
 - El alta de organizaciones solo es posible mediante `app.create_organization`, que crea la organización y la membresía de propietario de forma atómica.
 - Un `organizationId` inexistente o ajeno responde **404** (no 403) para no revelar su existencia.
-- La matriz de permisos (`src/server/tenancy/permissions.ts`) solo contiene permisos de funciones implementadas.
+- La matriz de permisos (`src/server/tenancy/permissions.ts`) solo contiene permisos de funciones implementadas. Los permisos efectivos son los del rol limitados por el plan de la organización (Básico, Avanzado o PRO; D-046), que se lee de la BD en cada petición.
 - **Límite del modelo:** la BD confía en el `app.user_id` que fija el servidor. RLS protege frente a errores de consulta, no frente a un servidor comprometido.
 - **Patrón para tablas hijas:** `establishments` tiene `UNIQUE (organization_id, id)` para que las tablas hijas usen FKs compuestas `(organization_id, establishment_id)` e impidan relaciones entre organizaciones a nivel de esquema.
 

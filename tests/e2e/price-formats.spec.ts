@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openTab, register, suffix } from "./helpers";
+import { choosePlan, openTab, register, suffix } from "./helpers";
 
 test("formatos de precio: media ración y ración en el catálogo, la carta y la página pública", async ({ browser }) => {
   test.setTimeout(120_000);
@@ -9,6 +9,7 @@ test("formatos de precio: media ración y ración en el catálogo, la carta y la
   await page.getByLabel("Nombre").fill("Casa Formatos");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Formatos" })).toBeVisible();
   const org = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Barra");

@@ -275,6 +275,11 @@ main.auth button[type="submit"] { width: 100%; }
 .info-box p { margin: 0; }
 
 /* Pestañas de página (enlaces con ?tab=). */
+/* Selector de apartado de una sección (Inventario, Proveedores, Turnos y horarios; D-046). */
+.section-switch { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.25rem 0 0.75rem; }
+.section-switch a { padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+.section-switch a:hover { color: var(--fg); }
+.section-switch a[aria-current="page"] { border-color: var(--accent); color: var(--accent-strong); background: var(--accent-soft); }
 .page-tabs { display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); margin: 0.5rem 0 1.25rem; }
 .page-tabs a { flex: none; padding: 0.65rem 1rem; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 0.95rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .page-tabs a:hover { color: var(--fg); }

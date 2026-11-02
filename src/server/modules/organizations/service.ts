@@ -3,10 +3,10 @@ import { z } from "zod";
 import { recordAudit } from "@/server/audit/audit";
 import type { Tx } from "@/server/db/pool";
 import { isUniqueViolation } from "@/server/db/pool";
-import { ConflictError, NotFoundError } from "@/server/errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { nameSchema, organizationSlugSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext, type UserContext } from "@/server/tenancy/context";
-import type { Role } from "@/server/tenancy/permissions";
+import { PLANS, type Plan, type Role } from "@/server/tenancy/permissions";
 import { parseInput } from "@/server/validation";
 
 export interface OrganizationSummary {
@@ -21,6 +21,7 @@ export interface Organization {
   name: string;
   slug: string;
   createdAt: Date;
+  plan: Plan;
 }
 
 // `.strict()` rechaza campos no previstos (asignación masiva: organization_id, role...).
@@ -57,7 +58,7 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
   await tx.query("SELECT set_config('app.org_id', $1, true)", [id]);
   await recordAudit(
     tx,
-    { userId: ctx.userId, organizationId: id, role: "owner", permissions: new Set(), establishments: "all" },
+    { userId: ctx.userId, organizationId: id, role: "owner", plan: "basic", permissions: new Set(), establishments: "all" },
     { action: "organization.created", entityType: "organization", entityId: id, metadata: { slug: data.slug } },
   );
   return id;
@@ -66,7 +67,7 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
 export async function getOrganization(tx: Tx, ctx: TenantContext): Promise<Organization> {
   requirePermission(ctx, "organization.read");
   const { rows } = await tx.query<Organization>(
-    `SELECT id, name, slug::text AS slug, created_at AS "createdAt"
+    `SELECT id, name, slug::text AS slug, created_at AS "createdAt", plan
        FROM organizations WHERE id = $1`,
     [ctx.organizationId],
   );
@@ -87,4 +88,47 @@ export async function updateOrganization(tx: Tx, ctx: TenantContext, input: unkn
     entityType: "organization",
     entityId: ctx.organizationId,
   });
+}
+
+/**
+ * Cambia el plan de la organización (D-046). Solo el propietario: aún no hay
+ * proveedor de cobros, así que no se cobra nada. Bajar no borra datos: solo
+ * deja de mostrarlos. Para bajar a Básico no puede haber más miembros ni
+ * invitaciones abiertas (la gestión de miembros es del plan Avanzado) y se
+ * desactiva la reserva online de todos los locales.
+ */
+export async function changePlan(tx: Tx, ctx: TenantContext, input: unknown): Promise<{ from: Plan; to: Plan }> {
+  if (ctx.role !== "owner") throw new ForbiddenError();
+  const { plan } = parseInput(z.object({ plan: z.enum(PLANS, { message: "Elige un plan" }) }).strict(), input);
+  const { rows } = await tx.query<{ plan: Plan }>("SELECT plan FROM organizations WHERE id = $1 FOR UPDATE", [
+    ctx.organizationId,
+  ]);
+  const from = rows[0]!.plan;
+  if (from === plan) return { from, to: plan };
+  if (plan === "basic") {
+    const others = await tx.query<{ members: number; invitations: number }>(
+      `SELECT (SELECT count(*)::int FROM memberships WHERE organization_id = $1 AND user_id <> $2) AS members,
+              (SELECT count(*)::int FROM invitations
+                WHERE organization_id = $1 AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now())
+                AS invitations`,
+      [ctx.organizationId, ctx.userId],
+    );
+    const { members, invitations } = others.rows[0]!;
+    if (members > 0 || invitations > 0) {
+      throw new ConflictError(
+        "El plan Básico es para una sola persona: quita antes a los demás miembros y revoca las invitaciones abiertas",
+      );
+    }
+    await tx.query("UPDATE reservation_settings SET public_enabled = false WHERE organization_id = $1 AND public_enabled", [
+      ctx.organizationId,
+    ]);
+  }
+  await tx.query("UPDATE organizations SET plan = $2 WHERE id = $1", [ctx.organizationId, plan]);
+  await recordAudit(tx, ctx, {
+    action: "organization.plan_changed",
+    entityType: "organization",
+    entityId: ctx.organizationId,
+    metadata: { from, to: plan },
+  });
+  return { from, to: plan };
 }

@@ -3,7 +3,7 @@ import type { AuthUser } from "@/server/auth/service";
 import { withTransaction, type Tx } from "@/server/db/pool";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { isUuid } from "@/server/validation";
-import { isRole, permissionsFor, type Permission, type Role } from "./permissions";
+import { isPlan, isRole, permissionsFor, type Permission, type Plan, type Role } from "./permissions";
 
 export interface UserContext {
   userId: string;
@@ -12,6 +12,8 @@ export interface UserContext {
 export interface TenantContext extends UserContext {
   organizationId: string;
   role: Role;
+  /** Plan de la organización (D-046): limita los permisos del rol. */
+  plan: Plan;
   permissions: ReadonlySet<Permission>;
   /**
    * Locales a los que accede: "all" o los identificadores asignados. RLS
@@ -54,24 +56,33 @@ export async function withTenant<T>(
     // muestra las filas de membership_establishments de la organización activa
     // (y solo si se es miembro, que se comprueba justo después).
     await tx.query("SELECT set_config('app.org_id', $1, true)", [organizationId]);
-    const { rows } = await tx.query<{ role: string; all_establishments: boolean; establishment_ids: string[] }>(
-      `SELECT m.role, m.all_establishments,
+    const { rows } = await tx.query<{
+      role: string;
+      plan: string;
+      all_establishments: boolean;
+      establishment_ids: string[];
+    }>(
+      `SELECT m.role, o.plan, m.all_establishments,
               coalesce(array_agg(me.establishment_id) FILTER (WHERE me.establishment_id IS NOT NULL), '{}')
                 AS establishment_ids
          FROM memberships m
+         JOIN organizations o ON o.id = m.organization_id
          LEFT JOIN membership_establishments me ON me.organization_id = m.organization_id AND me.membership_id = m.id
         WHERE m.organization_id = $1 AND m.user_id = $2 AND m.status = 'active'
-        GROUP BY m.id`,
+        GROUP BY m.id, o.plan`,
       [organizationId, user.id],
     );
     const role = rows[0]?.role;
     if (!isRole(role)) throw new NotFoundError();
     const all = rows[0]!.all_establishments;
+    const plan = rows[0]!.plan;
+    if (!isPlan(plan)) throw new Error("Plan de organización desconocido");
     return fn(tx, {
       userId: user.id,
       organizationId,
       role,
-      permissions: permissionsFor(role, all),
+      plan,
+      permissions: permissionsFor(role, all, plan),
       establishments: all ? "all" : new Set(rows[0]!.establishment_ids),
     });
   });

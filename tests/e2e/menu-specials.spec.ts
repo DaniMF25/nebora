@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 test("fuera de carta: se añade en el panel y sale al momento en la carta y la web", async ({ browser }) => {
   test.setTimeout(120_000);
@@ -9,6 +9,7 @@ test("fuera de carta: se añade en el panel y sale al momento en la carta y la w
   await page.getByLabel("Nombre").fill("Casa Sugerencias");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Sugerencias" })).toBeVisible();
   const org = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Puerto");

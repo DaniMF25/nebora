@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
@@ -56,6 +56,7 @@ test("cartas con horario: la web muestra la del momento y cada carta dice cuánd
   await page.getByLabel("Nombre").fill("Casa Horarios");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Horarios" })).toBeVisible();
   const org = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Puerto");

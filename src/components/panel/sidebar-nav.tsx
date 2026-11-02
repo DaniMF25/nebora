@@ -11,6 +11,8 @@ export interface NavItem {
   icon: PanelIconName;
   /** Activo solo en la ruta exacta (la portada); el resto, también en sus subpáginas. */
   exact?: boolean;
+  /** Otras rutas de la misma sección (expresión regular), p. ej. el inventario de cada local. */
+  also?: string;
 }
 
 export interface NavGroup {
@@ -63,7 +65,10 @@ export function SidebarNav({
   label: string;
 }) {
   const pathname = usePathname();
-  const isCurrent = (item: NavItem) => (item.exact ? pathname === item.href : pathname.startsWith(item.href));
+  const isCurrent = (item: NavItem) =>
+    item.exact
+      ? pathname === item.href
+      : pathname.startsWith(item.href) || (item.also !== undefined && new RegExp(item.also).test(pathname));
 
   const fromPath = local
     ? local.establishments.find((e) => pathname.startsWith(`${local.base}/establishments/${e.id}`))?.id

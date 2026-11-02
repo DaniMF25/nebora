@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { register, suffix } from "./helpers";
+import { choosePlan, register, suffix } from "./helpers";
 
 // Safari en iPhone amplía la página al entrar en un campo con letra de menos de 16 px.
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -25,6 +25,7 @@ test("en móvil los campos tienen al menos 16 px para que el navegador no amplí
   await page.getByLabel("Nombre").fill("Casa Zoom");
   await page.getByLabel("Identificador (URL)").fill(`zoom-${suffix()}`);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Zoom" })).toBeVisible();
   expect(await smallFields(page)).toEqual([]);
   await page.getByLabel("Nombre").fill("Puerto");

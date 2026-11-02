@@ -8,6 +8,9 @@ import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { listIngredients } from "@/server/modules/inventory/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createIngredientAction, setIngredientActiveAction, updateIngredientDetailsAction } from "../inventory/actions";
+import { SectionSwitch } from "@/components/panel/section-switch";
+import { listEstablishments } from "@/server/modules/establishments/service";
+import { inventoryLinks } from "../sections";
 
 const COST_UNIT: Record<string, string> = { g: "€/kg", ml: "€/l", unit: "€/ud." };
 
@@ -21,17 +24,19 @@ export default async function IngredientsPage({ params }: { params: Promise<{ or
       ingredients: await listIngredients(tx, ctx),
       canManage: ctx.permissions.has("catalog.manage"),
       canSeeCosts: ctx.permissions.has("costs.read"),
+      locals: (await listEstablishments(tx, ctx)).map((e) => ({ id: e.id, name: e.name })),
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { ingredients, canManage, canSeeCosts } = data;
+  const { ingredients, canManage, canSeeCosts, locals } = data;
 
   return (
     <>
       <section>
         <h2>Ingredientes</h2>
+        <SectionSwitch label="Apartados del inventario" links={inventoryLinks(orgId, locals, "ingredients")} />
         <p className="muted">
           Catálogo común a todos los locales: unidad, coste de referencia, alérgenos y nivel mínimo de reposición. El
           stock de cada local se lleva en su inventario.

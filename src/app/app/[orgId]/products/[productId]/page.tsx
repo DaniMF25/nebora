@@ -13,6 +13,9 @@ import { listIngredients, listWarehouses } from "@/server/modules/inventory/serv
 import { getProduct } from "@/server/modules/menus/products";
 import { getRecipe } from "@/server/modules/recipes/service";
 import { privateMediaUrl } from "@/lib/site";
+import { ProductFields } from "@/components/product-fields";
+import { isUuid } from "@/server/validation";
+import { deleteDishAction, updateProductAction } from "../actions";
 import { withTenant } from "@/server/tenancy/context";
 import {
   applyRecipeAllergensAction,
@@ -24,8 +27,17 @@ import {
   setRecipeLineAction,
 } from "./actions";
 
-export default async function ProductRecipePage({ params }: { params: Promise<{ orgId: string; productId: string }> }) {
+export default async function ProductRecipePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ orgId: string; productId: string }>;
+  searchParams: Promise<{ carta?: string | string[] }>;
+}) {
   const { orgId, productId } = await params;
+  // Carta desde la que se llegó (para volver a ella); solo un id válido.
+  const carta = (await searchParams).carta;
+  const fromMenu = typeof carta === "string" && isUuid(carta) ? carta : null;
   const user = await requireUser();
   let data;
   try {
@@ -39,26 +51,34 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         establishments: (await listEstablishments(tx, ctx)).map((e) => ({ id: e.id, name: e.name })),
         canEdit: ctx.permissions.has("catalog.manage"),
         canProduce: ctx.permissions.has("inventory.move"),
+        // Receta, escandallo y catálogo: plan PRO (D-046). La ficha del plato está en todos.
+        isPro: ctx.plan === "pro",
       };
     });
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { recipe, product, ingredients, warehouses, establishments, canEdit, canProduce } = data;
+  const { recipe, product, ingredients, warehouses, establishments, canEdit, canProduce, isPro } = data;
   const estName = new Map(establishments.map((e) => [e.id, e.name]));
   const costing = recipe.costing;
 
   return (
     <>
       <p>
-        <Link href={`/app/${orgId}/products`}>← Productos</Link>
+        {fromMenu ? (
+          <Link href={`/app/${orgId}/menus/${fromMenu}`}>← Volver a la carta</Link>
+        ) : isPro ? (
+          <Link href={`/app/${orgId}/products`}>← Productos</Link>
+        ) : (
+          <Link href={`/app/${orgId}`}>← Inicio</Link>
+        )}
       </p>
       <h2>
         {recipe.productName} <span className="muted">· {formatEuros(recipe.priceCents)}</span>
       </h2>
 
-      {recipe.undeclaredAllergens.length > 0 && (
+      {isPro && recipe.undeclaredAllergens.length > 0 && (
         <div className="alert" role="status">
           <p>
             La receta contiene alérgenos que el producto no declara en la carta:{" "}
@@ -77,6 +97,23 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         Alérgenos declarados en la carta:{" "}
         {recipe.productAllergens.length ? recipe.productAllergens.map((a) => ALLERGEN_LABELS[a]).join(", ") : "ninguno"}
       </p>
+
+      {canEdit && (
+        <section>
+          <h3>Datos del plato</h3>
+          <ActionForm
+            action={updateProductAction.bind(null, orgId, productId)}
+            submitLabel="Guardar plato"
+            resetOnSuccess={false}
+            secondary={{
+              action: deleteDishAction.bind(null, orgId, productId, fromMenu),
+              label: `Eliminar ${product.name}`,
+            }}
+          >
+            <ProductFields idPrefix={productId} defaults={product} />
+          </ActionForm>
+        </section>
+      )}
 
       <section>
         <h3>Foto del plato</h3>
@@ -171,83 +208,85 @@ export default async function ProductRecipePage({ params }: { params: Promise<{ 
         </section>
       )}
 
-      <section>
-        <h3>Receta (cantidades por ración)</h3>
-        {recipe.lines.length === 0 ? (
-          <p className="muted">Sin ingredientes.</p>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Ingrediente</th>
-                  <th>Cantidad</th>
-                  <th>Alérgenos</th>
-                  {costing && <th>Coste</th>}
-                  {canEdit && <th>Acciones</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {recipe.lines.map((l) => (
-                  <tr key={l.id}>
-                    <td data-label="Ingrediente">
-                      {l.ingredientName}
-                      {!l.ingredientActive && <span className="muted"> (archivado)</span>}
-                    </td>
-                    <td data-label="Cantidad">{formatQuantity(l.quantity, l.baseUnit)}</td>
-                    <td data-label="Alérgenos">{l.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ") || "—"}</td>
-                    {costing && <td data-label="Coste">{l.lineCostCents ? formatCentsNumeric(l.lineCostCents) : "sin coste"}</td>}
-                    {canEdit && (
-                      <td data-label="Acciones">
-                        <ActionForm
-                          action={removeRecipeLineAction.bind(null, orgId, productId, l.id)}
-                          submitLabel={`Quitar ${l.ingredientName}`}
-                          className="inline-form"
-                        />
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {canEdit &&
-          (ingredients.length === 0 ? (
-            <p className="muted">
-              No hay ingredientes. <Link href={`/app/${orgId}/ingredients`}>Créalos en el catálogo de ingredientes</Link>.
-            </p>
+      {isPro && (
+        <section>
+          <h3>Receta (cantidades por ración)</h3>
+          {recipe.lines.length === 0 ? (
+            <p className="muted">Sin ingredientes.</p>
           ) : (
-            <ActionForm action={setRecipeLineAction.bind(null, orgId, productId)} submitLabel="Añadir o actualizar">
-              <label>
-                Ingrediente
-                <select name="ingredientId">
-                  {ingredients.map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {i.name} ({BASE_UNIT_LABELS[i.baseUnit]})
-                    </option>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ingrediente</th>
+                    <th>Cantidad</th>
+                    <th>Alérgenos</th>
+                    {costing && <th>Coste</th>}
+                    {canEdit && <th>Acciones</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recipe.lines.map((l) => (
+                    <tr key={l.id}>
+                      <td data-label="Ingrediente">
+                        {l.ingredientName}
+                        {!l.ingredientActive && <span className="muted"> (archivado)</span>}
+                      </td>
+                      <td data-label="Cantidad">{formatQuantity(l.quantity, l.baseUnit)}</td>
+                      <td data-label="Alérgenos">{l.allergens.map((a) => ALLERGEN_LABELS[a]).join(", ") || "—"}</td>
+                      {costing && <td data-label="Coste">{l.lineCostCents ? formatCentsNumeric(l.lineCostCents) : "sin coste"}</td>}
+                      {canEdit && (
+                        <td data-label="Acciones">
+                          <ActionForm
+                            action={removeRecipeLineAction.bind(null, orgId, productId, l.id)}
+                            submitLabel={`Quitar ${l.ingredientName}`}
+                            className="inline-form"
+                          />
+                        </td>
+                      )}
+                    </tr>
                   ))}
-                </select>
-              </label>
-              <div className="inline-form">
+                </tbody>
+              </table>
+            </div>
+          )}
+          {canEdit &&
+            (ingredients.length === 0 ? (
+              <p className="muted">
+                No hay ingredientes. <Link href={`/app/${orgId}/ingredients`}>Créalos en el catálogo de ingredientes</Link>.
+              </p>
+            ) : (
+              <ActionForm action={setRecipeLineAction.bind(null, orgId, productId)} submitLabel="Añadir o actualizar">
                 <label>
-                  Cantidad por ración
-                  <input name="quantity" inputMode="decimal" required placeholder="120" size={10} />
-                </label>
-                <label>
-                  Unidad
-                  <select name="unit" defaultValue="g">
-                    {(Object.keys(INPUT_UNITS) as InputUnit[]).map((u) => (
-                      <option key={u} value={u}>
-                        {INPUT_UNITS[u].label}
+                  Ingrediente
+                  <select name="ingredientId">
+                    {ingredients.map((i) => (
+                      <option key={i.id} value={i.id}>
+                        {i.name} ({BASE_UNIT_LABELS[i.baseUnit]})
                       </option>
                     ))}
                   </select>
                 </label>
-              </div>
-            </ActionForm>
-          ))}
-      </section>
+                <div className="inline-form">
+                  <label>
+                    Cantidad por ración
+                    <input name="quantity" inputMode="decimal" required placeholder="120" size={10} />
+                  </label>
+                  <label>
+                    Unidad
+                    <select name="unit" defaultValue="g">
+                      {(Object.keys(INPUT_UNITS) as InputUnit[]).map((u) => (
+                        <option key={u} value={u}>
+                          {INPUT_UNITS[u].label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </ActionForm>
+            ))}
+        </section>
+      )}
 
       {canProduce && recipe.lines.length > 0 && warehouses.length > 0 && (
         <section>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
+import { ProductFields } from "@/components/product-fields";
 import { priceSummary, productOptionLabel } from "@/lib/price-formats";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
 import { ALLERGEN_LABELS } from "@/lib/allergens";
@@ -22,6 +23,7 @@ import { getMenuTranslationForm } from "@/server/modules/translations/service";
 import {
   activateVersionAction,
   addItemAction,
+  createDishAction,
   addSectionAction,
   deleteMenuAction,
   deleteSectionAction,
@@ -70,6 +72,9 @@ export default async function MenuEditorPage({
         products: await listProducts(tx, ctx, { activeOnly: true, availableIn: draft.menu.establishmentId }),
         canEdit: ctx.permissions.has("menus.edit"),
         canPublish: ctx.permissions.has("menus.publish"),
+        // Crear y editar platos (catálogo de la organización) y, en PRO, la página «Productos» (D-046).
+        canDishes: ctx.permissions.has("catalog.manage"),
+        isPro: ctx.plan === "pro",
         translations: tab === "traducciones" ? await getMenuTranslationForm(tx, ctx, menuId, search.lang) : null,
         languages: (await getEstablishment(tx, ctx, draft.menu.establishmentId)).languages,
       };
@@ -79,7 +84,7 @@ export default async function MenuEditorPage({
     throw err;
   }
 
-  const { draft, versions, products, canEdit, canPublish, outdated, translations, languages } = data;
+  const { draft, versions, products, canEdit, canPublish, outdated, translations, languages, canDishes, isPro } = data;
   const tabList = [
     { id: "contenido", label: "Contenido" },
     ...(languages.length > 0 ? [{ id: "traducciones", label: "Traducciones" }] : []),
@@ -265,12 +270,24 @@ export default async function MenuEditorPage({
                     </div>
                   )}
                   {section.items.length === 0 ? (
-                    <p className="muted">Sin productos.</p>
+                    <p className="muted">Sin platos.</p>
                   ) : (
                     <ul className="cards">
                       {section.items.map((item, ii) => (
                         <li key={item.id}>
-                          <strong>{item.name}</strong> · {priceSummary(item.priceCents, item.formats)}
+                          <strong>
+                            {canDishes ? (
+                              <Link
+                                href={`/app/${orgId}/products/${item.productId}?carta=${menuId}`}
+                                aria-label={`Editar plato ${item.name}`}
+                              >
+                                {item.name}
+                              </Link>
+                            ) : (
+                              item.name
+                            )}
+                          </strong>{" "}
+                          · {priceSummary(item.priceCents, item.formats)}
                           {item.recommended && <span className="badge"> Recomendado</span>}
                           {item.imageMediaId && <span className="muted"> · con foto</span>}
                           {item.priceOverrideCents !== null && !item.formats && (
@@ -337,12 +354,26 @@ export default async function MenuEditorPage({
                       ))}
                     </ul>
                   )}
+                  {canEdit && canDishes && (
+                    <details>
+                      <summary>Nuevo plato en {section.name}</summary>
+                      <ActionForm
+                        action={createDishAction.bind(null, orgId, menuId, section.id)}
+                        submitLabel="Crear plato"
+                        className="form form-wide"
+                      >
+                        <ProductFields idPrefix={`new-${section.id}`} />
+                      </ActionForm>
+                    </details>
+                  )}
                   {canEdit &&
                     (available.length === 0 ? (
-                      <p className="muted">
-                        No quedan productos disponibles en este local para añadir.{" "}
-                        <Link href={`/app/${orgId}/products`}>Gestionar productos</Link>
-                      </p>
+                      isPro && (
+                        <p className="muted">
+                          No quedan productos del catálogo disponibles en este local para añadir.{" "}
+                          <Link href={`/app/${orgId}/products`}>Gestionar productos</Link>
+                        </p>
+                      )
                     ) : (
                       <ActionForm
                         action={addItemAction.bind(null, orgId, menuId, section.id)}

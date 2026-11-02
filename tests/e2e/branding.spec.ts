@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
 
 test("marca de la web: logotipo, color propio y tipografía elegida", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -10,6 +10,7 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
   await page.getByLabel("Nombre").fill("Casa Marca");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Marca" })).toBeVisible();
   await page.getByLabel("Nombre").fill("El Faro");
   await page.getByLabel("Identificador (URL)").fill("faro");
@@ -123,6 +124,7 @@ test("web pública: hovers con los colores del tema y puntos del carrusel solo s
   await page.getByLabel("Nombre").fill("Casa Carrusel");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Carrusel" })).toBeVisible();
   const orgPath = new URL(page.url()).pathname;
   await page.getByLabel("Nombre").fill("Puerto");

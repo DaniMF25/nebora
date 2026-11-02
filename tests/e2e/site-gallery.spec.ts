@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import sharp from "sharp";
-import { register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, register, setSitePublished, suffix } from "./helpers";
 
 async function upload(page: Page, color: string, caption: string) {
   await page.locator('input[name="image"]').setInputFiles({
@@ -23,6 +23,7 @@ test("galería: se sube en el panel, se ordena y sale en la portada de la web", 
   await page.getByLabel("Nombre").fill("Casa Galería");
   await page.getByLabel("Identificador (URL)").fill(orgSlug);
   await page.getByRole("button", { name: "Crear organización" }).click();
+  await choosePlan(page, "pro");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Galería" })).toBeVisible();
   await page.getByLabel("Nombre").fill("Puerto");
   await page.getByLabel("Identificador (URL)").fill("puerto");

@@ -15,7 +15,11 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
   const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
   await nav.getByRole("link", { name: "Inventario", exact: true }).click();
   await expect(page.getByText("Necesitas al menos un almacén y un ingrediente")).toBeVisible();
-  await nav.getByRole("link", { name: "Ingredientes" }).click();
+  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Apartados del inventario" })
+    .getByRole("link", { name: "Ingredientes" })
+    .click();
   await page.getByText("Nuevo ingrediente").click();
   await page.getByLabel("Nombre del ingrediente").fill("Harina");
   await page.getByLabel("Nivel mínimo en unidad base (opcional)").fill("1000");

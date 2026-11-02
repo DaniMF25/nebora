@@ -5,6 +5,9 @@ import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { listSuppliers } from "@/server/modules/purchasing/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createSupplierAction, setSupplierActiveAction } from "../purchasing/actions";
+import { SectionSwitch } from "@/components/panel/section-switch";
+import { listEstablishments } from "@/server/modules/establishments/service";
+import { supplierLinks } from "../sections";
 
 /** Proveedores: comunes a todos los locales del grupo. */
 export default async function SuppliersPage({ params }: { params: Promise<{ orgId: string }> }) {
@@ -15,18 +18,20 @@ export default async function SuppliersPage({ params }: { params: Promise<{ orgI
     data = await withTenant(user, orgId, async (tx, ctx) => ({
       suppliers: await listSuppliers(tx, ctx),
       canManage: ctx.permissions.has("catalog.manage"),
+      locals: (await listEstablishments(tx, ctx)).map((e) => ({ id: e.id, name: e.name })),
     }));
   } catch (err) {
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { suppliers, canManage } = data;
+  const { suppliers, canManage, locals } = data;
 
   return (
     <>
       <section>
         <h2>Proveedores</h2>
-        <p className="muted">Comunes a todos los locales. Los pedidos se hacen desde las compras de cada local.</p>
+        <SectionSwitch label="Apartados de proveedores" links={supplierLinks(orgId, locals, "suppliers")} />
+        <p className="muted">Comunes a todos los locales. Los pedidos de compra se hacen en «Pedidos» de cada local.</p>
         {suppliers.length === 0 ? (
           <p className="muted">No hay proveedores.</p>
         ) : (
