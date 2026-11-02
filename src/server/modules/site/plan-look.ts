@@ -15,11 +15,12 @@ export function planAllowsCustomLook(plan: Plan): boolean {
 }
 
 /** Aspecto efectivo: el guardado, o el del plan Básico. */
-export function effectiveLook<T extends { theme: string; accentColor: string | null; fontPairing: string | null }>(
-  value: T,
-  plan: Plan,
-): T {
-  return planAllowsCustomLook(plan) ? value : { ...value, theme: BASIC_SITE_THEME, accentColor: null, fontPairing: null };
+export function effectiveLook<
+  T extends { theme: string; accentColor: string | null; fontPairing: string | null; decor?: string | null },
+>(value: T, plan: Plan): T {
+  return planAllowsCustomLook(plan)
+    ? value
+    : { ...value, theme: BASIC_SITE_THEME, accentColor: null, fontPairing: null, ...("decor" in value ? { decor: null } : {}) };
 }
 
 /** Plan de la organización de un local, para las páginas públicas (sin sesión). */

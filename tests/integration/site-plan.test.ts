@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { AuthUser } from "@/server/auth/service";
 import type { Tx } from "@/server/db/pool";
-import { ForbiddenError } from "@/server/errors";
+import { ForbiddenError, ValidationError } from "@/server/errors";
 import { createEstablishment } from "@/server/modules/establishments/service";
 import { changePlan } from "@/server/modules/organizations/service";
 import { addGalleryImage, getPublicGallery } from "@/server/modules/site/gallery";
@@ -10,6 +10,7 @@ import {
   getPublicSite,
   getSiteProfile,
   setSiteBranding,
+  setSiteDecor,
   setSitePublished,
   setSiteTheme,
   updateSiteProfile,
@@ -62,6 +63,12 @@ describe("web pública según el plan", () => {
     });
   });
 
+  it("fondo decorativo (D-050): se guarda y sale en la web; valores no previstos, no", async () => {
+    await asOwner((tx, ctx) => setSiteDecor(tx, ctx, est, { decor: "seafood" }));
+    expect((await getPublicSite(orgSlug, estSlug))!.decor).toBe("seafood");
+    await expect(asOwner((tx, ctx) => setSiteDecor(tx, ctx, est, { decor: "gatos" }))).rejects.toThrow(ValidationError);
+  });
+
   it("en Avanzado la web muestra lo elegido", async () => {
     const site = (await getPublicSite(orgSlug, estSlug))!;
     expect([site.theme, site.accentColor]).toEqual(["futurista", "#123456"]);
@@ -71,7 +78,7 @@ describe("web pública según el plan", () => {
   it("en Básico: Clásico, sin color propio ni galería, sin borrar lo guardado; al subir vuelve", async () => {
     await asOwner((tx, ctx) => changePlan(tx, ctx, { plan: "basic" }));
     const site = (await getPublicSite(orgSlug, estSlug))!;
-    expect([site.theme, site.accentColor, site.fontPairing]).toEqual(["clasico", null, null]);
+    expect([site.theme, site.accentColor, site.fontPairing, site.decor]).toEqual(["clasico", null, null, null]);
     expect(await getPublicGallery(est)).toEqual([]);
 
     // El servidor no deja cambiar estilo, color ni galería…
@@ -81,6 +88,7 @@ describe("web pública según el plan", () => {
         ForbiddenError,
       );
       await expect(addGalleryImage(tx, ctx, est, await png(), {})).rejects.toThrow(ForbiddenError);
+      await expect(setSiteDecor(tx, ctx, est, { decor: null })).rejects.toThrow(ForbiddenError);
       // …ni colarlo por el formulario de contenido, que tampoco pisa el estilo guardado.
       await updateSiteProfile(tx, ctx, est, { ...content, theme: "moderno", tagline: "Nuevo lema" });
       const saved = await getSiteProfile(tx, ctx, est);
@@ -89,7 +97,7 @@ describe("web pública según el plan", () => {
 
     await asOwner((tx, ctx) => changePlan(tx, ctx, { plan: "advanced" }));
     const back = (await getPublicSite(orgSlug, estSlug))!;
-    expect([back.theme, back.accentColor]).toEqual(["futurista", "#123456"]);
+    expect([back.theme, back.accentColor, back.decor]).toEqual(["futurista", "#123456", "seafood"]);
     expect(await getPublicGallery(est)).toHaveLength(1);
   });
 });

@@ -1,0 +1,65 @@
+/* Selector del fondo decorativo de la web (D-050). */
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.option {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.option:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.sample {
+  display: block;
+  height: 5rem;
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* La muestra, algo más marcada que en la web para que se distinga. */
+.sample::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--fg);
+  opacity: 0.35;
+  -webkit-mask-image: var(--decor);
+  mask-image: var(--decor);
+  -webkit-mask-size: 160px 160px;
+  mask-size: 160px 160px;
+}
+
+.none::before {
+  content: none;
+}
+
+.preview {
+  font-size: 0.85rem;
+}
+
+.note {
+  margin-bottom: 1rem;
+}
+
+.locked {
+  opacity: 0.6;
+}

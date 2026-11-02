@@ -13,6 +13,7 @@ import type { Language, PublicLanguage } from "@/lib/languages";
 import { normalizeHex } from "@/lib/color";
 import { FONT_PAIRING_IDS } from "@/lib/site-fonts";
 import { effectiveLook, publicEstablishmentPlan } from "./plan-look";
+import { isSiteDecor, SITE_DECORS, type SiteDecor } from "@/lib/site-decor";
 
 /** Contenido de la página pública del local, tal como lo edita el restaurante. */
 export interface SiteProfile {
@@ -34,6 +35,8 @@ export interface SiteProfile {
   logoSize: LogoSize;
   accentColor: string | null;
   fontPairing: string | null;
+  /** Fondo decorativo según el tipo de cocina (D-050), o null. */
+  decor: SiteDecor | null;
   updatedAt: Date | null;
 }
 
@@ -95,7 +98,7 @@ export const updateSiteSchema = z
 const COLUMNS = `establishment_id AS "establishmentId", published, theme, tagline, hero_eyebrow AS "heroEyebrow",
   hero_title AS "heroTitle", hero_text AS "heroText", hero_media_id AS "heroMediaId", phone, whatsapp, instagram,
   highlights, featured_menu_id AS "featuredMenuId", logo_media_id AS "logoMediaId", logo_size AS "logoSize", accent_color AS "accentColor",
-  font_pairing AS "fontPairing", updated_at AS "updatedAt"`;
+  font_pairing AS "fontPairing", decor, updated_at AS "updatedAt"`;
 
 function emptyProfile(establishmentId: string): SiteProfile {
   return {
@@ -116,6 +119,7 @@ function emptyProfile(establishmentId: string): SiteProfile {
     logoSize: "medium",
     accentColor: null,
     fontPairing: null,
+    decor: null,
     updatedAt: null,
   };
 }
@@ -393,6 +397,7 @@ export interface PublicSite {
   logoSize: LogoSize;
   accentColor: string | null;
   fontPairing: string | null;
+  decor: SiteDecor | null;
   i18n: Partial<Record<Language, Record<string, unknown>>>;
 }
 
@@ -452,6 +457,7 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     logo_size: LogoSize;
     accent_color: string | null;
     font_pairing: string | null;
+    decor: string | null;
   }>("SELECT * FROM app.public_site($1, $2)", slugs);
   const r = rows[0];
   if (!r) return null;
@@ -486,6 +492,7 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
     logoSize: r.logo_size,
     accentColor: r.accent_color,
     fontPairing: r.font_pairing,
+    decor: isSiteDecor(r.decor) ? r.decor : null,
     openingHours: hours.rows.map((h) => ({
       weekday: h.weekday,
       opensMinute: h.opens_minute,
@@ -544,4 +551,24 @@ export async function getSitePreview(tx: Tx, ctx: TenantContext, establishmentId
     bookingEnabled: r.booking_enabled,
     featuredMenuSlug: r.featured_menu_slug,
   };
+}
+
+/** Fondo decorativo de la web (D-050): del plan Avanzado, como el estilo. */
+export async function setSiteDecor(tx: Tx, ctx: TenantContext, establishmentId: string, input: unknown): Promise<void> {
+  requirePermission(ctx, "establishments.update");
+  requirePermission(ctx, "site.customize");
+  const { decor } = parseInput(z.object({ decor: z.enum(SITE_DECORS).nullable() }).strict(), input);
+  await getEstablishment(tx, ctx, establishmentId);
+  await lockProfile(tx, ctx, establishmentId);
+  await tx.query("UPDATE establishment_profiles SET decor = $3 WHERE organization_id = $1 AND establishment_id = $2", [
+    ctx.organizationId,
+    establishmentId,
+    decor,
+  ]);
+  await recordAudit(tx, ctx, {
+    action: "site.decor_set",
+    entityType: "establishment",
+    entityId: establishmentId,
+    metadata: { decor },
+  });
 }

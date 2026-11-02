@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
+import { DecorPicker } from "@/components/panel/decor-picker";
 import { ThemePicker } from "@/components/panel/theme-picker";
 import { effectiveLook, planAllowsCustomLook } from "@/server/modules/site/plan-look";
 import { HIGHLIGHT_ICON_LABELS, HIGHLIGHT_ICONS, MAX_HIGHLIGHTS, privateMediaUrl } from "@/lib/site";
@@ -26,6 +27,7 @@ import {
   removeHeroImageAction,
   removeLogoAction,
   setBrandingAction,
+  setDecorAction,
   setLogoAction,
   setLogoSizeAction,
   setPublishedAction,
@@ -139,6 +141,12 @@ export default async function SiteProfilePage({
             previewHref={(theme) => `/preview/site/${orgId}/${est.id}?theme=${theme}`}
             choose={canCustomize ? (theme) => setThemeAction.bind(null, orgId, est.id, theme) : undefined}
             locked={customLook ? undefined : planNote("Elegir otro estilo")}
+          />
+          <DecorPicker
+            current={p.decor}
+            save={canCustomize ? setDecorAction.bind(null, orgId, est.id) : undefined}
+            locked={customLook ? undefined : planNote("El fondo decorativo")}
+            previewHref={(decor) => `/preview/site/${orgId}/${est.id}?theme=${p.theme}&decor=${decor}`}
           />
         </section>
       )}

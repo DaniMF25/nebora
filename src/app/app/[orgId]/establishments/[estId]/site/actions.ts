@@ -6,6 +6,7 @@ import { readImageField } from "@/server/actions/form-file";
 import { formString, runTenantAction } from "@/server/actions/run";
 import {
   setSiteBranding,
+  setSiteDecor,
   setSiteHeroImage,
   setSiteLogo,
   setSiteLogoSize,
@@ -218,5 +219,16 @@ export async function removeGalleryImageAction(
     path(orgId, estId),
     (tx, ctx) => removeGalleryImage(tx, ctx, estId, imageId),
     "Foto quitada de la galería",
+  );
+}
+
+/** Fondo decorativo (D-050). */
+export async function setDecorAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  const decor = formString(fd, "decor");
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => setSiteDecor(tx, ctx, estId, { decor: decor === "" ? null : decor }),
+    "Fondo guardado",
   );
 }

@@ -1235,3 +1235,30 @@
   }
 }
 
+/* ------------------------------------------------------- fondo decorativo */
+/*
+ * Fondo decorativo (D-050): el dibujo se usa como máscara y se pinta con el
+ * color del texto del estilo a muy poca opacidad. Va detrás de todo el
+ * contenido (z-index -1 dentro de .site aislado), así que solo se ve en las
+ * zonas sin fondo propio: la foto principal, la galería y el pie quedan limpios.
+ */
+.decorated {
+  isolation: isolate;
+}
+
+.decorated::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--s-fg);
+  opacity: 0.07;
+  -webkit-mask-image: var(--s-decor);
+  mask-image: var(--s-decor);
+  -webkit-mask-size: 240px 240px;
+  mask-size: 240px 240px;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}
+

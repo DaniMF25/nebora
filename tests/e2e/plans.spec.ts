@@ -77,6 +77,8 @@ test("planes: Básico con web, cartas y platos en la carta; Avanzado y PRO añad
   await expect(page.getByText("Elegir otro estilo está disponible desde el plan Avanzado")).toBeVisible();
   await expect(page.getByRole("article", { name: "Estilo Clásico" }).getByText("Actual")).toBeVisible();
   await expect(page.getByRole("button", { name: "Usar Moderno" })).toBeDisabled();
+  await expect(page.getByText("El fondo decorativo está disponible desde el plan Avanzado")).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Mariscos y pescado/ })).toBeDisabled();
   await page.goto(`${est}/site?tab=marca`);
   await expect(
     page.getByText("Personalizar el color y la tipografía está disponible desde el plan Avanzado"),

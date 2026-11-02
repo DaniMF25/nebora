@@ -652,3 +652,24 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Formulario en Básico: el titular lo prefiere desde Avanzado.
 
 **Pendiente:** aviso por correo al restaurante cuando haya proveedor.
+
+## D-050 — Fondos decorativos según el tipo de cocina
+**Fecha:** 2026-11-02. **Estado:** aceptada.
+
+**Contexto:** el titular quiere que cada restaurante pueda elegir un fondo sutil acorde a su cocina (mariscos, carnes, hamburguesas, saludable…), solo decorativo, que no sature ni cambie los fondos.
+
+**Decisión:**
+- **Seis motivos** (`src/lib/site-decor.ts`): mariscos y pescado, carnes y parrilla, hamburguesería, saludable, italiano y cafetería. Son dibujos propios de trazo fino, sin imágenes de terceros, en una losa SVG de 240 px que se repite con los motivos girados.
+- **Cómo se pinta:**
+  - capa `::before` fija detrás de todo el contenido (`z-index: -1` en `.site` aislado);
+  - se usa como máscara (`mask-image` con URL `data:`, permitida por la CSP) sobre el color del texto del estilo, con un 7 % de opacidad;
+  - se adapta a cada estilo, no recibe clics y solo se ve donde no hay fondo propio: la foto principal, la galería y el pie quedan limpios.
+- **Datos:** `establishment_profiles.decor` (migración 0034) y `app.public_site` lo devuelve.
+- **Plan:** elegirlo es del plan Avanzado (permiso `site.customize`). En Básico se ve deshabilitado con aviso y la web no lo muestra aunque esté guardado.
+- **Panel:** en «Web pública → Estilo», con una muestra de cada motivo y vista previa sin guardar (`?decor=`).
+
+**Alternativas descartadas:**
+- Imágenes de bancos de imágenes: licencias y peso.
+- Teñir el fondo del estilo: el titular no quiere cambiar los fondos.
+
+**Pruebas:** las E2E dan a cada persona registrada su propia IP (`X-Forwarded-For`, que la aplicación usa sin `CLIENT_IP_HEADER`). Con 52 registros por ejecución se superaba el límite de 50 por IP, que no se relaja para las pruebas.

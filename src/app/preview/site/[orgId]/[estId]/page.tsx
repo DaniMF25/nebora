@@ -11,12 +11,13 @@ import { getPublishedMenu } from "@/server/modules/menus/menus";
 import { getSitePreview } from "@/server/modules/site/service";
 import { listGallery } from "@/server/modules/site/gallery";
 import { effectiveLook, planAllowsCustomLook } from "@/server/modules/site/plan-look";
+import { isSiteDecor } from "@/lib/site-decor";
 import { withTenant } from "@/server/tenancy/context";
 
 export const metadata: Metadata = { title: "Vista previa", robots: { index: false, follow: false } };
 
 type Params = Promise<{ orgId: string; estId: string }>;
-type Search = Promise<{ theme?: string; font?: string }>;
+type Search = Promise<{ theme?: string; font?: string; decor?: string }>;
 
 /**
  * Vista previa de la web del local tal como está guardada (aunque no esté
@@ -67,6 +68,8 @@ export default async function SitePreviewPage({ params, searchParams }: { params
         logoSize: profile.logoSize,
         accentColor: profile.accentColor,
         fontPairing,
+        // Con ?decor= se prueba un fondo sin guardarlo (D-050).
+        decor: isSiteDecor(search.decor) ? search.decor : profile.decor,
         links: {
           home: self,
           menu: menu && preview.featuredMenuSlug ? `/m/${org}/${est}/${preview.featuredMenuSlug}` : null,

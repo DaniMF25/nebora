@@ -9,6 +9,7 @@ import { groupOpeningHours, type WeeklySlot } from "@/lib/site-hours";
 import { themeFontClasses } from "./fonts";
 import { Icon } from "./icons";
 import styles from "./site.module.css";
+import { decorCssUrl, type SiteDecor } from "@/lib/site-decor";
 
 /** Datos públicos comunes a las páginas del local (inicio, carta y reservas). */
 export interface SiteChrome {
@@ -27,6 +28,8 @@ export interface SiteChrome {
   logoSize?: LogoSize;
   accentColor?: string | null;
   fontPairing?: string | null;
+  /** Fondo decorativo según el tipo de cocina (D-050). */
+  decor?: SiteDecor | null;
   /** Idioma de la página (por defecto español) y enlaces del selector de idioma. */
   lang?: PublicLanguage;
   languageLinks?: { lang: PublicLanguage; label: string; href: string }[];
@@ -74,12 +77,13 @@ export function SiteShell({
           "--s-on-accent": readableOn(site.accentColor),
         }
       : {}),
+    ...(site.decor ? { "--s-decor": decorCssUrl(site.decor) } : {}),
   };
 
   return (
     <div
       lang={lang}
-      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
+      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${site.decor ? styles.decorated : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
       style={brandStyle}
     >
       <header className={styles.header}>

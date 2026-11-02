@@ -7,7 +7,20 @@ export function suffix(): string {
   return randomBytes(4).toString("hex");
 }
 
+/**
+ * Cada persona que se registra en las pruebas lo hace desde su propio
+ * navegador y, como en la realidad, con su propia IP: sin esto, todas las
+ * pruebas compartirían IP y agotarían el límite de registros por IP (que no se
+ * relaja para las pruebas). La aplicación toma la IP de X-Forwarded-For cuando
+ * no hay cabecera de plataforma configurada (CLIENT_IP_HEADER).
+ */
+async function setOwnClientIp(page: Page): Promise<void> {
+  const b = randomBytes(3);
+  await page.context().setExtraHTTPHeaders({ "x-forwarded-for": `10.${b[0]}.${b[1]}.${b[2]}` });
+}
+
 export async function register(page: Page, name: string): Promise<string> {
+  await setOwnClientIp(page);
   const local = name.normalize("NFD").toLowerCase().replace(/[^a-z0-9]/g, "");
   const email = `${local}-${suffix()}@example.test`;
   await page.goto("/register");
