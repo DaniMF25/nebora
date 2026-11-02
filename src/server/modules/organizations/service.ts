@@ -8,6 +8,7 @@ import { nameSchema, organizationSlugSchema } from "@/server/modules/shared-sche
 import { requirePermission, type TenantContext, type UserContext } from "@/server/tenancy/context";
 import { PLANS, type Plan, type Role } from "@/server/tenancy/permissions";
 import { parseInput } from "@/server/validation";
+import { republishMenus } from "@/server/modules/menus/menus";
 
 export interface OrganizationSummary {
   id: string;
@@ -88,6 +89,8 @@ export async function updateOrganization(tx: Tx, ctx: TenantContext, input: unkn
     entityType: "organization",
     entityId: ctx.organizationId,
   });
+  // El nombre de la organización sale en las cartas publicadas (D-048).
+  await republishMenus(tx, ctx, { organization: true });
 }
 
 /**

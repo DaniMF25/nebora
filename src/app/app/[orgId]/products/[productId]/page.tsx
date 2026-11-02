@@ -144,7 +144,7 @@ export default async function ProductRecipePage({
             )}
             <p className="muted">
               Se guarda una copia reducida sin datos de ubicación ni de la cámara. Las cartas publicadas muestran la foto
-              al volver a publicarlas.
+              en cuanto la subes.
             </p>
           </>
         )}

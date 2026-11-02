@@ -132,11 +132,22 @@ describe("panel de inicio", () => {
     expect(d.incompleteCostings?.map((p) => p.name)).not.toContain("Aliño");
     expect(d.menusToPublish).toEqual([expect.objectContaining({ name: "Menú del día", neverPublished: true })]);
 
-    // Un cambio de precio deja la carta publicada desactualizada.
-    await withTenant(f.owner, f.org, async (tx, ctx) => {
+    // Un cambio de precio se publica solo (D-048): la carta publicada no queda pendiente.
+    const aliñoId = await withTenant(f.owner, f.org, async (tx, ctx) => {
       const { listProducts } = await import("@/server/modules/menus/products");
       const aliño = (await listProducts(tx, ctx)).find((p) => p.name === "Aliño")!;
       await updateProduct(tx, ctx, aliño.id, { priceCents: 250 });
+      return aliño.id;
+    });
+    const afterPrice = await withTenant(f.owner, f.org, (tx, ctx) => getDashboard(tx, ctx, NOW));
+    expect(afterPrice.menusToPublish?.map((m) => m.name)).toEqual(["Menú del día"]);
+
+    // Si no se puede publicar (una categoría vacía), queda desactualizada y se avisa.
+    await withTenant(f.owner, f.org, async (tx, ctx) => {
+      const carta = (await tx.query("SELECT id FROM menus WHERE organization_id = $1 AND slug = 'carta'", [f.org]))
+        .rows[0].id as string;
+      await addSection(tx, ctx, carta, { name: "Vacía" });
+      await updateProduct(tx, ctx, aliñoId, { priceCents: 300 });
     });
     const after = await withTenant(f.owner, f.org, (tx, ctx) => getDashboard(tx, ctx, NOW));
     expect(after.menusToPublish?.map((m) => [m.name, m.neverPublished])).toEqual(

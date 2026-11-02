@@ -192,17 +192,20 @@ describe("imágenes públicas: solo las del contenido publicado", () => {
     });
     expect((await getPublicMedia(first))?.contentType).toBe("image/webp");
 
-    // Al cambiar la foto, la carta publicada mantiene la suya y la nueva no es pública hasta republicar.
+    // Al cambiar la foto, la carta publicada se actualiza sola (D-048): se sirve la nueva y no la anterior.
     await withTenant(f.owner, f.org, async (tx, ctx) =>
       setProductImage(tx, ctx, productId, await photo(800, 600, "#aa3300")),
     );
     const second = (await withTenant(f.owner, f.org, (tx, ctx) => getProduct(tx, ctx, productId))).imageMediaId!;
     expect(second).not.toBe(first);
-    expect(await getPublicMedia(first)).not.toBeNull();
-    expect(await getPublicMedia(second)).toBeNull();
+    expect((await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))!.snapshot.sections[0]!.items[0]!.imageId).toBe(
+      second,
+    );
+    expect(await getPublicMedia(second)).not.toBeNull();
+    expect(await getPublicMedia(first)).toBeNull();
 
     await withTenant(f.owner, f.org, (tx, ctx) => unpublishMenu(tx, ctx, menuId));
-    expect(await getPublicMedia(first)).toBeNull();
+    expect(await getPublicMedia(second)).toBeNull();
   });
 
   it("el borrador refleja la foto y la marca de recomendado; los datos ajenos no", async () => {

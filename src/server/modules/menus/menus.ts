@@ -12,7 +12,7 @@ import { isUuid, parseInput } from "@/server/validation";
 import type { PriceFormat } from "@/lib/price-formats";
 import type { WeeklySlot } from "../schedules/time";
 import { MAX_AVAILABILITY_RULES, rulesToSlots } from "./availability";
-import { priceCentsSchema } from "./products";
+import { priceCentsSchema } from "./price-schema";
 
 export const MAX_SECTIONS = 50;
 export const MAX_ITEMS_PER_SECTION = 200;
@@ -193,6 +193,8 @@ export async function updateMenu(tx: Tx, ctx: TenantContext, menuId: string, inp
       mapUnique(err);
     }
     await recordAudit(tx, ctx, { action: "menu.updated", entityType: "menu", entityId: menuId, metadata: { fields } });
+    // Nombre y tema forman parte de lo que ve el cliente (D-048).
+    await republishMenus(tx, ctx, { menuId });
   }
   return getMenuSummary(tx, ctx, menuId);
 }
@@ -320,8 +322,10 @@ async function requireItem(tx: Tx, ctx: TenantContext, menuId: string, itemId: s
   return rows[0].section_id;
 }
 
+/** Audita un cambio de la carta y, si ya está publicada, lo publica (D-048). */
 async function audit(tx: Tx, ctx: TenantContext, menuId: string, action: string): Promise<void> {
   await recordAudit(tx, ctx, { action, entityType: "menu", entityId: menuId });
+  await republishMenus(tx, ctx, { menuId });
 }
 
 export async function addSection(tx: Tx, ctx: TenantContext, menuId: string, input: unknown): Promise<string> {
@@ -628,6 +632,50 @@ export async function publishMenu(tx: Tx, ctx: TenantContext, menuId: string): P
     metadata: { version: version.version_number },
   });
   return { versionNumber: version.version_number };
+}
+
+/** Qué cartas publicadas puede haber cambiado una operación (D-048). */
+export type RepublishScope =
+  | { menuId: string }
+  | { productIds: string[] }
+  | { establishmentId: string }
+  | { organization: true };
+
+/**
+ * Publicación automática (D-048): una carta que ya está publicada se vuelve a
+ * publicar en la misma transacción cuando cambia lo que ve el cliente, sin
+ * pasar por un borrador pendiente. Solo crea versión si la instantánea
+ * difiere. Si el borrador no se puede publicar (p. ej. una categoría vacía),
+ * la web sigue con la última versión válida y el editor muestra qué falta.
+ * Las cartas que nunca se han publicado no se tocan: se publican a mano la
+ * primera vez. Sin permiso de publicar, no hace nada.
+ */
+export async function republishMenus(tx: Tx, ctx: TenantContext, scope: RepublishScope): Promise<void> {
+  if (!ctx.permissions.has("menus.publish")) return;
+  const where =
+    "menuId" in scope
+      ? { sql: "m.id = $2", args: [scope.menuId] }
+      : "productIds" in scope
+        ? {
+            sql: `m.id IN (SELECT s.menu_id FROM menu_items i JOIN menu_sections s ON s.id = i.section_id
+                            WHERE i.organization_id = $1 AND i.product_id = ANY($2::uuid[]))`,
+            args: [scope.productIds],
+          }
+        : "establishmentId" in scope
+          ? { sql: "m.establishment_id = $2", args: [scope.establishmentId] }
+          : { sql: "true", args: [] };
+  if ("productIds" in scope && scope.productIds.length === 0) return;
+  const { rows } = await tx.query<{ id: string }>(
+    `SELECT m.id FROM menus m
+      WHERE m.organization_id = $1 AND m.published_version_id IS NOT NULL AND ${where.sql}
+      ORDER BY m.id`,
+    [ctx.organizationId, ...where.args],
+  );
+  for (const { id } of rows) {
+    if (!(await hasUnpublishedChanges(tx, ctx, id))) continue;
+    if (publicationProblems(await getMenuDraft(tx, ctx, id)).length > 0) continue;
+    await publishMenu(tx, ctx, id);
+  }
 }
 
 export async function unpublishMenu(tx: Tx, ctx: TenantContext, menuId: string): Promise<void> {

@@ -7,6 +7,7 @@ import { nameSchema, slugSchema, timezoneSchema } from "@/server/modules/shared-
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
 import { LANGUAGES, type Language } from "@/lib/languages";
+import { republishMenus } from "@/server/modules/menus/menus";
 
 export interface Establishment {
   id: string;
@@ -122,6 +123,8 @@ export async function updateEstablishment(
       entityId: id,
       metadata: { fields },
     });
+    // El nombre del local sale en sus cartas publicadas (D-048).
+    await republishMenus(tx, ctx, { establishmentId: id });
     return rows[0];
   } catch (err) {
     if (isUniqueViolation(err)) throw new ConflictError("Ya existe un establecimiento con ese identificador");
@@ -151,4 +154,5 @@ export async function setEstablishmentLanguages(tx: Tx, ctx: TenantContext, id: 
     entityId: id,
     metadata: { languages: ordered },
   });
+  await republishMenus(tx, ctx, { establishmentId: id });
 }

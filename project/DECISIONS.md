@@ -599,3 +599,29 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Ocultar las opciones: el titular prefiere verlas deshabilitadas, como reclamo.
 
 **Límite conocido:** una foto de la galería cuyo enlace directo ya se conocía sigue sirviéndose (`app.public_media` no mira el plan), aunque la web ya no la muestra.
+
+## D-048 — Publicación automática de las cartas
+**Fecha:** 2026-11-02. **Estado:** aceptada.
+
+**Contexto:** las cartas tenían un borrador y había que pulsar «Publicar borrador» tras cada cambio. Si se olvidaba, la carta pública quedaba desactualizada (precios, alérgenos, fotos). El titular prefiere que los cambios se publiquen solos.
+
+**Decisión:**
+- La primera publicación sigue siendo manual («Publicar carta»), para no mostrar una carta a medio montar.
+- **Después**, cada cambio que altere lo que ve el cliente vuelve a publicar la carta en la misma transacción (`republishMenus`), siempre que el usuario tenga permiso de publicar:
+  - categorías y platos de la carta;
+  - nombre y tema;
+  - la ficha de un plato, en todas las cartas publicadas que lo incluyan;
+  - foto y alérgenos traídos de la receta;
+  - traducciones;
+  - nombre del local, idiomas y nombre de la organización.
+- Solo se crea versión si la instantánea cambia, y las versiones siguen siendo inmutables.
+- Si el borrador no se puede publicar (categoría vacía, plato archivado), la web mantiene la última versión válida y el editor avisa de qué falta. Al corregirlo, se publica solo.
+- Una carta despublicada no se vuelve a publicar por los cambios.
+- El esquema de precios pasa a `menus/price-schema.ts` para evitar una dependencia circular entre cartas y productos.
+
+**Alternativas descartadas:**
+- Quitar las versiones: se pierde la posibilidad de volver a una anterior.
+- Publicar automáticamente también la primera vez.
+- Un botón «Publicar» tras cada cambio, que era el problema de partida.
+
+**Consecuencia:** se generan más versiones (una por cambio visible); la lista de versiones crece con el uso.

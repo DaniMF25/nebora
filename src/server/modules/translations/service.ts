@@ -6,7 +6,7 @@ import { recordAudit } from "@/server/audit/audit";
 import type { Tx } from "@/server/db/pool";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { getEstablishment } from "@/server/modules/establishments/service";
-import { getMenuDraft } from "@/server/modules/menus/menus";
+import { getMenuDraft, republishMenus } from "@/server/modules/menus/menus";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
 import { entryFor, sourceHash, text, type StoredI18n, type TranslationStatus } from "./stored";
@@ -231,6 +231,9 @@ export async function saveMenuTranslations(
     entityId: menuId,
     metadata: { lang: language, products: data.products ? Object.keys(data.products).length : 0 },
   });
+  // Publicación automática (D-048): esta carta y las demás con esos platos.
+  await republishMenus(tx, ctx, { menuId });
+  if (data.products) await republishMenus(tx, ctx, { productIds: Object.keys(data.products) });
 }
 
 // ---------------------------------------------------------------------------

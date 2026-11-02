@@ -64,8 +64,8 @@ test("formatos de precio: media ración y ración en el catálogo, la carta y la
   await expect(page.getByRole("button", { name: "Quitar Calamares" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Fijar precio" })).toHaveCount(0);
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
 
   const visitor = await (await browser.newContext()).newPage();
   await visitor.goto(`/m/${orgSlug}/barra/carta`);

@@ -89,9 +89,9 @@ describe("traducciones", () => {
     expect((await asOwner((tx, ctx) => getMenuTranslationForm(tx, ctx, menuId, "fr")))!.summary.missing).toBe(3);
   });
 
-  it("la carta publicada lleva las traducciones al volver a publicar", async () => {
-    expect(await asOwner((tx, ctx) => hasUnpublishedChanges(tx, ctx, menuId))).toBe(true);
-    await asOwner((tx, ctx) => publishMenu(tx, ctx, menuId));
+  it("la carta publicada lleva las traducciones en cuanto se guardan (D-048)", async () => {
+    // Guardar las traducciones ya publicó la carta: no queda nada pendiente.
+    expect(await asOwner((tx, ctx) => hasUnpublishedChanges(tx, ctx, menuId))).toBe(false);
     const published = (await getPublishedMenu(orgSlug, est.slug, "carta"))!;
     expect(published.snapshot.languages).toEqual(["en", "fr"]);
     expect(published.snapshot.menuNameI18n).toEqual({ en: "Menu" });

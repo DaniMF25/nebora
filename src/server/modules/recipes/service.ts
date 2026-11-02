@@ -8,6 +8,7 @@ import { NotFoundError, ValidationError } from "@/server/errors";
 import { insertMovement, idempotencyKeySchema, type Movement } from "@/server/modules/inventory/service";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
+import { republishMenus } from "@/server/modules/menus/menus";
 
 export interface RecipeLine {
   id: string;
@@ -203,6 +204,7 @@ export async function applyRecipeAllergens(tx: Tx, ctx: TenantContext, productId
     entityId: productId,
     metadata: { added: recipe.undeclaredAllergens },
   });
+  await republishMenus(tx, ctx, { productIds: [productId] });
   return merged;
 }
 

@@ -64,8 +64,8 @@ test("página pública del local con foto, carta destacada y despublicación", a
     }),
   ).toBeVisible();
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
 
   // Perfil público
   await page.goto(estUrl);

@@ -45,8 +45,8 @@ test("estadísticas: cuenta visitas reales a la web, la carta y el QR, y no las 
   await page.getByRole("button", { name: "Añadir a Entrantes" }).click();
   await expect(page.getByRole("button", { name: "Quitar Croquetas" })).toBeVisible();
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
   const editorUrl = page.url().split("?")[0]!;
   const shortPath = new URL((await page.locator(".qr code").textContent())!).pathname;
 

@@ -164,8 +164,8 @@ test("web pública: hovers con los colores del tema y puntos del carrusel solo s
   await page.getByLabel("Producto para Del mar").selectOption({ label: "Pulpo (9,00 €)" });
   await page.getByRole("button", { name: "Añadir a Del mar" }).click();
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
   await page.goto(`${estUrl}/site?tab=contenido`);
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Bienvenidos");
   await page.getByLabel("Carta destacada").selectOption({ label: "Carta" });

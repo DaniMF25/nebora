@@ -93,9 +93,10 @@ describe("horario de las cartas", () => {
     }
   });
 
-  it("la lectura pública da solo cartas publicadas, con el nombre publicado y la destacada", async () => {
+  it("la lectura pública da solo cartas publicadas, con su nombre al día y la destacada", async () => {
     await withTenant(owner, org, (tx, ctx) => createMenu(tx, ctx, est.id, { name: "Borrador", slug: "borrador" }));
-    await withTenant(owner, org, (tx, ctx) => updateMenu(tx, ctx, main, { name: "Nombre sin publicar" }));
+    // Renombrar una carta publicada se publica solo (D-048).
+    await withTenant(owner, org, (tx, ctx) => updateMenu(tx, ctx, main, { name: "Carta de la casa" }));
     await withTenant(owner, org, (tx, ctx) =>
       updateSiteProfile(tx, ctx, est.id, {
         theme: "moderno",
@@ -113,7 +114,7 @@ describe("horario de las cartas", () => {
     const data = await getPublicMenus(orgSlug, est.slug);
     expect(data?.timezone).toBe("Europe/Madrid");
     expect(data?.menus.map((m) => [m.slug, m.name, m.featured])).toEqual([
-      ["carta", "Carta", true],
+      ["carta", "Carta de la casa", true],
       ["desayunos", "Desayunos", false],
     ]);
     expect(data?.menus[1]!.availability).toHaveLength(5);

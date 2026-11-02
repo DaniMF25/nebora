@@ -82,14 +82,14 @@ describe("cartas: borrador, publicación y versiones", () => {
     expect(draft.sections[1]!.items[0]).toMatchObject({ basePriceCents: 600, priceOverrideCents: 650, priceCents: 650 });
   });
 
-  it("publicar crea una versión inmutable que no cambia al editar el borrador", async () => {
+  it("publicar crea una versión inmutable; después cada cambio se publica solo en una versión nueva (D-048)", async () => {
     const v1 = await withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id));
     expect(v1.versionNumber).toBe(1);
 
     const pub = await getPublishedMenu(f.orgSlug, f.est.slug, "CARTA");
     expect(pub).not.toBeNull();
     expect(pub!.versionNumber).toBe(1);
-    expect(pub!.snapshot).toEqual({
+    const v1Snapshot = {
       schemaVersion: 1,
       theme: "mediterraneo",
       organizationName: expect.any(String),
@@ -100,59 +100,75 @@ describe("cartas: borrador, publicación y versiones", () => {
         { name: "Entrantes", items: [{ name: "Croquetas", description: "De jamón", priceCents: 850, allergens: ["gluten", "milk"] }] },
         { name: "Postres", items: [{ name: "Tarta de queso", description: null, priceCents: 650, allergens: ["eggs", "milk"] }] },
       ],
-    });
+    };
+    expect(pub!.snapshot).toEqual(v1Snapshot);
     // La instantánea pública no contiene identificadores internos.
     expect(JSON.stringify(pub!.snapshot)).not.toContain(m.croquetas.id);
     expect(JSON.stringify(pub!.snapshot)).not.toContain(f.org);
 
-    // Cambios en el catálogo y el borrador no afectan a lo publicado.
+    // Un cambio del plato se publica solo, como versión 2; la 1 no cambia.
+    await withTenant(f.owner, f.org, (tx, ctx) =>
+      updateProduct(tx, ctx, m.croquetas.id, { priceCents: 990, name: "Croquetas caseras" }),
+    );
+    const v2 = await getPublishedMenu(f.orgSlug, f.est.slug, "carta");
+    expect(v2!.versionNumber).toBe(2);
+    expect(v2!.snapshot.sections[0]!.items[0]).toMatchObject({ name: "Croquetas caseras", priceCents: 990 });
+    const stored = await withAdminClient((c) =>
+      c.query("SELECT snapshot FROM menu_versions WHERE menu_id = $1 AND version_number = 1", [m.menu.id]),
+    );
+    expect(stored.rows[0].snapshot).toEqual(v1Snapshot);
+
+    // Con una categoría vacía no se puede publicar: la web sigue con la versión 2.
     await withTenant(f.owner, f.org, async (tx, ctx) => {
-      await updateProduct(tx, ctx, m.croquetas.id, { priceCents: 990, name: "Croquetas caseras" });
       await addSection(tx, ctx, m.menu.id, { name: "Borrador secreto" });
       await updateMenu(tx, ctx, m.menu.id, { theme: "futurista" });
     });
     const still = await getPublishedMenu(f.orgSlug, f.est.slug, "carta");
+    expect(still!.versionNumber).toBe(2);
     expect(still!.snapshot.theme).toBe("mediterraneo");
     expect(still!.snapshot.sections.map((s) => s.name)).toEqual(["Entrantes", "Postres"]);
-    expect(still!.snapshot.sections[0]!.items[0]!.priceCents).toBe(850);
   });
 
-  it("no publica borradores incompletos", async () => {
+  it("no publica borradores incompletos; al corregirlo se publica solo", async () => {
     await expect(withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id))).rejects.toThrow(
       ValidationError,
     );
     const draft = await withTenant(f.owner, f.org, (tx, ctx) => getMenuDraft(tx, ctx, m.menu.id));
     const empty = draft.sections.find((s) => s.name === "Borrador secreto")!;
     await withTenant(f.owner, f.org, (tx, ctx) => deleteSection(tx, ctx, m.menu.id, empty.id));
+    const pub = await getPublishedMenu(f.orgSlug, f.est.slug, "carta");
+    expect(pub!.versionNumber).toBe(3);
+    expect(pub!.snapshot.theme).toBe("futurista");
+    // Sin cambios visibles no se crean versiones.
+    await withTenant(f.owner, f.org, (tx, ctx) => updateMenu(tx, ctx, m.menu.id, { theme: "futurista" }));
+    expect((await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))!.versionNumber).toBe(3);
   });
 
   it("versiones sucesivas, reactivar una anterior y despublicar", async () => {
-    const v2 = await withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id));
-    expect(v2.versionNumber).toBe(2);
-    expect((await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))!.snapshot.sections[0]!.items[0]!.name).toBe(
-      "Croquetas caseras",
-    );
-
     const versions = await withTenant(f.owner, f.org, (tx, ctx) => listVersions(tx, ctx, m.menu.id));
     expect(versions.map((v) => [v.versionNumber, v.isCurrent])).toEqual([
-      [2, true],
+      [3, true],
+      [2, false],
       [1, false],
     ]);
-    await withTenant(f.owner, f.org, (tx, ctx) => activateVersion(tx, ctx, m.menu.id, versions[1]!.id));
+    await withTenant(f.owner, f.org, (tx, ctx) => activateVersion(tx, ctx, m.menu.id, versions[2]!.id));
     expect((await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))!.versionNumber).toBe(1);
 
     await withTenant(f.owner, f.org, (tx, ctx) => unpublishMenu(tx, ctx, m.menu.id));
     expect(await getPublishedMenu(f.orgSlug, f.est.slug, "carta")).toBeNull();
     const list = await withTenant(f.owner, f.org, (tx, ctx) => listMenus(tx, ctx, f.est.id));
     expect(list[0]!.publishedVersionNumber).toBeNull();
+    // Despublicada, los cambios no la vuelven a publicar.
+    await withTenant(f.owner, f.org, (tx, ctx) => updateMenu(tx, ctx, m.menu.id, { theme: "moderno" }));
+    expect(await getPublishedMenu(f.orgSlug, f.est.slug, "carta")).toBeNull();
   });
 
   it("publicaciones simultáneas generan versiones consecutivas distintas", async () => {
     const results = await Promise.all(
       Array.from({ length: 6 }, () => withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id))),
     );
-    expect(results.map((r) => r.versionNumber).sort((x, y) => x - y)).toEqual([3, 4, 5, 6, 7, 8]);
-    expect((await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))!.versionNumber).toBe(8);
+    expect(results.map((r) => r.versionNumber).sort((x, y) => x - y)).toEqual([4, 5, 6, 7, 8, 9]);
+    expect((await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))!.versionNumber).toBe(9);
   });
 
   it("las versiones no se pueden modificar ni borrar con el rol de aplicación", async () => {
@@ -397,15 +413,18 @@ describe("cartas: código público estable (QR)", () => {
   });
 });
 
-describe("aviso de cambios sin publicar", () => {
-  it("detecta cualquier cambio visible respecto a la versión publicada", async () => {
+describe("publicación automática y aviso de cambios sin publicar (D-048)", () => {
+  it("cada cambio visible de una carta publicada crea y activa una versión; si no se puede publicar, se avisa", async () => {
     const f = await setupRestaurant("outdated");
     const m = await buildMenu(f);
     const check = () => withTenant(f.owner, f.org, (tx, ctx) => hasUnpublishedChanges(tx, ctx, m.menu.id));
-    const publish = () => withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id));
+    const version = async () => (await getPublishedMenu(f.orgSlug, f.est.slug, "carta"))?.versionNumber ?? null;
 
     expect(await check()).toBeNull(); // nunca publicada
-    await publish();
+    // Mientras no se publica a mano la primera vez, los cambios no la publican.
+    await withTenant(f.owner, f.org, (tx, ctx) => updateMenu(tx, ctx, m.menu.id, { name: "Carta principal" }));
+    expect(await version()).toBeNull();
+    await withTenant(f.owner, f.org, (tx, ctx) => publishMenu(tx, ctx, m.menu.id));
     expect(await check()).toBe(false);
 
     const changes: ((
@@ -418,12 +437,19 @@ describe("aviso de cambios sin publicar", () => {
       (tx, ctx) => updateMenu(tx, ctx, m.menu.id, { theme: "futurista" }),
       (tx, ctx) => moveSection(tx, ctx, m.menu.id, m.postres, "up"),
     ];
-    for (const change of changes) {
+    for (const [n, change] of changes.entries()) {
       await withTenant(f.owner, f.org, change);
-      expect(await check()).toBe(true);
-      await publish();
       expect(await check()).toBe(false);
+      expect(await version()).toBe(n + 2);
     }
+
+    // Con una categoría vacía no se puede publicar: el cambio de precio queda pendiente y se avisa.
+    await withTenant(f.owner, f.org, async (tx, ctx) => {
+      await addSection(tx, ctx, m.menu.id, { name: "Vacía" });
+      await updateProduct(tx, ctx, m.croquetas.id, { priceCents: 1000 });
+    });
+    expect(await check()).toBe(true);
+    expect(await version()).toBe(changes.length + 1);
 
     // Otra organización no puede consultarlo.
     const other = await setupRestaurant("outdated-other");
@@ -441,7 +467,11 @@ describe("carta para imprimir: versión publicada", () => {
     const read = (f: Fixture) => withTenant(f.owner, f.org, (tx, ctx) => getPublishedSnapshot(tx, ctx, menu.id));
     expect(await read(a)).toBeNull();
     await withTenant(a.owner, a.org, (tx, ctx) => publishMenu(tx, ctx, menu.id));
-    await withTenant(a.owner, a.org, (tx, ctx) => updateMenu(tx, ctx, menu.id, { name: "Nombre en borrador" }));
+    // Con una categoría vacía el borrador no se publica solo (D-048): se imprime la versión publicada.
+    await withTenant(a.owner, a.org, async (tx, ctx) => {
+      await addSection(tx, ctx, menu.id, { name: "Vacía" });
+      await updateMenu(tx, ctx, menu.id, { name: "Nombre en borrador" });
+    });
     const published = await read(a);
     expect(published).toMatchObject({ versionNumber: 1, snapshot: { menuName: "Carta principal" } });
     expect(published!.snapshot.sections.map((s) => s.name)).toEqual(["Entrantes", "Postres"]);

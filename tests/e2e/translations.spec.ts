@@ -59,8 +59,8 @@ test("traducciones: el local activa inglés, traduce web y carta, y el cliente l
   await page.reload();
   await expect(page.getByText("3 traducidos · 0 por revisar · 0 sin traducir")).toBeVisible();
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
 
   // Web publicada y traducida (el texto sin traducir queda en español).
   await page.goto(`${estUrl}/site?tab=contenido`);

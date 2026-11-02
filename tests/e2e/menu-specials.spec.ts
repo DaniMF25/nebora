@@ -42,8 +42,8 @@ test("fuera de carta: se añade en el panel y sale al momento en la carta y la w
   await page.getByRole("button", { name: "Añadir a Entrantes" }).click();
   await expect(page.getByRole("button", { name: "Quitar Croquetas" })).toBeVisible();
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
   await page.goto(`${est}/site?tab=contenido`);
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Bienvenidos");
   await page.getByLabel("Carta destacada").selectOption({ label: "Carta" });

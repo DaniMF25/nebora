@@ -115,13 +115,14 @@ export default async function MenuEditorPage({
         ) : (
           <strong>Sin publicar</strong>
         )}{" "}
-        · <Link href={`/app/${orgId}/menus/${menuId}/preview`}>Vista previa del borrador</Link>
+        · <Link href={`/app/${orgId}/menus/${menuId}/preview`}>Vista previa</Link>
       </p>
 
       {outdated && tab !== "publicacion" && (
         <p className="notice">
-          Hay cambios sin publicar: la carta pública aún muestra la versión anterior.{" "}
-          <Link href={`/app/${orgId}/menus/${menuId}?tab=publicacion`}>Ir a publicación</Link>
+          Hay cambios sin publicar porque la carta no se puede publicar así; mientras tanto, la carta pública muestra
+          la versión anterior.{" "}
+          <Link href={`/app/${orgId}/menus/${menuId}?tab=publicacion`}>Ver qué falta</Link>
         </p>
       )}
       <PageTabs tabs={tabList} current={tab} basePath={`/app/${orgId}/menus/${menuId}`} />
@@ -149,8 +150,8 @@ export default async function MenuEditorPage({
               </nav>
               <p className="muted">
                 {translations.summary.done} traducidos · {translations.summary.stale} por revisar ·{" "}
-                {translations.summary.missing} sin traducir. Lo que quede sin traducir se muestra en español. Los
-                cambios se ven en la carta pública al volver a publicar.
+                {translations.summary.missing} sin traducir. Lo que quede sin traducir se muestra en español. Si la carta
+                está publicada, los cambios se ven en cuanto los guardas.
               </p>
               <ActionForm
                 action={saveMenuTranslationsAction.bind(null, orgId, menuId, translations.lang, translations.canEditProducts)}
@@ -426,16 +427,17 @@ export default async function MenuEditorPage({
             <section>
               <h3>Publicación</h3>
               <p className="muted">
-                Publicar congela el borrador actual en una nueva versión. Los cambios posteriores no se verán en la
-                página pública hasta volver a publicar.
+                {menu.publishedVersionNumber
+                  ? "La carta está publicada: cada cambio que guardes se publica automáticamente."
+                  : "Publica la carta cuando esté lista. A partir de entonces, cada cambio que guardes se publica automáticamente."}
               </p>
               {outdated && (
                 <p className="notice" role="status">
-                  Hay cambios sin publicar: la página pública aún muestra la versión anterior (precios, fotos, alérgenos
-                  u orden). Publica el borrador para actualizarla.
+                  Hay cambios sin publicar porque la carta no se puede publicar así. Corrige lo que falta y se
+                  publicará sola; mientras tanto, la página pública muestra la versión anterior.
                 </p>
               )}
-              {outdated === false && <p className="muted">La versión publicada está al día con el borrador.</p>}
+              {outdated === false && <p className="muted">La carta pública está al día.</p>}
               {problems.length > 0 && (
                 <ul className="muted">
                   {problems.map((p) => (
@@ -444,11 +446,13 @@ export default async function MenuEditorPage({
                 </ul>
               )}
               <div className="inline-form">
-                <ActionForm
-                  action={publishMenuAction.bind(null, orgId, menuId)}
-                  submitLabel="Publicar borrador"
-                  className="inline-form"
-                />
+                {!menu.publishedVersionNumber && (
+                  <ActionForm
+                    action={publishMenuAction.bind(null, orgId, menuId)}
+                    submitLabel="Publicar carta"
+                    className="inline-form"
+                  />
+                )}
                 {menu.publishedVersionNumber && (
                   <ActionForm
                     action={unpublishMenuAction.bind(null, orgId, menuId)}

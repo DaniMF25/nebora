@@ -200,8 +200,8 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
     await expect(page.getByRole("button", { name: `Quitar ${dish}` })).toBeVisible();
   }
   await page.goto(`${menu}?tab=publicacion`);
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
 
   await page.goto(`${org}/ingredients`);
   await page.getByText("Nuevo ingrediente").click();

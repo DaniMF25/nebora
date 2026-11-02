@@ -23,8 +23,8 @@ async function createPublishedMenu(page: Page, estUrl: string, name: string, slu
   await page.getByRole("button", { name: "Añadir a Platos" }).click();
   await expect(page.getByRole("button", { name: `Quitar ${dish}` })).toBeVisible();
   await openTab(page, "Publicación y QR");
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText(/Publicada la versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
   return editor;
 }
 

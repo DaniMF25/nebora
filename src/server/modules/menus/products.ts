@@ -9,8 +9,10 @@ import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { nameSchema } from "@/server/modules/shared-schemas";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
+import { MAX_PRICE_CENTS, priceCentsSchema } from "./price-schema";
+import { republishMenus } from "./menus";
 
-export const MAX_PRICE_CENTS = 100_000_000;
+export { MAX_PRICE_CENTS, priceCentsSchema };
 
 export interface Product {
   id: string;
@@ -34,8 +36,6 @@ const descriptionSchema = z
   .max(500)
   .transform((v) => (v === "" ? null : v))
   .nullable();
-
-export const priceCentsSchema = z.number().int().min(0).max(MAX_PRICE_CENTS);
 
 /** De 2 a 6 formatos con nombres distintos; null = precio único. */
 const formatsSchema = z
@@ -244,6 +244,8 @@ export async function updateProduct(tx: Tx, ctx: TenantContext, id: string, inpu
     entityId: id,
     metadata: { fields },
   });
+  // Publicación automática de las cartas publicadas que lo incluyen (D-048).
+  await republishMenus(tx, ctx, { productIds: [id] });
   return rows[0];
 }
 
@@ -282,4 +284,5 @@ export async function setProductImage(tx: Tx, ctx: TenantContext, id: string, by
     entityType: "product",
     entityId: id,
   });
+  await republishMenus(tx, ctx, { productIds: [id] });
 }

@@ -42,8 +42,8 @@ test("QR: enlace permanente que sobrevive al cambio de identificador y descarga 
   const visitor = await anon.newPage();
   expect((await visitor.goto(shortUrl))?.status()).toBe(404);
 
-  await page.getByRole("button", { name: "Publicar borrador" }).click();
-  await expect(page.getByText("Publicada la versión 1")).toBeVisible();
+  await page.getByRole("button", { name: "Publicar carta" }).click();
+  await expect(page.getByText("(versión 1)")).toBeVisible();
   await visitor.goto(shortUrl);
   await expect(visitor).toHaveURL(/\/m\/.+\/carta$/);
   await expect(visitor.getByText("Gazpacho")).toBeVisible();

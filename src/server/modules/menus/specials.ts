@@ -13,7 +13,7 @@ import { isUuid, parseInput } from "@/server/validation";
 import { isValidLocalDate, localDateOf } from "../schedules/time";
 import type { PriceFormat } from "@/lib/price-formats";
 import { FORMATS_PRICE_MESSAGE } from "./menus";
-import { priceCentsSchema } from "./products";
+import { priceCentsSchema } from "./price-schema";
 
 /**
  * Fuera de carta (D-037): platos del catálogo que un local ofrece aparte, con
