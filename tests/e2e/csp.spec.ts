@@ -43,16 +43,20 @@ test("CSP estricta: solo scripts con nonce y la aplicación funciona sin violaci
   expect(new Set(scriptNonces)).toEqual(new Set([/'nonce-([^']+)'/.exec(again)![1]]));
 
   // Control: un manejador en línea inyectado se bloquea y el detector lo registra.
-  await page.evaluate(() => {
+  // En otra página: el navegador avisa de la violación más de una vez y de forma
+  // asíncrona, y esos avisos no deben mezclarse con los del recorrido.
+  const control = await (await browser.newContext()).newPage();
+  const controlViolations = await watchViolations(control);
+  await control.goto("/login");
+  await control.evaluate(() => {
     const b = document.createElement("button");
     b.id = "inyectado";
     b.setAttribute("onclick", "document.title = 'XSS'");
     document.body.append(b);
   });
-  await page.locator("#inyectado").click();
-  await expect.poll(() => violations.length).toBeGreaterThan(0);
-  expect(await page.title()).not.toBe("XSS");
-  violations.length = 0;
+  await control.locator("#inyectado").click();
+  await expect.poll(() => controlViolations.length).toBeGreaterThan(0);
+  expect(await control.title()).not.toBe("XSS");
 
   // Panel: los componentes interactivos solo funcionan si sus scripts se cargan.
   await register(page, "Csp");
