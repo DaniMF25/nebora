@@ -264,6 +264,23 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
   await page.getByLabel("Correo electrónico").fill(`otra-${suffix()}@example.test`);
   await page.getByRole("button", { name: "Crear invitación" }).click();
 
+  // Personal y un turno, para ver el cuadrante con datos.
+  await page.goto(`${org}/staff`);
+  const addPerson = page.locator("section", { has: page.getByRole("heading", { name: "Añadir persona" }) });
+  await addPerson.getByLabel("Nombre").fill("Lucía Fernández");
+  await addPerson.getByLabel("Puesto (opcional)").fill("Sala");
+  await addPerson.getByLabel("Cuenta en Nébora (opcional)").selectOption({ label: "Ana" });
+  await addPerson.getByRole("button", { name: "Añadir persona" }).click();
+  await expect(page.getByRole("cell", { name: "Lucía Fernández" })).toBeVisible();
+  await page.goto(`${est}/staff?week=2030-06-17`);
+  const addShift = page.locator("section", { has: page.getByRole("heading", { name: "Añadir turno" }) });
+  await addShift.getByLabel("Persona").selectOption({ label: "Lucía Fernández (Sala)" });
+  await addShift.getByLabel("Día").fill("2030-06-18");
+  await addShift.getByLabel("De", { exact: true }).fill("12:00");
+  await addShift.getByLabel("A", { exact: true }).fill("16:00");
+  await addShift.getByRole("button", { name: "Añadir turno" }).click();
+  await expect(page.getByText("Turno añadido")).toBeVisible();
+
   await page.goto(`${est}/site?tab=contenido`);
   await page.getByLabel("Titular (obligatorio para publicar)").fill("Bienvenidos");
   await page.getByRole("button", { name: "Guardar página" }).click();
@@ -287,6 +304,7 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
     `${org}/ingredients`,
     `${org}/suppliers`,
     `${org}/members`,
+    `${org}/staff`,
     `${org}/privacy`,
     est,
     `${est}?tab=horario`,
@@ -303,6 +321,7 @@ test("botones separados, sin desbordamientos en móvil ni violaciones de CSP en 
     order,
     `${est}/floor`,
     `${est}/reservations?date=2030-06-17`,
+    `${est}/staff?week=2030-06-17`,
     `${est}/site`,
     `${est}/site?tab=marca`,
     `${est}/site?tab=contenido`,

@@ -128,6 +128,12 @@ export default async function EstablishmentPage({
                 </Link>
               </li>
               <li>
+                <Link href={`${base}/staff`} aria-label="Cuadrante de turnos del personal">
+                  <strong>Turnos</strong>
+                  <span>Cuadrante semanal del personal</span>
+                </Link>
+              </li>
+              <li>
                 <Link href={`${base}/site`} aria-label="Página pública">
                   <strong>Web pública</strong>
                   <span>Diseño, contenido y publicación de tu web</span>

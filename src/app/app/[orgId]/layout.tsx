@@ -43,6 +43,7 @@ export default async function OrganizationLayout({
         menus: ctx.permissions.has("menus.read"),
         inventory: ctx.permissions.has("inventory.read"),
         purchasing: ctx.permissions.has("purchasing.read"),
+        staff: ctx.permissions.has("staff.read"),
       },
       // Solo organizaciones en las que el usuario es miembro activo.
       hasOthers: (await listMyOrganizations(tx, ctx)).some((o) => o.id !== orgId),
@@ -81,6 +82,7 @@ export default async function OrganizationLayout({
       title: "Organización",
       items: [
         { href: `${base}/members`, label: "Miembros", icon: "team" },
+        ...(can.staff ? [{ href: `${base}/staff`, label: "Personal", icon: "person" as const }] : []),
         ...(can.privacy ? [{ href: `${base}/privacy`, label: "Privacidad", icon: "shield" as const }] : []),
       ],
     },
@@ -98,6 +100,7 @@ export default async function OrganizationLayout({
             ...(can.menus ? [{ path: "/menus", label: "Cartas", icon: "products" as const }] : []),
             { path: "/reservations", label: "Reservas", icon: "calendar" },
             { path: "/floor", label: "Sala", icon: "floor" },
+            ...(can.staff ? [{ path: "/staff", label: "Turnos", icon: "clock" as const }] : []),
             ...(can.inventory ? [{ path: "/inventory", label: "Inventario", icon: "inventory" as const }] : []),
             ...(can.purchasing ? [{ path: "/purchasing", label: "Compras", icon: "purchasing" as const }] : []),
             { path: "/site", label: "Web pública", icon: "globe" },

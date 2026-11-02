@@ -37,6 +37,9 @@ export const PERMISSIONS = [
   // Catálogo común a todos los locales: productos, recetas, ingredientes y
   // proveedores. Solo con acceso a todos los locales (D-031).
   "catalog.manage",
+  // Personal y cuadrante de turnos (D-045): todos lo ven; lo editan los encargados.
+  "staff.read",
+  "staff.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -64,6 +67,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reservations.manage",
     "stats.read",
     "catalog.manage",
+    "staff.read",
+    "staff.manage",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -79,6 +84,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     // El personal de sala toma y gestiona reservas.
     "reservations.read",
     "reservations.manage",
+    // Consulta el cuadrante de turnos de sus locales.
+    "staff.read",
   ],
 };
 

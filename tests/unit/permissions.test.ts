@@ -20,8 +20,15 @@ describe("matriz de permisos", () => {
       "purchasing.receive",
       "reservations.manage",
       "reservations.read",
+      "staff.read",
       "tables.read",
     ]);
+  });
+
+  it("todos ven el cuadrante de turnos; solo el encargado o superior lo edita", () => {
+    for (const r of ROLES) expect(roleHasPermission(r, "staff.read")).toBe(true);
+    expect(roleHasPermission("manager", "staff.manage")).toBe(true);
+    expect(roleHasPermission("staff", "staff.manage")).toBe(false);
   });
 
   it("manager no puede crear establecimientos, renombrar la organización ni leer auditoría", () => {

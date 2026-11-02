@@ -526,3 +526,24 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Dependencias: `zod` 4.6.7 y `vitest` 4.1.12. Se aceptan 2 avisos moderados de `minimatch` (solo desarrollo, vía ESLint 9).
 
 **Alternativas descartadas:** CSP estática con hashes (Next genera scripts en línea distintos en cada página); `'unsafe-inline'` en scripts (anula la protección); HSTS siempre (impide entrar en local por http).
+
+## D-045 — Personal y cuadrante de turnos
+**Fecha:** 2026-11-02. **Estado:** aceptada.
+
+**Contexto:** la Fase 6 tenía pendientes los turnos del personal. Muchos empleados de un restaurante no tienen ni necesitan cuenta en Nébora.
+
+**Decisión:**
+- `staff_members`: fichas de la organización (nombre, puesto, activo y, opcionalmente, la cuenta de un miembro activo; una ficha por cuenta). Datos mínimos: sin teléfono, documento ni salario. Una ficha con turnos no se elimina: se desactiva.
+- `staff_shifts`: turnos de una persona en un local, guardados como instantes UTC (`starts_at`, `ends_at`, `during` generado). Restricción de exclusión `staff_shifts_no_overlap` por persona: no puede haber dos turnos solapados, tampoco en locales distintos ni con altas simultáneas. Máximo 16 horas. Se introducen con día y horas locales del local; si la hora de fin es anterior a la de inicio, acaba al día siguiente (cambios de hora incluidos).
+- Permisos `staff.read` (todos los roles: el personal consulta el cuadrante) y `staff.manage` (owner, admin, manager). RLS: fichas por organización; turnos además por local (D-031).
+- Panel: «Personal» en la organización y «Turnos» en cada local: cuadrante semanal (lunes a domingo) con horas por persona, alta, modificación y borrado de turnos y «Copiar la semana anterior» (salta los turnos de personas desactivadas y los que se solaparían; un bloqueo por local evita copias duplicadas con dos clics).
+- Auditoría de altas, cambios y bajas de fichas y turnos, y de cada copia de semana.
+
+**Alternativas descartadas:**
+- Turnos solo para miembros con cuenta: obligaría a invitar a todo el equipo.
+- Fichas por local: duplicaría a quien trabaja en varios locales y no permitiría impedir solapes entre ellos.
+- Comprobar solapes solo en el servidor: no resiste altas simultáneas.
+
+**Límites conocidos:**
+- Un encargado limitado a un local ve las fichas de toda la organización (nombre y puesto). Si una persona ya tiene un turno en otro local al que el encargado no accede, este solo sabe que «se solapa».
+- Las horas son las planificadas, no las trabajadas: no hay fichaje.

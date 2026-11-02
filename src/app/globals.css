@@ -110,6 +110,9 @@ td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--
 tbody tr:hover { background: #fafafc; }
 .table-wrap { position: relative; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
 .table-wrap td:first-child, .table-wrap th:first-child { padding-left: 1rem; }
+/* Cuadrante de turnos (D-045): las horas no se parten; el día de hoy, resaltado. */
+.rota td div, .rota td[data-label="Horas"] { white-space: nowrap; }
+.rota thead th[aria-current="date"] { color: var(--accent-strong); }
 tbody tr:last-child td { border-bottom: none; }
 dl.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; margin: 0; }
 dl.kpis div { background: var(--bg); border-radius: 10px; padding: 0.65rem 0.85rem; }
@@ -252,6 +255,8 @@ main.auth button[type="submit"] { width: 100%; }
   /* Acciones: a todo el ancho, sin etiqueta. */
   .table-wrap td[data-label="Acciones"] { padding-left: 0; }
   .table-wrap td[data-label="Acciones"]::before { content: none; }
+  /* En tarjeta, solo los días con turno. */
+  .rota td.free { display: none; }
   main.auth { margin-top: 4vh; padding: 1.5rem 1.25rem; }
 }
 
