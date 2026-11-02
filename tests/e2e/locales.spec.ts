@@ -51,6 +51,8 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   // Centro no ve el almacén de Playa.
   await nav.getByRole("link", { name: "Inventario", exact: true }).click();
   await inventory.getByRole("link", { name: "Centro" }).click();
+  // Esperar a la página de Centro: la del grupo también tiene la pestaña «Almacenes».
+  await expect(page.getByRole("heading", { level: 2, name: "Inventario · Centro" })).toBeVisible();
   await openTab(page, "Almacenes");
   await expect(page.getByText("No hay almacenes.")).toBeVisible();
   await expect(page.getByText("Bodega de la playa")).toHaveCount(0);
@@ -68,6 +70,7 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   // La vista del grupo reúne los almacenes de todos los locales.
   await nav.getByRole("link", { name: "Inventario", exact: true }).click();
   await inventory.getByRole("link", { name: "Todos los locales" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Inventario del grupo" })).toBeVisible();
   await openTab(page, "Almacenes");
   await expect(page.getByRole("listitem").filter({ hasText: "Playa · Bodega de la playa" })).toBeVisible();
 });
