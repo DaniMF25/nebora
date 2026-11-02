@@ -89,6 +89,12 @@ test("reserva online en inglés: página, errores y confirmación en el idioma e
   await setSitePublished(page, true);
   const site = publicHref.replace(/^\/r\//, "/");
   await client.goto(`${site}?lang=en`);
+  // En escritorio, el selector de idioma y el botón de reservar de la cabecera van alineados y miden lo mismo.
+  const header = client.locator("header").first();
+  const langBox = (await header.locator('summary[aria-label^="Language"]').boundingBox())!;
+  const ctaBox = (await header.getByRole("link", { name: "Book", exact: true }).boundingBox())!;
+  expect(Math.abs(langBox.y - ctaBox.y), "misma altura en pantalla").toBeLessThanOrEqual(1);
+  expect(Math.abs(langBox.height - ctaBox.height), "mismo alto").toBeLessThanOrEqual(1);
   await client.getByRole("link", { name: "Book a table" }).first().click();
   await expect(client).toHaveURL(/\/r\/.*\?lang=en$/);
   await expect(client.getByRole("heading", { level: 1, name: "Book a table" })).toBeVisible();

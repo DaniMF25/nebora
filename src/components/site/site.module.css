@@ -240,6 +240,7 @@
 
 .menuToggle {
   position: relative;
+  margin: 0;
 }
 
 .menuToggle summary {
@@ -299,17 +300,26 @@
 /* Selector de idioma de la cabecera (sin JavaScript: details/summary). */
 .langMenu {
   position: relative;
+  display: flex;
+  /* Sin el margen que el panel da a todos los <details>. */
+  margin: 0;
 }
 
+/* Misma caja que el botón de reservar: van juntos en la cabecera. */
 .langMenu summary {
   list-style: none;
   cursor: pointer;
   color: inherit;
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 2.25rem;
+  font-size: 0.8rem;
+  line-height: 1;
   letter-spacing: var(--s-label-spacing);
   border: 1px solid currentColor;
   border-radius: var(--s-radius);
-  padding: 0.35rem 0.6rem;
+  padding: 0 0.7rem;
 }
 
 .langMenu summary::-webkit-details-marker {
@@ -351,12 +361,16 @@
 
 @media (min-width: 768px) {
   .headerCta {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 2.25rem;
+    line-height: 1;
     color: inherit;
     text-decoration: none;
     border: 1px solid currentColor;
     border-radius: var(--s-radius);
-    padding: 0.45rem 1rem;
+    padding: 0 1rem;
     font-size: 0.8rem;
     letter-spacing: var(--s-label-spacing);
     text-transform: uppercase;
