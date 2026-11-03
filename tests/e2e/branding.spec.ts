@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
+import { brandPalette, contrastRatio } from "../../src/lib/color";
+import { THEME_INFO } from "../../src/lib/site-themes";
+
+const m = THEME_INFO.mediterraneo;
 
 test("marca de la web: logotipo, color propio y tipografía elegida", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -89,7 +93,11 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
       .locator("body div[lang]")
       .first()
       .evaluate((el) => getComputedStyle(el).getPropertyValue("--s-accent").trim()),
-  ).toBe("#2e86ab");
+    // El color de marca se ajusta lo justo para leerse sobre el fondo de la página (WCAG AA, D-051).
+  ).toBe(brandPalette("#2e86ab", { page: m.pageBg, hero: m.heroBg, contact: m.contactBg }).page);
+  expect(
+    contrastRatio(brandPalette("#2e86ab", { page: m.pageBg, hero: m.heroBg, contact: m.contactBg }).page, m.pageBg),
+  ).toBeGreaterThanOrEqual(4.5);
 
   // Sin color propio vuelve el del estilo.
   await page.getByLabel("Usar mi color de marca").uncheck();

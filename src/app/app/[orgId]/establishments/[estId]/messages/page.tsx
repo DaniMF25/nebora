@@ -4,12 +4,20 @@ import { ActionForm } from "@/components/action-form";
 import { PageTabs, pickTab } from "@/components/panel/page-tabs";
 import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
-import { listMessages } from "@/server/modules/contact/service";
+import { listMessages, type ContactTopic } from "@/server/modules/contact/service";
 import { getEstablishment } from "@/server/modules/establishments/service";
 import { withTenant } from "@/server/tenancy/context";
 import { deleteMessageAction, setMessageStatusAction } from "./actions";
 
 const TABS = ["recibidos", "archivados"] as const;
+
+/** Motivo elegido en el formulario (D-052). */
+const TOPIC_LABELS: Record<ContactTopic, string> = {
+  group: "Reserva de grupo",
+  event: "Evento o celebración",
+  allergies: "Alergias e intolerancias",
+  other: "Otra consulta",
+};
 
 /** Bandeja de mensajes del formulario de contacto de la web (D-049). */
 export default async function MessagesPage({
@@ -70,6 +78,7 @@ export default async function MessagesPage({
             <li key={m.id} className={m.status === "new" ? "message-new" : undefined}>
               <strong>{m.customerName}</strong>
               {m.status === "new" && <span className="badge badge-ok"> Nuevo</span>}
+              {m.topic && <span className="badge"> {TOPIC_LABELS[m.topic]}</span>}
               <span className="muted"> · {when.format(m.createdAt)}</span>
               <div className="muted">
                 {m.customerPhone && <a href={`tel:${m.customerPhone.replace(/[^0-9+]/g, "")}`}>{m.customerPhone}</a>}

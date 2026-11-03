@@ -42,6 +42,8 @@ test("contacto: CTA en la portada, formulario en la web, mensaje en el panel; en
   await expect(visitor.locator("form [role=alert]")).toContainText("Indica un teléfono o un correo");
   await expect(visitor.getByLabel("Mensaje", { exact: true })).toHaveValue("¿Hacéis menús para grupos de 20?");
   await visitor.getByLabel("Correo electrónico").fill("laura@example.test");
+  // Motivo del mensaje (D-052).
+  await visitor.getByText("Reserva de grupo", { exact: true }).click();
   await visitor.getByRole("button", { name: "Enviar mensaje" }).click();
   await expect(visitor.getByText("Mensaje enviado. Te responderemos lo antes posible.")).toBeVisible();
 
@@ -51,6 +53,7 @@ test("contacto: CTA en la portada, formulario en la web, mensaje en el panel; en
   await expect(page.getByRole("heading", { level: 2, name: "Mensajes" })).toBeVisible();
   await expect(page.getByText("¿Hacéis menús para grupos de 20?")).toBeVisible();
   await expect(page.getByRole("link", { name: "laura@example.test" })).toBeVisible();
+  await expect(page.getByText("Reserva de grupo")).toBeVisible();
   await page.getByRole("button", { name: "Marcar como leído (Laura)" }).click();
   await expect(page.getByRole("button", { name: "Marcar como no leído (Laura)" })).toBeVisible();
   await page.getByRole("button", { name: "Archivar el mensaje de Laura" }).click();

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ActionForm } from "@/components/action-form";
 import { fontClasses } from "@/components/site/fonts";
 import type { FormState } from "@/lib/form-state";
-import { contrastRatio } from "@/lib/color";
+import { brandPalette } from "@/lib/color";
 import type { MenuTheme } from "@/lib/menu-snapshot";
 import { LOGO_SIZE_LABELS, LOGO_SIZES, type LogoSize } from "@/lib/site";
 import { pairingsFor, resolvePairing } from "@/lib/site-fonts";
@@ -48,7 +48,11 @@ export function BrandSettings({
   const info = THEME_INFO[theme];
   const current = resolvePairing(theme, fontPairing);
   const color = accentColor ?? info.accent;
-  const contrast = contrastRatio(color, info.pageBg);
+  // Variantes legibles del color de marca en cada fondo del estilo (D-051).
+  const palette = accentColor
+    ? brandPalette(accentColor, { page: info.pageBg, hero: info.heroBg, contact: info.contactBg })
+    : null;
+  const adjusted = palette !== null && [palette.page, palette.hero, palette.contact].some((c) => c !== accentColor);
 
   return (
     <>
@@ -129,11 +133,14 @@ export function BrandSettings({
                   Color
                   <input type="color" name="accentColor" defaultValue={color} />
                 </label>
-                {accentColor && contrast < 3 && (
-                  <p className="notice" role="status">
-                    Este color contrasta poco con el fondo del estilo ({contrast.toFixed(1)}:1): los enlaces y botones
-                    pueden costar de leer. Prueba uno más {info.pageBg === "#0a0a14" ? "claro" : "oscuro"}.
-                  </p>
+                {palette && adjusted && (
+                  <div className="notice">
+                    <p>
+                      Para que se lea bien en cada fondo (contraste WCAG AA), tu web usará este color ajustado:{" "}
+                      <Swatch color={palette.page} /> en la página, <Swatch color={palette.hero} /> en la portada y la
+                      cabecera y <Swatch color={palette.contact} /> en el pie.
+                    </p>
+                  </div>
                 )}
               </fieldset>
 
@@ -180,11 +187,14 @@ export function BrandSettings({
                 Color
                 <input type="color" name="accentColor" defaultValue={color} />
               </label>
-              {accentColor && contrast < 3 && (
-                <p className="notice" role="status">
-                  Este color contrasta poco con el fondo del estilo ({contrast.toFixed(1)}:1): los enlaces y botones
-                  pueden costar de leer. Prueba uno más {info.pageBg === "#0a0a14" ? "claro" : "oscuro"}.
-                </p>
+              {palette && adjusted && (
+                <div className="notice">
+                  <p>
+                    Para que se lea bien en cada fondo (contraste WCAG AA), tu web usará este color ajustado:{" "}
+                    <Swatch color={palette.page} /> en la página, <Swatch color={palette.hero} /> en la portada y la
+                    cabecera y <Swatch color={palette.contact} /> en el pie.
+                  </p>
+                </div>
               )}
             </fieldset>
 
@@ -219,6 +229,15 @@ export function BrandSettings({
           </Link>
         </p>
       </section>
+    </>
+  );
+}
+
+/** Muestra de color con su código. */
+function Swatch({ color }: { color: string }) {
+  return (
+    <>
+      <span className={styles.swatch} style={{ background: color }} aria-hidden="true" /> {color}
     </>
   );
 }

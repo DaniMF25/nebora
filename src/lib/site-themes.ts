@@ -7,6 +7,9 @@ export interface ThemeInfo {
   swatches: string[];
   /** Fondo de la página y color de acento por defecto (para el color de marca). */
   pageBg: string;
+  /** Fondo de la portada y la cabecera, y del pie (para ajustar el contraste del color de marca, D-051). */
+  heroBg: string;
+  contactBg: string;
   accent: string;
   mock: {
     bg: string;
@@ -28,6 +31,8 @@ export const THEME_INFO: Record<MenuTheme, ThemeInfo> = {
     description: "Elegante y sereno: fondo oscuro con detalles dorados y tipografía serif. Para cocina de mercado y de mar.",
     swatches: ["#111418", "#efebe4", "#b48c56", "#17191c", "#f7f4ef"],
     pageBg: "#efebe4",
+    heroBg: "#0e1115",
+    contactBg: "#17191c",
     accent: "#b48c56",
     mock: {
       bg: "#111418",
@@ -44,6 +49,8 @@ export const THEME_INFO: Record<MenuTheme, ThemeInfo> = {
     description: "Cálido y tradicional: papel, azul marino y letra manuscrita. Ideal para tabernas y casas de comidas.",
     swatches: ["#f3ebdc", "#1d2f4a", "#b4412f", "#fbf6ec", "#4f5b6e"],
     pageBg: "#f3ebdc",
+    heroBg: "#f3ebdc",
+    contactBg: "#efe5d2",
     accent: "#1d2f4a",
     mock: {
       bg: "#f3ebdc",
@@ -60,6 +67,8 @@ export const THEME_INFO: Record<MenuTheme, ThemeInfo> = {
     description: "Atrevido y vanguardista: negro con neón violeta y tipografía geométrica. Para cocina creativa.",
     swatches: ["#0a0a14", "#b26bff", "#4fd1ff", "#13132a", "#ecebff"],
     pageBg: "#0a0a14",
+    heroBg: "#0a0a14",
+    contactBg: "#07070f",
     accent: "#b26bff",
     mock: {
       bg: "#0a0a14",
@@ -76,6 +85,8 @@ export const THEME_INFO: Record<MenuTheme, ThemeInfo> = {
     description: "Neutro y limpio: blanco y negro con tipografía sin adornos. Encaja con cualquier tipo de cocina.",
     swatches: ["#18181b", "#fafaf9", "#e4572e", "#ffffff", "#5f5f66"],
     pageBg: "#fafaf9",
+    heroBg: "#121216",
+    contactBg: "#18181b",
     accent: "#18181b",
     mock: {
       bg: "#18181b",

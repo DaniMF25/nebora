@@ -847,13 +847,6 @@
   padding: 3rem clamp(1.25rem, 5vw, 4rem) 2rem;
 }
 
-/* Datos de contacto dentro de la página de contacto (D-049). */
-.contactPanel {
-  border-radius: var(--s-radius);
-  padding: 2rem clamp(1.25rem, 3vw, 2rem);
-  margin: 1.5rem 0 2rem;
-}
-
 .contactGrid {
   max-width: 72rem;
   margin: 0 auto;
@@ -1246,6 +1239,31 @@
   isolation: isolate;
 }
 
+/*
+ * Bloques con fondo de sección propio (la carta destacada y la galería de la
+ * portada): llevan su propia capa, detrás de su contenido y sobre su fondo.
+ */
+.decorated .menuBlock,
+.decorated .galleryBlock {
+  position: relative;
+  isolation: isolate;
+}
+
+.decorated .menuBlock::before,
+.decorated .galleryBlock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--s-fg);
+  opacity: 0.07;
+  -webkit-mask-image: var(--s-decor);
+  mask-image: var(--s-decor);
+  -webkit-mask-size: 240px 240px;
+  mask-size: 240px 240px;
+}
+
 .decorated::before {
   content: "";
   position: fixed;
@@ -1260,5 +1278,236 @@
   mask-size: 240px 240px;
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
+}
+
+/* ---------------------------------------------------------- color de marca */
+/*
+ * Con color de marca (D-051), la portada, la cabecera de cada página y la
+ * cabecera fija usan su variante legible sobre su fondo (que en la mayoría de
+ * estilos es oscuro); el resto de la página, la variante para el fondo claro.
+ */
+.branded .hero,
+.branded .pageHead,
+.branded .header {
+  --s-accent: var(--s-brand-hero);
+  --s-accent-2: var(--s-brand-hero);
+  --s-on-accent: var(--s-brand-on-hero);
+}
+
+/* ------------------------------------------------------ página de contacto */
+/* Rediseño (D-052): fichas de contacto y horario junto al formulario, con los colores claros del estilo. */
+.contactLayout {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2.5rem clamp(1.25rem, 5vw, 4rem) 4rem;
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .contactLayout {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 3.5rem;
+  }
+}
+
+.contactSide {
+  display: grid;
+  gap: 2rem;
+  min-width: 0;
+}
+
+.contactIntro {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.contactHeading {
+  margin: 0 0 0.9rem;
+  font-family: var(--s-font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: var(--s-label-spacing);
+  text-transform: uppercase;
+  color: var(--s-accent);
+}
+
+.contactWays {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+/* Cada forma de contacto es una ficha entera pulsable. */
+.contactWay {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+  border-radius: var(--s-radius);
+  color: var(--s-fg);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.contactWay:hover,
+.contactWay:focus-visible {
+  border-color: var(--s-accent);
+  transform: translateY(-1px);
+}
+
+.contactWay strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.contactWayValue {
+  display: block;
+  color: var(--s-muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.contactWayIcon {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: var(--s-accent);
+  color: var(--s-on-accent);
+}
+
+.contactWayIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.contactWayArrow {
+  width: 1rem;
+  height: 1rem;
+  color: var(--s-muted);
+}
+
+.contactHours dl {
+  margin: 0;
+  display: grid;
+  border-top: 1px solid var(--s-line);
+}
+
+.contactHours dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.25rem;
+  border-bottom: 1px solid var(--s-line);
+}
+
+.contactHours dt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contactHours dd {
+  margin: 0;
+  color: var(--s-muted);
+  text-align: right;
+}
+
+.contactToday dt,
+.contactToday dd {
+  font-weight: 600;
+  color: var(--s-fg);
+}
+
+.contactTodayBadge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--s-accent);
+  color: var(--s-on-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: var(--s-label-spacing);
+  text-transform: uppercase;
+}
+
+.contactFormCard {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+  border-top: 3px solid var(--s-accent);
+  border-radius: var(--s-radius);
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.35);
+}
+
+.contactFormCard .blockTitle {
+  margin-bottom: 1.25rem;
+}
+
+.contactFormCard input,
+.contactFormCard textarea {
+  background: var(--s-bg);
+}
+
+.contactFormCard button {
+  color: var(--s-on-accent);
+}
+
+/* Motivo del mensaje como pastillas (radio). */
+.contactTopics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  min-width: 0;
+}
+
+.contactTopics legend {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.contactTopic {
+  position: relative;
+  margin: 0;
+}
+
+.contactTopic input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.contactTopic span {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--s-line);
+  border-radius: 999px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.contactTopic input:checked + span {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: var(--s-on-accent);
+}
+
+.contactTopic input:focus-visible + span {
+  outline: 2px solid var(--s-accent);
+  outline-offset: 2px;
 }
 

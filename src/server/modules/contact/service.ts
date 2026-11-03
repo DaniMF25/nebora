@@ -13,6 +13,9 @@ import { isUuid, parseInput } from "@/server/validation";
 
 export const CONTACT_RATE_LIMITS = { perClientPerHour: 5, perEstablishmentPerHour: 100, perContactPerDay: 3 };
 export const MAX_MESSAGE_LENGTH = 2000;
+/** Motivos del mensaje (D-052). */
+export const CONTACT_TOPICS = ["group", "event", "allergies", "other"] as const;
+export type ContactTopic = (typeof CONTACT_TOPICS)[number];
 
 export interface ContactMessage {
   id: string;
@@ -21,6 +24,7 @@ export interface ContactMessage {
   customerPhone: string | null;
   message: string | null;
   status: "new" | "read" | "archived";
+  topic: ContactTopic | null;
   createdAt: Date;
   readAt: Date | null;
 }
@@ -47,6 +51,11 @@ export const contactSchema = z
     // Campo trampa: invisible para personas; los bots suelen rellenarlo.
     website: z.string().max(0, { message: "No se pudo procesar la solicitud" }),
     idempotencyKey: z.string().regex(/^[A-Za-z0-9_-]{8,100}$/),
+    // Motivo opcional (D-052); "" = sin motivo.
+    topic: z
+      .union([z.enum(CONTACT_TOPICS), z.literal("")])
+      .optional()
+      .transform((v) => (v ? v : null)),
   })
   .strict()
   .refine((v) => v.customerPhone !== "" || v.customerEmail !== "", {
@@ -77,7 +86,7 @@ export async function submitContactMessage(
   }
   try {
     const { rows } = await getPool().query<{ replayed: boolean }>(
-      "SELECT * FROM app.public_contact($1, $2, $3, $4, $5, $6)",
+      "SELECT * FROM app.public_contact($1, $2, $3, $4, $5, $6, $7)",
       [
         establishmentId,
         d.customerName,
@@ -85,6 +94,7 @@ export async function submitContactMessage(
         d.customerPhone || null,
         d.message,
         d.idempotencyKey,
+        d.topic,
       ],
     );
     return { replayed: rows[0]!.replayed };
@@ -100,7 +110,7 @@ export async function submitContactMessage(
   }
 }
 
-const COLUMNS = `id, customer_name AS "customerName", customer_email AS "customerEmail",
+const COLUMNS = `id, topic, customer_name AS "customerName", customer_email AS "customerEmail",
   customer_phone AS "customerPhone", message, status, created_at AS "createdAt", read_at AS "readAt"`;
 
 async function establishmentExists(tx: Tx, ctx: TenantContext, establishmentId: string): Promise<void> {

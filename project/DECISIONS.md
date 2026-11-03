@@ -673,3 +673,43 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Teñir el fondo del estilo: el titular no quiere cambiar los fondos.
 
 **Pruebas:** las E2E dan a cada persona registrada su propia IP (`X-Forwarded-For`, que la aplicación usa sin `CLIENT_IP_HEADER`). Con 52 registros por ejecución se superaba el límite de 50 por IP, que no se relaja para las pruebas.
+
+## D-051 — Color de marca en toda la web y con contraste garantizado
+**Fecha:** 2026-11-03. **Estado:** aceptada.
+
+**Contexto:**
+- Con un color de marca, los separadores seguían en el color secundario del estilo.
+- Un color oscuro se perdía en la cabecera, la portada y el pie, que en la mayoría de estilos son oscuros.
+- Un color muy claro se perdía en la página.
+
+**Decisión:**
+- `brandPalette` (`src/lib/color.ts`) calcula una variante del color de marca para cada fondo del estilo: página, portada y cabecera, y pie. Cada una es el color más parecido al elegido que alcanza un contraste de 4,5:1 (WCAG AA); si hace falta, se aclara sobre fondos oscuros o se oscurece sobre claros.
+- La variante de página y la de portada se eligen además para que el texto de los botones (blanco o casi negro) también llegue a 4,5:1.
+- Con color de marca, `--s-accent-2` (separadores y detalles) toma el mismo color.
+- La portada, la cabecera de cada página y la cabecera fija usan su variante (`.branded`), y el pie la suya.
+- Los fondos de cada estilo están en `THEME_INFO` (`pageBg`, `heroBg`, `contactBg`).
+- **Panel:** si el color se ajusta, se muestran los tonos que usará la web en cada zona, en lugar del aviso de «prueba otro color».
+- **Fondo decorativo (D-050):** también en los bloques de la portada con fondo propio (carta destacada y galería).
+
+**Alternativas descartadas:**
+- Rechazar colores de poco contraste: el titular quiere poder usar su color.
+- Cambiar los fondos del estilo según el color de marca.
+
+## D-052 — Página de contacto rediseñada y motivo del mensaje
+**Fecha:** 2026-11-03. **Estado:** aceptada.
+
+**Contexto:**
+- La página de contacto (D-049) era básica.
+- Los datos iban en una caja con los colores del pie, que con un color de marca oscuro no se leía.
+
+**Decisión:**
+- **Dos columnas en escritorio, una en móvil**, con los colores claros del estilo:
+  - fichas de contacto directo pulsables (llamar, WhatsApp, cómo llegar, Instagram), con su icono sobre el color de marca;
+  - el horario día a día con el de hoy (en la hora del local) resaltado;
+  - el formulario en una tarjeta.
+- **Motivo opcional** del mensaje en forma de pastillas: reserva de grupo, evento o celebración, alergias e intolerancias, u otra consulta.
+  - Migración 0035: `contact_messages.topic`, con su CHECK, y `app.public_contact` lo recibe.
+  - La bandeja del panel lo muestra como etiqueta.
+  - Textos en los 7 idiomas.
+
+**Límite conocido:** el horario muestra el semanal; no refleja los días con excepción (festivos), igual que el pie.

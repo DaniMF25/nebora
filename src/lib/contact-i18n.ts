@@ -21,6 +21,12 @@ export interface ContactTexts {
   sending: string;
   sent: string;
   another: string;
+  /** Rediseño de la página (D-052): motivo del mensaje, fichas de contacto y horario. */
+  topicLegend: string;
+  topics: { group: string; event: string; allergies: string; other: string };
+  waysTitle: string;
+  today: string;
+  closed: string;
   /** Mensajes del servidor (en español) → este idioma. */
   errors: Record<string, string>;
 }
@@ -60,6 +66,16 @@ const es: ContactTexts = {
   sending: "Enviando…",
   sent: "Mensaje enviado. Te responderemos lo antes posible.",
   another: "Enviar otro mensaje",
+  topicLegend: "¿De qué se trata?",
+  topics: {
+    group: "Reserva de grupo",
+    event: "Evento o celebración",
+    allergies: "Alergias e intolerancias",
+    other: "Otra consulta",
+  },
+  waysTitle: "Contacto directo",
+  today: "Hoy",
+  closed: "Cerrado",
   errors: Object.fromEntries(CONTACT_SERVER_MESSAGES.map((m) => [m, m])) as Errors,
 };
 
@@ -79,6 +95,16 @@ const en: ContactTexts = {
   sending: "Sending…",
   sent: "Message sent. We will get back to you as soon as possible.",
   another: "Send another message",
+  topicLegend: "What is it about?",
+  topics: {
+    group: "Group booking",
+    event: "Event or celebration",
+    allergies: "Allergies and intolerances",
+    other: "Other question",
+  },
+  waysTitle: "Get in touch directly",
+  today: "Today",
+  closed: "Closed",
   errors: {
     "Indica tu nombre": "Enter your name",
     "Teléfono no válido": "Invalid phone number",
@@ -115,6 +141,16 @@ const fr: ContactTexts = {
   sending: "Envoi…",
   sent: "Message envoyé. Nous vous répondrons au plus vite.",
   another: "Envoyer un autre message",
+  topicLegend: "De quoi s'agit-il ?",
+  topics: {
+    group: "Réservation de groupe",
+    event: "Événement ou célébration",
+    allergies: "Allergies et intolérances",
+    other: "Autre question",
+  },
+  waysTitle: "Contact direct",
+  today: "Aujourd'hui",
+  closed: "Fermé",
   errors: {
     "Indica tu nombre": "Indiquez votre nom",
     "Teléfono no válido": "Téléphone non valide",
@@ -152,6 +188,16 @@ const de: ContactTexts = {
   sending: "Wird gesendet…",
   sent: "Nachricht gesendet. Wir antworten so schnell wie möglich.",
   another: "Weitere Nachricht senden",
+  topicLegend: "Worum geht es?",
+  topics: {
+    group: "Gruppenreservierung",
+    event: "Veranstaltung oder Feier",
+    allergies: "Allergien und Unverträglichkeiten",
+    other: "Andere Frage",
+  },
+  waysTitle: "Direkter Kontakt",
+  today: "Heute",
+  closed: "Geschlossen",
   errors: {
     "Indica tu nombre": "Geben Sie Ihren Namen an",
     "Teléfono no válido": "Ungültige Telefonnummer",
@@ -189,6 +235,16 @@ const it: ContactTexts = {
   sending: "Invio…",
   sent: "Messaggio inviato. Ti risponderemo il prima possibile.",
   another: "Invia un altro messaggio",
+  topicLegend: "Di cosa si tratta?",
+  topics: {
+    group: "Prenotazione di gruppo",
+    event: "Evento o festa",
+    allergies: "Allergie e intolleranze",
+    other: "Altra domanda",
+  },
+  waysTitle: "Contatto diretto",
+  today: "Oggi",
+  closed: "Chiuso",
   errors: {
     "Indica tu nombre": "Indica il tuo nome",
     "Teléfono no válido": "Telefono non valido",
@@ -225,6 +281,16 @@ const pt: ContactTexts = {
   sending: "A enviar…",
   sent: "Mensagem enviada. Responderemos o mais depressa possível.",
   another: "Enviar outra mensagem",
+  topicLegend: "Sobre o que é?",
+  topics: {
+    group: "Reserva de grupo",
+    event: "Evento ou celebração",
+    allergies: "Alergias e intolerâncias",
+    other: "Outra questão",
+  },
+  waysTitle: "Contacto direto",
+  today: "Hoje",
+  closed: "Fechado",
   errors: {
     "Indica tu nombre": "Indique o seu nome",
     "Teléfono no válido": "Telefone inválido",
@@ -262,6 +328,16 @@ const ca: ContactTexts = {
   sending: "S'està enviant…",
   sent: "Missatge enviat. Et respondrem com més aviat millor.",
   another: "Envia un altre missatge",
+  topicLegend: "De què es tracta?",
+  topics: {
+    group: "Reserva de grup",
+    event: "Esdeveniment o celebració",
+    allergies: "Al·lèrgies i intoleràncies",
+    other: "Una altra consulta",
+  },
+  waysTitle: "Contacte directe",
+  today: "Avui",
+  closed: "Tancat",
   errors: {
     "Indica tu nombre": "Indica el teu nom",
     "Teléfono no válido": "Telèfon no vàlid",

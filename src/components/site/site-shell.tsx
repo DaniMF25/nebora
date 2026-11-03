@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { PublicLanguage } from "@/lib/languages";
 import type { MenuTheme } from "@/lib/menu-snapshot";
-import { readableOn } from "@/lib/color";
 import type { LogoSize } from "@/lib/site";
 import { PUBLIC_TEXTS } from "@/lib/public-i18n";
 import { pairingStyle, resolvePairing } from "@/lib/site-fonts";
@@ -10,6 +9,8 @@ import { themeFontClasses } from "./fonts";
 import { Icon } from "./icons";
 import styles from "./site.module.css";
 import { decorCssUrl, type SiteDecor } from "@/lib/site-decor";
+import { brandPalette } from "@/lib/color";
+import { THEME_INFO } from "@/lib/site-themes";
 
 /** Datos públicos comunes a las páginas del local (inicio, carta y reservas). */
 export interface SiteChrome {
@@ -37,7 +38,7 @@ export interface SiteChrome {
 
 type Current = "home" | "menu" | "booking" | "contact";
 
-function mapsUrl(address: string): string {
+export function mapsUrl(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
@@ -68,13 +69,22 @@ export function SiteShell({
   ];
   const languages = site.languageLinks ?? [];
   // La marca sustituye variables del tema; el CSS del tema no cambia.
+  const info = THEME_INFO[site.theme];
+  const brand = site.accentColor
+    ? brandPalette(site.accentColor, { page: info.pageBg, hero: info.heroBg, contact: info.contactBg })
+    : null;
   const brandStyle: Record<string, string> = {
     ...pairingStyle(resolvePairing(site.theme, site.fontPairing)),
-    ...(site.accentColor
+    // Color de marca (D-051): una variante por fondo con contraste suficiente
+    // (WCAG AA), y los acentos secundarios (separadores) con el mismo color.
+    ...(brand
       ? {
-          "--s-accent": site.accentColor,
-          "--s-contact-accent": site.accentColor,
-          "--s-on-accent": readableOn(site.accentColor),
+          "--s-accent": brand.page,
+          "--s-accent-2": brand.page,
+          "--s-on-accent": brand.onPage,
+          "--s-brand-hero": brand.hero,
+          "--s-brand-on-hero": brand.onHero,
+          "--s-contact-accent": brand.contact,
         }
       : {}),
     ...(site.decor ? { "--s-decor": decorCssUrl(site.decor) } : {}),
@@ -83,7 +93,7 @@ export function SiteShell({
   return (
     <div
       lang={lang}
-      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${site.decor ? styles.decorated : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
+      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${site.decor ? styles.decorated : ""} ${brand ? styles.branded : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
       style={brandStyle}
     >
       <header className={styles.header}>

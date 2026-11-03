@@ -71,6 +71,13 @@ describe("mensajes de contacto", () => {
     expect(inbox.filter((x) => x.customerEmail === m.customerEmail)).toHaveLength(1);
     expect(inbox[0]).toMatchObject({ customerName: "Laura", status: "new", message: "¿Tenéis menú para celíacos?" });
     expect((await asOwner((tx, ctx) => unreadMessageCounts(tx, ctx))).get(est)).toBeGreaterThan(0);
+    // Motivo del mensaje (D-052).
+    const withTopic = message({ topic: "event" });
+    await submitContactMessage(est, withTopic, "10.2.0.3");
+    const saved = (await asOwner((tx, ctx) => listMessages(tx, ctx, est))).find(
+      (x) => x.customerEmail === withTopic.customerEmail,
+    );
+    expect(saved?.topic).toBe("event");
   });
 
   it("valida contacto, mensaje, consentimiento y campo trampa", async () => {
@@ -83,6 +90,7 @@ describe("mensajes de contacto", () => {
     await rejects({ website: "https://spam.example" });
     await rejects({ customerEmail: "no-es-correo" });
     await rejects({ organizationId: org });
+    await rejects({ topic: "spam" });
   });
 
   it("límite por contacto", async () => {

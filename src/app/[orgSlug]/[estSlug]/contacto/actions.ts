@@ -49,6 +49,7 @@ export async function contactAction(
         consent: fd.get("consent") === "on",
         website: formString(fd, "website"),
         idempotencyKey: formString(fd, "idempotencyKey"),
+        topic: formString(fd, "topic"),
       },
       await clientIdentifier(),
     );
