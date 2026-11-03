@@ -48,7 +48,10 @@ test("fondo decorativo: se elige en Estilo y la web lo muestra sin violaciones d
   expect(await decorVar()).toContain("data:image/svg+xml");
   expect(violations, violations.join("\n")).toEqual([]);
 
-  // Sin fondo otra vez.
+  // Sin fondo otra vez. Se recarga antes: el mensaje del guardado anterior
+  // sigue en pantalla y no serviría para saber que este ha terminado.
+  await page.reload();
+  await expect(page.getByText("Fondo guardado")).toHaveCount(0);
   await page.getByRole("radio", { name: /Sin fondo/ }).check();
   await page.getByRole("button", { name: "Guardar fondo" }).click();
   await expect(page.getByText("Fondo guardado")).toBeVisible();
