@@ -42,6 +42,12 @@
 - [x] Barra superior del panel con el mismo alto en todas las páginas del móvil (en páginas cortas la rejilla repartía el alto sobrante y la barra crecía). Turnos del horario en rejilla (cada hora en su hueco) y, en Safari de iPhone, los campos de fecha y hora respetan el ancho de su contenedor. Botón «quitar turno» cuadrado con icono. La prueba de maquetación comprueba el alto de la barra y que ningún campo o botón se monte sobre un vecino. Safari no se puede ejecutar en este entorno (solo Chromium): la corrección para iPhone está sin verificar en un dispositivo real.
 - [x] Panel en móvil (2026-10-29): ninguna página se desplaza en horizontal. Causa principal: la columna del panel crecía con el contenido más ancho (ahora `minmax(0, 1fr)`); el texto oculto de las tablas se escapaba de su contenedor (`position: relative`). Por debajo de 640 px las tablas se muestran como tarjetas con la etiqueta de cada dato (`data-label`), las pestañas pasan a varias líneas, las cifras no desbordan, el horario reparte el ancho y los tres tamaños del logotipo van en una fila. `layout-spacing.spec.ts` comprueba a 390 y 360 px que no hay scroll horizontal, que nada se sale de la pantalla, de su tarjeta o (imágenes) de su contenedor, que nada queda recortado y que no hay contenido que desplazar en horizontal salvo el plano de sala.
 - [x] Separación entre botones: formularios seguidos (p. ej. «Guardar» y «Eliminar») ya no quedan pegados; `tests/e2e/layout-spacing.spec.ts` recorre 27 páginas con datos (panel y web pública) a 1280 px y 390 px y falla si dos botones están a menos de 6 px o si dos botones vecinos de una fila están desalineados.
+- [x] Entrada al panel (D-055):
+  - con una organización se entra directamente;
+  - sin ninguna, una bienvenida con los primeros pasos y el alta solo con el nombre (el identificador se genera si se deja vacío);
+  - con varias, un selector con rol, plan y número de locales.
+  - Desde el panel, «Crear otra organización» o «Cambiar de organización».
+  - Pruebas: `tests/unit/slug.test.ts`, integración en `site.test.ts` y `tests/e2e/org-entry.spec.ts` (con axe y móvil).
 - [x] «Mis próximos turnos» en Inicio (D-054): quien tiene su cuenta vinculada a una ficha del personal ve sus turnos de los próximos 14 días, con el que está en curso marcado «Ahora» y enlace al cuadrante de esa semana. La ficha se busca por la sesión y los turnos quedan limitados a los locales a los que accede la cuenta (RLS). Pruebas: `tests/integration/my-shifts.test.ts`, que falla si se deja de filtrar por la cuenta, y `tests/e2e/my-shifts.spec.ts`, que incluye axe y móvil.
 - [x] Accesibilidad y rendimiento (D-053, 2026-11-04):
   - **Prueba de accesibilidad:** `tests/e2e/accessibility.spec.ts` pasa axe-core (WCAG 2.2 A y AA) por las 36 páginas del recorrido con datos, en escritorio y en móvil, más el acceso y el registro. Repasa además la web en los otros tres estilos y comprueba el teclado («Saltar al contenido»).
@@ -105,9 +111,9 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test:all` (unitarias + integración) | PASÓ — 61 archivos, 398 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:all` (unitarias + integración) | PASÓ — 62 archivos, 402 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ |
-| `pnpm exec playwright test` (E2E) | PASÓ — 47 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`). |
+| `pnpm exec playwright test` (E2E) | PASÓ — 48 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`). |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (2026-11-01; con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 

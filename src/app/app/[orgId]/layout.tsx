@@ -156,12 +156,10 @@ export default async function OrganizationLayout({
         <>
           <SidebarNav label="Secciones de la organización" groups={groups} local={local} localAfter={1} />
           <div className="side-footer">
-            {hasOthers && (
-              <Link href="/app" className="side-switch">
-                <PanelIcon name="switch" />
-                Cambiar de organización
-              </Link>
-            )}
+            <Link href="/app?elegir" className="side-switch">
+              <PanelIcon name="switch" />
+              {hasOthers ? "Cambiar de organización" : "Crear otra organización"}
+            </Link>
             <div className="side-user">
               <span className="avatar" aria-hidden="true">
                 {initials(user.displayName)}

@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { AuthUser } from "@/server/auth/service";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { createEstablishment, type Establishment } from "@/server/modules/establishments/service";
 import { getOrganizationMedia, getPublicMedia, MAX_IMAGE_SIDE } from "@/server/modules/media/service";
 import {
@@ -404,6 +404,33 @@ describe("identificadores de organización reservados", () => {
     await expect(
       withAdminClient((c) => c.query("INSERT INTO organizations (name, slug) VALUES ('X', 'app')")),
     ).rejects.toMatchObject({ code: "23514" });
+  });
+});
+
+describe("identificador automático de la organización (D-055)", () => {
+  it("sin identificador se crea a partir del nombre; si está ocupado o reservado, con sufijo", async () => {
+    const user = await createTestUser("autoslug");
+    const name = `Casa Pepé ${uniqueSuffix()}`;
+    const slugOf = async (id: string) =>
+      (await withAdminClient((c) => c.query("SELECT slug::text AS slug FROM organizations WHERE id = $1", [id])))
+        .rows[0].slug as string;
+    const first = await withUser(user, (tx, ctx) => createOrganization(tx, ctx, { name, slug: "" }));
+    const base = (await slugOf(first)) as string;
+    expect(base).toMatch(/^casa-pepe-[a-z0-9]+$/);
+    // Mismo nombre: el identificador ya existe y se añade un sufijo.
+    const second = await withUser(user, (tx, ctx) => createOrganization(tx, ctx, { name }));
+    expect(await slugOf(second)).toMatch(new RegExp(`^${base}-[0-9a-f]{4}$`));
+    // Nombre que coincide con una ruta reservada o que no da para un identificador.
+    expect(await slugOf(await withUser(user, (tx, ctx) => createOrganization(tx, ctx, { name: "App" })))).toMatch(
+      /^app-[0-9a-f]{4}$/,
+    );
+    expect(await slugOf(await withUser(user, (tx, ctx) => createOrganization(tx, ctx, { name: "¡!" })))).toMatch(
+      /^restaurante(-[0-9a-f]{4})?$/,
+    );
+    // Si lo elige la persona y está ocupado, no se cambia: se avisa.
+    await expect(withUser(user, (tx, ctx) => createOrganization(tx, ctx, { name: "Otra", slug: base }))).rejects.toBeInstanceOf(
+      ConflictError,
+    );
   });
 });
 

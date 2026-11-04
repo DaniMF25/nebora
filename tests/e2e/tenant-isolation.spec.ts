@@ -43,7 +43,7 @@ test("el restaurante B no puede ver la organización ni los locales del restaura
   await expect(pageB.getByText("Restaurante A")).toHaveCount(0);
 
   // Y su listado de organizaciones solo contiene la suya.
-  await pageB.goto("/app");
+  await pageB.goto("/app?elegir");
   await expect(pageB.getByRole("link", { name: "Restaurante B" })).toBeVisible();
   await expect(pageB.getByRole("link", { name: "Restaurante A" })).toHaveCount(0);
 

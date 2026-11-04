@@ -790,3 +790,26 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Límites conocidos:**
 - Un turno en un local al que la cuenta no tiene acceso no aparece. Lo coherente es asignarle ese local o no ponerle turnos allí.
 - No hay avisos por correo ni calendario (.ics): no hay proveedor de correo.
+
+## D-055 — Entrada al panel: bienvenida, entrada directa y selector
+**Fecha:** 2026-11-04. **Estado:** aceptada.
+
+**Contexto:**
+- La pantalla previa al panel (`/app`) listaba las organizaciones y un formulario con nombre e identificador.
+- Era un paso de más para quien solo tiene una organización, que es lo habitual.
+- Quien se acababa de registrar no recibía ninguna explicación.
+
+**Decisión:**
+- **Con una sola organización**, `/app` lleva directamente a su panel.
+- **Sin ninguna**, una bienvenida:
+  - los tres primeros pasos: tu negocio, tu primer local, y tu carta y tu web;
+  - el alta del negocio, que solo pide el nombre;
+  - un aviso para quien llega invitado de que no tiene que crear nada.
+- **Con varias**, o desde el panel con `/app?elegir`, un selector:
+  - una tarjeta por organización con el rol, el plan y los locales a los que accede la cuenta;
+  - «Crear otra organización» plegado.
+- **El panel** enlaza siempre al selector: «Cambiar de organización» si hay varias, «Crear otra organización» si solo hay una.
+- **Identificador opcional:** si se deja vacío, se genera a partir del nombre (`slugify`: sin tildes, en minúsculas y con guiones). Si está ocupado o reservado, se le añade un sufijo aleatorio, con hasta 5 intentos, cada uno en un savepoint. Si el identificador lo elige la persona y está ocupado, se le avisa en lugar de cambiarlo.
+
+**Límites conocidos:**
+- El número de locales se calcula con una transacción por organización; está pensado para pocas organizaciones por cuenta.

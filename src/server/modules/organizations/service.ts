@@ -1,5 +1,7 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { z } from "zod";
+import { slugify } from "@/lib/slug";
 import { recordAudit } from "@/server/audit/audit";
 import type { Tx } from "@/server/db/pool";
 import { isUniqueViolation } from "@/server/db/pool";
@@ -15,6 +17,16 @@ export interface OrganizationSummary {
   name: string;
   slug: string;
   role: Role;
+  plan: Plan;
+}
+
+/** Base del identificador automático: el nombre sin tildes ni símbolos, o «restaurante». */
+function autoSlugBase(name: string): string {
+  return slugify(name, 45) || "restaurante";
+}
+
+function withSuffix(base: string): string {
+  return `${base}-${randomBytes(2).toString("hex")}`;
 }
 
 export interface Organization {
@@ -26,13 +38,16 @@ export interface Organization {
 }
 
 // `.strict()` rechaza campos no previstos (asignación masiva: organization_id, role...).
-export const createOrganizationSchema = z.object({ name: nameSchema, slug: organizationSlugSchema }).strict();
+// Identificador opcional: vacío, se genera a partir del nombre.
+export const createOrganizationSchema = z
+  .object({ name: nameSchema, slug: z.union([z.literal(""), organizationSlugSchema]).optional() })
+  .strict();
 export const updateOrganizationSchema = z.object({ name: nameSchema }).strict();
 
 /** Organizaciones en las que el usuario es miembro activo. */
 export async function listMyOrganizations(tx: Tx, ctx: UserContext): Promise<OrganizationSummary[]> {
   const { rows } = await tx.query<OrganizationSummary>(
-    `SELECT o.id, o.name, o.slug::text AS slug, m.role
+    `SELECT o.id, o.name, o.slug::text AS slug, m.role, o.plan
        FROM organizations o
        JOIN memberships m ON m.organization_id = o.id
       WHERE m.user_id = $1 AND m.status = 'active'
@@ -44,23 +59,34 @@ export async function listMyOrganizations(tx: Tx, ctx: UserContext): Promise<Org
 
 export async function createOrganization(tx: Tx, ctx: UserContext, input: unknown): Promise<string> {
   const data = parseInput(createOrganizationSchema, input);
-  let id: string;
-  try {
-    const { rows } = await tx.query<{ id: string }>("SELECT app.create_organization($1, $2) AS id", [
-      data.name,
-      data.slug,
-    ]);
-    id = rows[0]!.id;
-  } catch (err) {
-    if (isUniqueViolation(err)) throw new ConflictError("Ese identificador ya está en uso");
-    throw err;
+  // Sin identificador, se propone uno a partir del nombre; si ya existe o no
+  // es válido (reservado, demasiado corto), se le añade un sufijo aleatorio.
+  const chosen = data.slug || null;
+  const base = chosen ?? autoSlugBase(data.name);
+  let id: string | null = null;
+  let slug = "";
+  for (let attempt = 0; id === null; attempt++) {
+    slug = chosen ?? (attempt === 0 && organizationSlugSchema.safeParse(base).success ? base : withSuffix(base));
+    try {
+      await tx.query("SAVEPOINT create_org");
+      const { rows } = await tx.query<{ id: string }>("SELECT app.create_organization($1, $2) AS id", [
+        data.name,
+        slug,
+      ]);
+      await tx.query("RELEASE SAVEPOINT create_org");
+      id = rows[0]!.id;
+    } catch (err) {
+      await tx.query("ROLLBACK TO SAVEPOINT create_org");
+      if (!isUniqueViolation(err)) throw err;
+      if (chosen || attempt >= 4) throw new ConflictError("Ese identificador ya está en uso");
+    }
   }
   // La organización recién creada pasa a ser el contexto para auditar su alta.
   await tx.query("SELECT set_config('app.org_id', $1, true)", [id]);
   await recordAudit(
     tx,
     { userId: ctx.userId, organizationId: id, role: "owner", plan: "basic", permissions: new Set(), establishments: "all" },
-    { action: "organization.created", entityType: "organization", entityId: id, metadata: { slug: data.slug } },
+    { action: "organization.created", entityType: "organization", entityId: id, metadata: { slug } },
   );
   return id;
 }
@@ -134,4 +160,13 @@ export async function changePlan(tx: Tx, ctx: TenantContext, input: unknown): Pr
     metadata: { from, to: plan },
   });
   return { from, to: plan };
+}
+
+/** Número de locales de la organización a los que accede la cuenta (RLS), para el selector de organizaciones. */
+export async function countAccessibleEstablishments(tx: Tx, ctx: TenantContext): Promise<number> {
+  const { rows } = await tx.query<{ n: number }>(
+    "SELECT count(*)::int AS n FROM establishments WHERE organization_id = $1",
+    [ctx.organizationId],
+  );
+  return rows[0]!.n;
 }
