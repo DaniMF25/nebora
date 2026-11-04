@@ -15,6 +15,10 @@ export function PanelShell({ brand, sidebar, children }: { brand: ReactNode; sid
   const isOpen = open === pathname;
   return (
     <div className="panel" data-menu-open={isOpen ? "true" : undefined}>
+      {/* Primer elemento al tabular: salta la barra lateral (WCAG 2.4.1). */}
+      <a href="#contenido" className="skip-link">
+        Saltar al contenido
+      </a>
       <header className="panel-topbar">
         {brand}
         <button
@@ -32,7 +36,9 @@ export function PanelShell({ brand, sidebar, children }: { brand: ReactNode; sid
         <div className="panel-brand">{brand}</div>
         {sidebar}
       </aside>
-      <main className="panel-main">{children}</main>
+      <main id="contenido" tabIndex={-1} className="panel-main">
+        {children}
+      </main>
     </div>
   );
 }

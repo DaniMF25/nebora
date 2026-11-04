@@ -96,6 +96,9 @@ export function SiteShell({
       className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${site.decor ? styles.decorated : ""} ${brand ? styles.branded : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
       style={brandStyle}
     >
+      <a href="#contenido" className="skip-link">
+        {t.skipToContent}
+      </a>
       <header className={styles.header}>
         <details className={styles.menuToggle}>
           <summary aria-label={t.openMenu}>
@@ -154,7 +157,9 @@ export function SiteShell({
         </div>
       </header>
 
-      {children}
+      <main id="contenido" tabIndex={-1}>
+        {children}
+      </main>
 
       <footer className={styles.contact} id="contacto">
         {current !== "contact" && <ContactDetails site={site} />}

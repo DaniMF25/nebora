@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, quickLink, register, setSitePublished, suffix } from "./helpers";
 
 test("traducciones: el local activa inglés, traduce web y carta, y el cliente las ve en su idioma", async ({
   browser,
@@ -39,7 +39,7 @@ test("traducciones: el local activa inglés, traduce web y carta, y el cliente l
 
   // Carta con su traducción.
   await page.goto(estUrl);
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");
@@ -120,7 +120,7 @@ test("traducciones: el local activa inglés, traduce web y carta, y el cliente l
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByText("Guardado", { exact: true })).toBeVisible();
   await page.goto(estUrl);
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByRole("link", { name: "Carta", exact: true }).click();
   await openTab(page, "Traducciones");
   await expect(page.getByText("2 traducidos · 1 por revisar · 0 sin traducir")).toBeVisible();

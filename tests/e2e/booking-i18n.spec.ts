@@ -34,7 +34,7 @@ test("reserva online en inglés: página, errores y confirmación en el idioma e
   await tableForm.getByLabel("Nombre de la mesa").fill("T1");
   await tableForm.getByLabel("Máximo").fill("4");
   await tableForm.getByRole("button", { name: "Crear mesa" }).click();
-  await expect(page.getByRole("button", { name: /^Mesa T1,/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Mesa T1 / })).toBeVisible();
   await page.goto(`${estUrl}/reservations`);
   await page.getByText("Configurar reservas online").click();
   await page.getByLabel(/Aceptar reservas desde/).check();

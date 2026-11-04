@@ -90,3 +90,10 @@ export async function setSitePublished(page: Page, published: boolean): Promise<
   if ((await toggle.getAttribute("aria-checked")) !== String(published)) await toggle.click();
   await expect(toggle).toHaveAttribute("aria-checked", String(published));
 }
+
+/** Acceso rápido del resumen del local («Cartas», «Sala», «Turnos»…), por su título visible. */
+export function quickLink(page: Page, title: string) {
+  return page
+    .getByRole("region", { name: "Accesos rápidos" })
+    .getByRole("link", { name: new RegExp(`^${title} `) });
+}

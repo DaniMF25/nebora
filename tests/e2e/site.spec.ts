@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, quickLink, register, setSitePublished, suffix } from "./helpers";
 
 async function jpeg(color: string): Promise<Buffer> {
   return sharp({
@@ -48,7 +48,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByRole("link", { name: "Altamar" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");
@@ -69,7 +69,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
 
   // Perfil público
   await page.goto(estUrl);
-  await page.getByRole("link", { name: "Página pública" }).click();
+  await quickLink(page, "Web pública").click();
   await expect(page.getByRole("heading", { name: "Diseño de tu web" })).toBeVisible();
   await openTab(page, "Foto principal");
   await page.locator('input[name="image"]').setInputFiles({

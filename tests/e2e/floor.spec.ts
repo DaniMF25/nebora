@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, quickLink, register, suffix } from "./helpers";
 
 /** Posición en celdas a partir del estilo (left/top en %) de la mesa. */
 async function cellOf(table: Locator, planWidth: number, planHeight: number) {
@@ -34,7 +34,7 @@ test("plano de sala: zonas, mesas, arrastrar, teclado y solapes rechazados", asy
   await page.getByLabel("Identificador (URL)").fill(`sala-${suffix()}`);
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
   await page.getByRole("link", { name: "Local Sala" }).click();
-  await page.getByRole("link", { name: "Plano de sala (zonas y mesas)" }).click();
+  await quickLink(page, "Sala").click();
   await expect(page.getByText("Todavía no hay zonas")).toBeVisible();
 
   await page.getByLabel("Nombre de la zona").fill("Comedor");
@@ -50,13 +50,13 @@ test("plano de sala: zonas, mesas, arrastrar, teclado y solapes rechazados", asy
     await form.getByLabel("Nombre de la mesa").fill(name);
     await form.getByLabel("Máximo").fill(max);
     await form.getByRole("button", { name: "Crear mesa" }).click();
-    await expect(page.getByRole("button", { name: new RegExp(`^Mesa ${name},`) })).toBeVisible();
+    await expect(page.getByRole("button", { name: new RegExp(`^Mesa ${name} `) })).toBeVisible();
   }
   await expect(page.getByText("2 mesas activas · 6 plazas")).toBeVisible();
 
   const plan = page.getByRole("group", { name: "Plano de Comedor" });
-  const m1 = plan.getByRole("button", { name: /^Mesa M1,/ });
-  const m2 = plan.getByRole("button", { name: /^Mesa M2,/ });
+  const m1 = plan.getByRole("button", { name: /^Mesa M1 / });
+  const m2 = plan.getByRole("button", { name: /^Mesa M2 / });
   expect(await cellOf(m1, 10, 6)).toEqual({ x: 0, y: 0 });
   expect(await cellOf(m2, 10, 6)).toEqual({ x: 2, y: 0 });
 
@@ -66,22 +66,22 @@ test("plano de sala: zonas, mesas, arrastrar, teclado y solapes rechazados", asy
   expect(await cellOf(m1, 10, 6)).toEqual({ x: 5, y: 3 });
   await saved;
   await page.reload();
-  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M1,/ }), 10, 6)).toEqual({ x: 5, y: 3 });
+  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M1 / }), 10, 6)).toEqual({ x: 5, y: 3 });
 
   // Teclado: M2 una celda a la derecha.
-  await plan.getByRole("button", { name: /^Mesa M2,/ }).focus();
+  await plan.getByRole("button", { name: /^Mesa M2 / }).focus();
   saved = serverActionDone(page);
   await page.keyboard.press("ArrowRight");
   await saved;
   await page.reload();
-  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2,/ }), 10, 6)).toEqual({ x: 3, y: 0 });
+  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2 / }), 10, 6)).toEqual({ x: 3, y: 0 });
 
   // Soltar M2 encima de M1: el servidor lo rechaza y la mesa vuelve a su sitio.
-  await dragTo(page, plan, plan.getByRole("button", { name: /^Mesa M2,/ }), 5, 3, 10, 6);
+  await dragTo(page, plan, plan.getByRole("button", { name: /^Mesa M2 / }), 5, 3, 10, 6);
   await expect(page.getByText("La mesa se solapa con otra en el plano")).toBeVisible();
-  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2,/ }), 10, 6)).toEqual({ x: 3, y: 0 });
+  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2 / }), 10, 6)).toEqual({ x: 3, y: 0 });
   await page.reload();
-  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2,/ }), 10, 6)).toEqual({ x: 3, y: 0 });
+  expect(await cellOf(plan.getByRole("button", { name: /^Mesa M2 / }), 10, 6)).toEqual({ x: 3, y: 0 });
 
   const floorUrl = page.url();
   const otherCtx = await browser.newContext();

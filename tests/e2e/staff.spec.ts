@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, quickLink, register, suffix } from "./helpers";
 
 const section = (page: Page, heading: string) =>
   page.locator("section", { has: page.getByRole("heading", { name: heading, exact: true }) });
@@ -17,7 +17,7 @@ test("personal y turnos: fichas, cuadrante semanal, solapes, madrugada y copiar 
   const est = page.url();
 
   // Sin personal, el cuadrante remite a la página de Personal.
-  await page.getByRole("link", { name: "Cuadrante de turnos del personal" }).click();
+  await quickLink(page, "Turnos").click();
   await expect(page.getByText("Para hacer el cuadrante, añade primero a tu equipo")).toBeVisible();
 
   await page.goto(`${org}/staff`);

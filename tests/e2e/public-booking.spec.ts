@@ -29,7 +29,7 @@ test("reserva online: el local la activa, un cliente reserva y el personal la ve
   await tableForm.getByLabel("Nombre de la mesa").fill("T1");
   await tableForm.getByLabel("Máximo").fill("4");
   await tableForm.getByRole("button", { name: "Crear mesa" }).click();
-  await expect(page.getByRole("button", { name: /^Mesa T1,/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Mesa T1 / })).toBeVisible();
 
   // Activar reservas online.
   await page.goto(`${estUrl}/reservations`);

@@ -461,11 +461,14 @@ export async function getPublicSite(orgSlug: string, establishmentSlug: string):
   }>("SELECT * FROM app.public_site($1, $2)", slugs);
   const r = rows[0];
   if (!r) return null;
-  const hours = await pool.query<{ weekday: number; opens_minute: number; duration_minutes: number }>(
-    "SELECT * FROM app.public_site_hours($1)",
-    [r.establishment_id],
-  );
-  const plan = await publicEstablishmentPlan(r.establishment_id);
+  // Horario y plan a la vez: cada visita genera la página, así se espera una sola ida y vuelta a la BD.
+  const [hours, plan] = await Promise.all([
+    pool.query<{ weekday: number; opens_minute: number; duration_minutes: number }>(
+      "SELECT * FROM app.public_site_hours($1)",
+      [r.establishment_id],
+    ),
+    publicEstablishmentPlan(r.establishment_id),
+  ]);
   // En Básico, estilo Clásico sin color ni tipografía propios (D-047).
   return effectiveLook({
     organizationName: r.organization_name,

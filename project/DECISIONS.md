@@ -713,3 +713,57 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
   - Textos en los 7 idiomas.
 
 **Límite conocido:** el horario muestra el semanal; no refleja los días con excepción (festivos), igual que el pie.
+
+## D-053 — Pruebas automáticas de accesibilidad y rendimiento
+**Fecha:** 2026-11-04. **Estado:** aceptada.
+
+**Contexto:**
+- Faltaban pruebas de accesibilidad y rendimiento (ROADMAP, «Hardening»).
+- La web pública y el panel se generan en cada visita (CSP con nonce, D-044), así que conviene medir su coste.
+
+**Decisión:**
+- **Dependencia nueva, solo de desarrollo:** `@axe-core/playwright` 4.14.0, versión fija. axe-core es el motor de referencia para comprobar WCAG de forma automática. Escribir esas reglas a mano sería menos fiable, y no llega al código que se sirve.
+- **`tests/e2e/accessibility.spec.ts`:**
+  - Pasa axe con las reglas WCAG 2.2 A y AA por las 36 páginas del recorrido con datos, en escritorio y en móvil, más el acceso y el registro.
+  - Antes de analizar, abre los desplegables para revisar también su contenido.
+  - Repasa también las páginas públicas en los estilos Clásico, Futurista y Moderno, en móvil.
+  - Comprueba también el teclado: el primer Tab llega a «Saltar al contenido» y Enter lleva el foco al contenido.
+- **`tests/e2e/showcase.ts`:** una organización PRO de muestra con datos en todas las secciones. La comparten la prueba de maquetación, la de accesibilidad y la de rendimiento. Ahora incluye la reserva online activada y las páginas `/m/` y `/r/`.
+- **`tests/e2e/performance.spec.ts`:**
+  - Mide sin caché del navegador los bytes transferidos de JavaScript y CSS y el CLS en las páginas públicas y en las principales del panel.
+  - Exige límites deterministas: JavaScript 180 KB en la web y 200 KB en el panel, CSS 30 KB, CLS 0,1.
+  - Anota sin exigirlos la respuesta del servidor (TTFB) y el LCP, que dependen de la máquina.
+- **Correcciones encontradas** (23 avisos de axe en 13 páginas antes de corregir):
+  - **Mediterráneo:** el dorado (#b48c56) se usaba como texto sobre el crema con un contraste de 2,6:1. Afectaba a precios de la carta, títulos de la página de contacto, la página actual del menú y el idioma actual.
+    - Sobre fondos claros pasa a #7e623c (4,8:1), con el texto de los botones en blanco.
+    - La portada, la cabecera de cada página y la cabecera fija siguen con el dorado original.
+    - Los desplegables de la cabecera, que tienen fondo claro, recuperan el acento de la página (`--s-accent-page`), también con color de marca.
+    - Los separadores decorativos siguen en dorado.
+  - **Clásico:** el texto legal del pie tenía transparencia y bajaba a 3,6:1; ahora se muestra sin transparencia.
+  - **Panel:**
+    - Verde de «correcto» #1d8358 → #187550 (4,2 → 5,1:1 sobre su fondo).
+    - Plazas de las mesas del plano más oscuras sobre el fondo de color de la mesa.
+  - **Nombre accesible con el texto visible (WCAG 2.5.3):**
+    - Los accesos rápidos del resumen del local ya no tienen `aria-label`; su nombre es el texto que se ve.
+    - Las mesas del plano se llaman «Mesa M1 2–4 personas, …», que contiene lo que se ve: «M1 2–4».
+  - **Tamaño de los controles:** casillas y botones de opción de 18 px (antes 16), con foco visible propio.
+  - **Foco visible:** el contorno de foco del panel era violeta muy claro (#efeafe), casi invisible sobre blanco. Pasa a ser el violeta del acento (más de 5:1), y blanco en la barra lateral oscura.
+  - **«Saltar al contenido» (WCAG 2.4.1):**
+    - Panel y web pública tienen un enlace oculto hasta recibir el foco, en los 7 idiomas en la web.
+    - La web pública tiene ahora un `<main>`, que anula el ancho máximo que el panel da a los `<main>`. Una prueba existente, la del carrusel, detectó ese estrechamiento.
+- **Rendimiento medido** (2026-11-04, local, build de producción, móvil sin caché):
+  - JavaScript: unos 140 KB transferidos, casi todo React y Next.js.
+  - CSS: unos 15 KB.
+  - CLS: 0.
+  - TTFB: 15–80 ms; LCP: 100–250 ms.
+  - En la portada pública, el horario, el plan, la carta destacada y la galería se leían una tras otra; ahora las consultas independientes se lanzan a la vez.
+
+**Alternativas descartadas:**
+- Lighthouse en la CI: más pesado y con resultados variables entre ejecuciones. Los límites en bytes y CLS son reproducibles.
+- Exigir tiempos (TTFB, LCP) en la CI: dependen de la máquina y darían fallos aleatorios.
+
+**Límites conocidos:**
+- axe detecta solo una parte de los problemas de WCAG.
+- Falta una revisión manual con lector de pantalla (NVDA, VoiceOver) y con zoom al 200–400 %.
+- La prueba de accesibilidad repasa los estilos con los colores por defecto; los colores de marca se ajustan para el contraste aparte (D-051).
+- Las medidas de rendimiento son locales y con pocos datos; en producción dependerán de la latencia de la BD y del volumen de datos.

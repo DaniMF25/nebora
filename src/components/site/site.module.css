@@ -18,6 +18,9 @@
   --s-hero-fg: #ffffff;
   --s-hero-tint: 18 18 22;
   --s-hero-plain: linear-gradient(135deg, #18181b, #2d2d33);
+  /* Acento para los fondos claros de la página, que los desplegables de la cabecera recuperan. */
+  --s-accent-page: var(--s-accent);
+  --s-on-accent-page: var(--s-on-accent);
   --s-band-bg: transparent;
   --s-band-fg: var(--s-fg);
   --s-contact-bg: #18181b;
@@ -52,6 +55,13 @@
   .site {
     padding-bottom: 0;
   }
+}
+
+/* El contenido de la web ocupa todo el ancho: anula el <main> del panel (globals.css). */
+.site > main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Anula el margen genérico de las secciones del panel (globals.css). */
@@ -131,9 +141,10 @@
   --s-bg: #efebe4;
   --s-fg: #1f2023;
   --s-muted: #6b665e;
-  --s-accent: #b48c56;
+  /* Dorado oscurecido para que se lea sobre el crema (WCAG AA, 4,8:1); el dorado original, en los fondos oscuros. */
+  --s-accent: #7e623c;
   --s-accent-2: #b48c56;
-  --s-on-accent: #111316;
+  --s-on-accent: #ffffff;
   --s-surface: #f7f4ef;
   --s-line: rgba(31, 32, 35, 0.14);
   --s-hero-fg: #f3eee6;
@@ -153,6 +164,13 @@
   --s-brand-transform: uppercase;
   --s-brand-size: 1.6rem;
   --s-section-size: clamp(2.2rem, 5vw, 3rem);
+}
+
+.mediterraneo .hero,
+.mediterraneo .pageHead,
+.mediterraneo .header {
+  --s-accent: #b48c56;
+  --s-on-accent: #111316;
 }
 
 /* --------------------------------------------------------------- cabecera */
@@ -275,6 +293,9 @@
   border: 1px solid var(--s-line);
   border-radius: var(--s-radius);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  /* Fondo claro dentro de una cabecera oscura: el acento de la página. */
+  --s-accent: var(--s-accent-page);
+  --s-on-accent: var(--s-on-accent-page);
 }
 
 .drawer a {
@@ -339,6 +360,8 @@
   border: 1px solid var(--s-line);
   border-radius: var(--s-radius);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  --s-accent: var(--s-accent-page);
+  --s-on-accent: var(--s-on-accent-page);
 }
 
 .langMenu a {
@@ -912,8 +935,8 @@
   max-width: 72rem;
   margin: 2.5rem auto 0;
   font-size: 0.75rem;
+  /* Sin transparencia: con ella el gris del Clásico bajaba a 3,6:1 (WCAG 1.4.3). */
   color: var(--s-contact-muted);
-  opacity: 0.8;
 }
 
 /* -------------------------------------------------- navegación inferior */

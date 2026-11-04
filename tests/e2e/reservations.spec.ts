@@ -31,7 +31,7 @@ test("reservas: buscar mesas libres, reservar, ocupación en el plano, cancelar 
     await form.getByLabel("Nombre de la mesa").fill(name);
     await form.getByLabel("Máximo").fill("4");
     await form.getByRole("button", { name: "Crear mesa" }).click();
-    await expect(page.getByRole("button", { name: new RegExp(`^Mesa ${name},`) })).toBeVisible();
+    await expect(page.getByRole("button", { name: new RegExp(`^Mesa ${name} `) })).toBeVisible();
   }
 
   const base = `${estUrl}/reservations`;

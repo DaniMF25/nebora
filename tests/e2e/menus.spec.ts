@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, openTab, quickLink, register, suffix } from "./helpers";
 
 async function createProduct(page: Page, name: string, price: string, allergens: string[] = []) {
   const form = page.locator("section", { has: page.getByRole("heading", { name: "Nuevo producto" }) });
@@ -28,7 +28,7 @@ test("crear y publicar una carta; después los cambios se publican solos y lo in
 
   await page.goto(orgPath);
   await page.getByRole("link", { name: "Local Puerto" }).click();
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta de verano");
   await page.getByLabel("Identificador de la carta (URL)").fill("verano");

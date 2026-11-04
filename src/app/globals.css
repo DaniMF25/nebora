@@ -14,7 +14,7 @@
   --border: #e4e4ec;
   --danger: #c0352b;
   --danger-soft: #fdeeec;
-  --ok: #1d8358;
+  --ok: #187550;
   --ok-soft: #e7f6ee;
   --sidebar: #0e1016;
   --sidebar-fg: #d4d5de;
@@ -59,14 +59,17 @@ input, select, textarea {
    (maximum-scale) porque impediría ampliar a quien lo necesita. */
 @media (pointer: coarse) { input, select, textarea { font-size: 16px; } }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 1rem; height: 1rem; padding: 0; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 1.125rem; height: 1.125rem; padding: 0; }
+input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button {
   font: inherit; font-size: 0.92rem; font-weight: 600; padding: 0.55rem 1.1rem; border-radius: 10px;
   border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent, #fff); cursor: pointer; justify-self: start;
   transition: background 0.15s, border-color 0.15s;
 }
 button:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
-button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+/* Foco visible con contraste de al menos 3:1 sobre el fondo (WCAG 1.4.11); el violeta claro anterior apenas se veía. */
+button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.panel-sidebar :is(a, button, summary):focus-visible { outline-color: #ffffff; }
 button.secondary, .inline-form > button {
   background: var(--surface); color: var(--fg); border-color: var(--border); font-weight: 500;
 }
@@ -118,6 +121,11 @@ dl.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1f
 dl.kpis div { background: var(--bg); border-radius: 10px; padding: 0.65rem 0.85rem; }
 dl.kpis dt { color: var(--muted); font-size: 0.8rem; }
 dl.kpis dd { margin: 0; font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Enlace «Saltar al contenido»: invisible hasta recibir el foco con el teclado (WCAG 2.4.1). */
+.skip-link { position: absolute; left: 0.75rem; top: 0.75rem; z-index: 100; padding: 0.6rem 1rem; border-radius: 10px; background: #16161d; color: #ffffff; font-weight: 600; text-decoration: none; transform: translateY(-200%); }
+.skip-link:focus { transform: none; outline: 2px solid #ffffff; outline-offset: 2px; box-shadow: 0 0 0 4px #16161d; }
+/* El contenido recibe el foco al saltar, sin marco: no es un control. */
+main[tabindex="-1"]:focus { outline: none; }
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;

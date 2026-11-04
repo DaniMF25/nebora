@@ -26,14 +26,18 @@ type Search = Promise<{ lang?: string | string[] }>;
 const load = cache(async (org: string, est: string) => {
   const found = await getPublicSite(org, est);
   if (!found) return null;
-  let site = found;
-  if (site.featuredMenuSlug) {
-    const menus = await getPublicMenus(org, est);
-    const current = menus ? pickCurrentMenu(menus.menus, menus.timezone, new Date()) : null;
-    if (current) site = { ...site, featuredMenuSlug: current.slug };
-  }
-  const menu = site.featuredMenuSlug ? await getPublishedMenu(org, est, site.featuredMenuSlug) : null;
-  const gallery = await getPublicGallery(site.establishmentId);
+  const featured = async () => {
+    let slug = found.featuredMenuSlug;
+    if (slug) {
+      const menus = await getPublicMenus(org, est);
+      const current = menus ? pickCurrentMenu(menus.menus, menus.timezone, new Date()) : null;
+      if (current) slug = current.slug;
+    }
+    return { slug, menu: slug ? await getPublishedMenu(org, est, slug) : null };
+  };
+  // La galería no depende de la carta: se lee a la vez.
+  const [{ slug, menu }, gallery] = await Promise.all([featured(), getPublicGallery(found.establishmentId)]);
+  const site = slug === found.featuredMenuSlug ? found : { ...found, featuredMenuSlug: slug };
   return { site, menu, gallery };
 });
 

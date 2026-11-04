@@ -23,6 +23,8 @@ export interface PublicTexts {
   writeUs: string;
   legal: string;
   mainNav: string;
+  /** Enlace para saltar la cabecera con el teclado (WCAG 2.4.1). */
+  skipToContent: string;
   seeHours: string;
   ourMenu: string;
   seeFullMenu: string;
@@ -74,6 +76,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Escríbenos",
     legal: "Horario habitual; puede variar en festivos. Web creada con Nébora.",
     mainNav: "Navegación principal",
+    skipToContent: "Saltar al contenido",
     seeHours: "Ver horarios",
     ourMenu: "Nuestra carta",
     seeFullMenu: "Ver carta completa",
@@ -134,6 +137,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Message us",
     legal: "Usual opening hours; they may vary on public holidays. Website made with Nébora.",
     mainNav: "Main navigation",
+    skipToContent: "Skip to content",
     seeHours: "Opening hours",
     ourMenu: "Our menu",
     seeFullMenu: "See the full menu",
@@ -194,6 +198,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Écrivez-nous",
     legal: "Horaires habituels ; ils peuvent varier les jours fériés. Site créé avec Nébora.",
     mainNav: "Navigation principale",
+    skipToContent: "Aller au contenu",
     seeHours: "Voir les horaires",
     ourMenu: "Notre carte",
     seeFullMenu: "Voir toute la carte",
@@ -254,6 +259,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Schreiben Sie uns",
     legal: "Übliche Öffnungszeiten; an Feiertagen können sie abweichen. Website erstellt mit Nébora.",
     mainNav: "Hauptnavigation",
+    skipToContent: "Zum Inhalt springen",
     seeHours: "Öffnungszeiten",
     ourMenu: "Unsere Speisekarte",
     seeFullMenu: "Ganze Speisekarte ansehen",
@@ -314,6 +320,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Scrivici",
     legal: "Orari abituali; possono variare nei giorni festivi. Sito creato con Nébora.",
     mainNav: "Navigazione principale",
+    skipToContent: "Vai al contenuto",
     seeHours: "Vedi gli orari",
     ourMenu: "Il nostro menù",
     seeFullMenu: "Vedi il menù completo",
@@ -374,6 +381,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Escreva-nos",
     legal: "Horário habitual; pode variar nos feriados. Site criado com Nébora.",
     mainNav: "Navegação principal",
+    skipToContent: "Saltar para o conteúdo",
     seeHours: "Ver horário",
     ourMenu: "A nossa ementa",
     seeFullMenu: "Ver a ementa completa",
@@ -434,6 +442,7 @@ export const PUBLIC_TEXTS: Record<PublicLanguage, PublicTexts> = {
     writeUs: "Escriu-nos",
     legal: "Horari habitual; pot variar els dies festius. Web creada amb Nébora.",
     mainNav: "Navegació principal",
+    skipToContent: "Salta al contingut",
     seeHours: "Veure horaris",
     ourMenu: "La nostra carta",
     seeFullMenu: "Veure la carta completa",

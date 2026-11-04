@@ -23,7 +23,7 @@ test("lista de espera: apuntar, ver hueco y convertir en reserva", async ({ page
   await tableForm.getByLabel("Nombre de la mesa").fill("T1");
   await tableForm.getByLabel("Máximo").fill("4");
   await tableForm.getByRole("button", { name: "Crear mesa" }).click();
-  await expect(page.getByRole("button", { name: /^Mesa T1,/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Mesa T1 / })).toBeVisible();
 
   // La única mesa, ocupada de 20:00 a 21:30.
   const base = `${estUrl}/reservations`;

@@ -94,7 +94,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Revisar OWASP ASVS aplicable (revisión interna, `docs/SECURITY_REVIEW.md`; falta la independiente).
 - [x] Ejecutar análisis de dependencias y secretos (manual, 2026-11-01; falta automatizarlo en la CI).
 - [ ] Pruebas de permisos, aislamiento y concurrencia.
-- [ ] Pruebas de accesibilidad y rendimiento.
+- [x] Pruebas de accesibilidad y rendimiento automáticas (D-053: axe WCAG 2.2 AA en 38 páginas (36 del recorrido, más acceso y registro), teclado, límites de peso y CLS; falta la revisión manual con lector de pantalla).
 - [ ] Restauración de copia de seguridad.
 - [ ] Monitorización y alertas.
 - [ ] Revisión de privacidad y operaciones.

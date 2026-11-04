@@ -130,7 +130,7 @@ export default async function EstablishmentPage({
               )}
               {canTables && (
                 <li>
-                  <Link href={`${base}/floor`} aria-label="Plano de sala (zonas y mesas)">
+                  <Link href={`${base}/floor`}>
                     <strong>Sala</strong>
                     <span>Plano de sala (zonas y mesas)</span>
                   </Link>
@@ -138,7 +138,7 @@ export default async function EstablishmentPage({
               )}
               {canStaff && (
                 <li>
-                  <Link href={`${base}/staff`} aria-label="Cuadrante de turnos del personal">
+                  <Link href={`${base}/staff`}>
                     <strong>Turnos</strong>
                     <span>Cuadrante semanal del personal</span>
                   </Link>
@@ -146,20 +146,20 @@ export default async function EstablishmentPage({
               )}
               {canMessages && (
                 <li>
-                  <Link href={`${base}/messages`} aria-label="Mensajes de la web">
+                  <Link href={`${base}/messages`}>
                     <strong>Mensajes</strong>
                     <span>Lo que te escriben desde el formulario de contacto</span>
                   </Link>
                 </li>
               )}
               <li>
-                <Link href={`${base}/site`} aria-label="Página pública">
+                <Link href={`${base}/site`}>
                   <strong>Web pública</strong>
                   <span>Diseño, contenido y publicación de tu web</span>
                 </Link>
               </li>
               <li>
-                <Link href={`${base}/menus`} aria-label="Gestionar cartas">
+                <Link href={`${base}/menus`}>
                   <strong>Cartas</strong>
                   <span>
                     {menus.length === 0
@@ -171,7 +171,7 @@ export default async function EstablishmentPage({
               </li>
               {canInventory && (
                 <li>
-                  <Link href={`${base}/inventory`} aria-label="Inventario del local">
+                  <Link href={`${base}/inventory`}>
                     <strong>Inventario</strong>
                     <span>Stock, movimientos y recuentos de sus almacenes</span>
                   </Link>
@@ -179,7 +179,7 @@ export default async function EstablishmentPage({
               )}
               {canPurchasing && (
                 <li>
-                  <Link href={`${base}/purchasing`} aria-label="Compras del local">
+                  <Link href={`${base}/purchasing`}>
                     <strong>Compras</strong>
                     <span>Pedidos a proveedores y recepciones</span>
                   </Link>

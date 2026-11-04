@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, openTab, quickLink, register, suffix } from "./helpers";
 
 test("varios locales: selector de local, inventario y pedidos por local desde Gestión, y vista del grupo", async ({
   page,
@@ -106,7 +106,7 @@ test("producto disponible solo en un local: solo lo ofrecen las cartas de ese lo
   ] as const) {
     await page.goto(orgUrl);
     await page.getByRole("main").getByRole("link", { name: local }).click();
-    await page.getByRole("link", { name: "Gestionar cartas" }).click();
+    await quickLink(page, "Cartas").click();
     await page.getByText("Nueva carta").click();
     await page.getByLabel("Nombre de la carta").fill(`Carta ${local}`);
     await page.getByLabel("Identificador de la carta (URL)").fill("carta");

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, quickLink, register, setSitePublished, suffix } from "./helpers";
 import { brandPalette, contrastRatio } from "../../src/lib/color";
 import { THEME_INFO } from "../../src/lib/site-themes";
 
@@ -99,7 +99,7 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
     contrastRatio(brandPalette("#2e86ab", { page: m.pageBg, hero: m.heroBg, contact: m.contactBg }).page, m.pageBg),
   ).toBeGreaterThanOrEqual(4.5);
 
-  // Sin color propio vuelve el del estilo.
+  // Sin color propio vuelve el del estilo (en Mediterráneo, el dorado oscurecido que se lee sobre el crema).
   await page.getByLabel("Usar mi color de marca").uncheck();
   await page.getByRole("button", { name: "Guardar color y tipografía" }).click();
   await expect(page.getByText("Marca guardada", { exact: true })).toBeVisible();
@@ -109,7 +109,7 @@ test("marca de la web: logotipo, color propio y tipografía elegida", async ({ b
       .locator("body div[lang]")
       .first()
       .evaluate((el) => getComputedStyle(el).getPropertyValue("--s-accent").trim()),
-  ).toBe("#b48c56");
+  ).toBe("#7e623c");
 
   // «Quitar logotipo» va junto a «Subir logotipo» y quita el logotipo (sin enviar el archivo).
   const upload = await page.getByRole("button", { name: "Subir logotipo" }).boundingBox();
@@ -151,7 +151,7 @@ test("web pública: hovers con los colores del tema y puntos del carrusel solo s
   await page.getByRole("main").getByRole("link", { name: "Puerto" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");

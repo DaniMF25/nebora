@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { choosePlan, openTab, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, openTab, quickLink, register, setSitePublished, suffix } from "./helpers";
 
 const GOOGLEBOT_UA = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 const MOBILE_UA =
@@ -35,7 +35,7 @@ test("estadísticas: cuenta visitas reales a la web, la carta y el QR, y no las 
   await page.getByRole("link", { name: "Puerto" }).click();
   await page.waitForURL(/establishments\/[0-9a-f-]+$/);
   const estUrl = page.url();
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta de mediodía");
   await page.getByLabel("Identificador de la carta (URL)").fill("mediodia");

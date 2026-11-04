@@ -54,7 +54,8 @@
 
 .capacity {
   font-size: 0.85em;
-  color: var(--muted);
+  /* Sobre el fondo coloreado de las mesas, el gris normal no llega a 4,5:1 (WCAG 1.4.3). */
+  color: color-mix(in srgb, var(--muted) 60%, var(--fg));
 }
 
 .status {

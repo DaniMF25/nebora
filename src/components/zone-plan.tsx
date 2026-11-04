@@ -18,6 +18,11 @@ export interface PlanTable {
   active: boolean;
 }
 
+/** Plazas de la mesa tal como se ven en el plano: «4» o «2–4». */
+function capacityText(t: PlanTable): string {
+  return t.minCapacity === t.maxCapacity ? String(t.maxCapacity) : `${t.minCapacity}–${t.maxCapacity}`;
+}
+
 interface Props {
   zoneName: string;
   planWidth: number;
@@ -140,16 +145,15 @@ export function ZonePlan({ zoneName, planWidth, planHeight, tables: initial, can
               height: `${(t.height / planHeight) * 100}%`,
               cursor: canManage ? "grab" : "default",
             }}
-            aria-label={`Mesa ${t.name}, ${TABLE_SHAPE_LABELS[t.shape].toLowerCase()}, ${t.minCapacity} a ${t.maxCapacity} personas${t.active ? "" : ", desactivada"}${canManage ? ". Usa las flechas para moverla" : ""}`}
+            // El nombre accesible contiene el texto visible seguido («M1 2–4»), como pide WCAG 2.5.3.
+            aria-label={`Mesa ${t.name} ${capacityText(t)} personas, ${TABLE_SHAPE_LABELS[t.shape].toLowerCase()}${t.active ? "" : ", desactivada"}${canManage ? ". Usa las flechas para moverla" : ""}`}
             onPointerDown={(e) => onPointerDown(e, t)}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onKeyDown={(e) => onKeyDown(e, t)}
           >
-            <span className={styles.name}>{t.name}</span>
-            <span className={styles.capacity}>
-              {t.minCapacity === t.maxCapacity ? t.maxCapacity : `${t.minCapacity}–${t.maxCapacity}`}
-            </span>
+            <span className={styles.name}>{t.name}</span>{" "}
+            <span className={styles.capacity}>{capacityText(t)}</span>
           </button>
         ))}
       </div>

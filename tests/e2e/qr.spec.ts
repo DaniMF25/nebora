@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, openTab, quickLink, register, suffix } from "./helpers";
 
 test("QR: enlace permanente que sobrevive al cambio de identificador y descarga protegida", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -20,7 +20,7 @@ test("QR: enlace permanente que sobrevive al cambio de identificador y descarga 
 
   await page.goto(orgPath);
   await page.getByRole("link", { name: "Local QR" }).click();
-  await page.getByRole("link", { name: "Gestionar cartas" }).click();
+  await quickLink(page, "Cartas").click();
   await page.getByText("Nueva carta").click();
   await page.getByLabel("Nombre de la carta").fill("Carta QR");
   await page.getByLabel("Identificador de la carta (URL)").fill("carta");
