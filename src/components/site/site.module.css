@@ -1241,27 +1241,14 @@
 
 /*
  * Bloques con fondo de sección propio (la carta destacada y la galería de la
- * portada): llevan su propia capa, detrás de su contenido y sobre su fondo.
+ * portada): con fondo decorativo se vuelven transparentes para que se vea la
+ * capa común de la página, continua y sin cortes. Su fondo es el mismo color
+ * que el de la página en todos los estilos (--s-section-bg = --s-bg), así que
+ * el aspecto no cambia.
  */
 .decorated .menuBlock,
 .decorated .galleryBlock {
-  position: relative;
-  isolation: isolate;
-}
-
-.decorated .menuBlock::before,
-.decorated .galleryBlock::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--s-fg);
-  opacity: 0.07;
-  -webkit-mask-image: var(--s-decor);
-  mask-image: var(--s-decor);
-  -webkit-mask-size: 240px 240px;
-  mask-size: 240px 240px;
+  background: transparent;
 }
 
 .decorated::before {

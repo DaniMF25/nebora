@@ -689,7 +689,7 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - La portada, la cabecera de cada página y la cabecera fija usan su variante (`.branded`), y el pie la suya.
 - Los fondos de cada estilo están en `THEME_INFO` (`pageBg`, `heroBg`, `contactBg`).
 - **Panel:** si el color se ajusta, se muestran los tonos que usará la web en cada zona, en lugar del aviso de «prueba otro color».
-- **Fondo decorativo (D-050):** también en los bloques de la portada con fondo propio (carta destacada y galería).
+- **Fondo decorativo (D-050):** también en los bloques de la portada con fondo propio (carta destacada y galería). Primero tenían su propia capa, pero el dibujo no casaba en la unión con la capa común y se repetía. Ahora, con fondo decorativo, esos bloques son transparentes; su color es el mismo que el de la página en todos los estilos, así que se ve la capa común, continua y sin cortes.
 
 **Alternativas descartadas:**
 - Rechazar colores de poco contraste: el titular quiere poder usar su color.
