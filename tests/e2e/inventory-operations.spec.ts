@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, navLink, openTab, register, suffix } from "./helpers";
 
 test("traspaso entre almacenes y recuento físico con ajuste de diferencias", async ({ page }) => {
   await register(page, "Recuentos");
@@ -9,8 +9,7 @@ test("traspaso entre almacenes y recuento físico con ajuste de diferencias", as
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
   await expect(page.getByRole("link", { name: "Local Recuento" })).toBeVisible();
 
-  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await page
     .getByRole("navigation", { name: "Apartados del inventario" })
     .getByRole("link", { name: "Ingredientes" })
@@ -19,7 +18,7 @@ test("traspaso entre almacenes y recuento físico con ajuste de diferencias", as
   await page.getByLabel("Nombre del ingrediente").fill("Harina");
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Harina" })).toBeVisible();
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await openTab(page, "Almacenes");
   for (const name of ["Central", "Barra"]) {
     await page.getByText("Nuevo almacén").click();

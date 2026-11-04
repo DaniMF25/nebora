@@ -1,6 +1,7 @@
 // Iconos del panel (trazos propios, sin dependencias); heredan el color del texto.
 const PATHS = {
   home: <path d="M3 11 12 4l9 7M5 10v10h5v-6h4v6h5V10" />,
+  chevron: <path d="m6 9 6 6 6-6" />,
   products: (
     <>
       <path d="M4 7h16l-1.5 12a2 2 0 0 1-2 1.8h-9A2 2 0 0 1 5.5 19z" />

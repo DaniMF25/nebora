@@ -1,10 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { choosePlan, createOrganization, register, suffix } from "./helpers";
+import { choosePlan, createOrganization, navLink, register, suffix } from "./helpers";
 
 /** Enlaces del menú lateral (D-046). */
 async function navLinks(page: Page): Promise<string[]> {
   const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
-  return (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+  // También los de los grupos plegados (Gestión y Organización), aunque estén cerrados.
+  return (await nav.getByRole("link", { includeHidden: true }).allTextContents()).map((t) => t.trim()).filter(Boolean);
 }
 
 // Planes Básico, Avanzado y PRO (D-046).
@@ -107,10 +108,7 @@ test("planes: Básico con web, cartas y platos en la carta; Avanzado y PRO añad
   await choosePlan(page, "pro");
   links = await navLinks(page);
   for (const l of ["Productos", "Inventario", "Proveedores"]) expect(links, l).toContain(l);
-  await page
-    .getByRole("navigation", { name: "Secciones de la organización" })
-    .getByRole("link", { name: "Productos" })
-    .click();
+  await (await navLink(page, "Productos")).click();
   await page.getByRole("link", { name: "Croquetas" }).click();
   await expect(page.getByRole("heading", { name: /Receta/ })).toBeVisible();
 

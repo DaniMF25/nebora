@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, register, suffix } from "./helpers";
+import { createOrganization, navLink, register, suffix } from "./helpers";
 
 test("portada con resumen del día, avisos reales y navegación usable en móvil", async ({ browser }) => {
   const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
@@ -27,7 +27,7 @@ test("portada con resumen del día, avisos reales y navegación usable en móvil
 
   // Un producto sin receta aparece como aviso con enlace a su ficha.
   await menu("Abrir menú");
-  await nav.getByRole("link", { name: "Productos" }).click();
+  await (await navLink(page, "Productos")).click();
   await expect(page.getByRole("heading", { name: "Nuevo producto" })).toBeVisible();
   await expect(nav).toBeHidden(); // el menú se cierra al navegar
   await menu("Abrir menú");

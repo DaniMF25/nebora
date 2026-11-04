@@ -178,7 +178,7 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
 .panel { display: grid; grid-template-columns: 264px minmax(0, 1fr); min-height: 100vh; }
 .panel-topbar { display: none; }
 .panel-sidebar {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--sidebar); color: var(--sidebar-fg);
+  position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--sidebar); color: var(--sidebar-fg);
   padding: 1.25rem 0.85rem 1rem; display: flex; flex-direction: column; gap: 1.25rem;
 }
 .panel-sidebar a, .panel-topbar a { color: inherit; text-decoration: none; }
@@ -189,7 +189,18 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
   flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 10px;
   background: linear-gradient(135deg, #7d5cff, #4a2bd6); color: #fff; font-weight: 700; font-size: 0.85rem;
 }
-.side-nav { display: grid; gap: 1.1rem; flex: 1; align-content: start; }
+/* El menú se desplaza solo si no cabe; la cabecera y el pie (cuenta y salir) quedan siempre a la vista. */
+.side-nav { display: grid; gap: 1.1rem; flex: 1; align-content: start; min-height: 0; overflow-y: auto; margin: 0 -0.35rem; padding: 0 0.35rem; }
+/* Gestión y Organización plegables (acordeón). */
+.side-section { margin: 0; }
+.side-section > summary { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.75rem 0.4rem 0; border-radius: 9px; cursor: pointer; list-style: none; color: var(--sidebar-muted); }
+.side-section > summary::-webkit-details-marker { display: none; }
+.side-section > summary .side-group { margin: 0; }
+.side-section > summary:hover { background: rgba(255, 255, 255, 0.05); color: var(--sidebar-fg); }
+.side-section > summary svg { width: 16px; height: 16px; transition: transform 0.15s; }
+.side-section[open] > summary svg { transform: rotate(180deg); }
+.side-section > div { margin-top: 0.25rem; }
+@media (prefers-reduced-motion: reduce) { .side-section > summary svg { transition: none; } }
 .side-nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .side-group { margin: 0 0 0.35rem; padding: 0 0.75rem; color: var(--sidebar-muted); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .side-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.5rem 0.75rem; border-radius: 9px; font-size: 0.92rem; color: var(--sidebar-fg); }

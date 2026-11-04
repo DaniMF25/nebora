@@ -813,3 +813,21 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 
 **Límites conocidos:**
 - El número de locales se calcula con una transacción por organización; está pensado para pocas organizaciones por cuenta.
+
+## D-056 — Menú lateral con Gestión y Organización plegables
+**Fecha:** 2026-11-04. **Estado:** aceptada.
+
+**Contexto:** con el plan PRO, el menú (Inicio, local, Gestión y Organización) ya no cabía en una pantalla de portátil. Además, el enlace «Crear otra organización» (D-055) añadía una línea más, así que había que desplazarse y la cuenta quedaba cortada.
+
+**Decisión:**
+- **El bloque del local** (Resumen, Cartas, Reservas…) siempre desplegado.
+- **Gestión y Organización** plegables en acordeón (`<details>`):
+  - al abrir una se cierra la otra;
+  - se abre sola la que contiene la página actual, y al navegar se vuelve a ajustar;
+  - se manejan con el teclado como cualquier `<details>`.
+- **Cuenta y salir**, siempre abajo:
+  - solo se desplaza la lista del menú si no cabe;
+  - «Cambiar de organización» o «Crear otra organización» pasa a ser un icono junto a «Cerrar sesión», con su nombre accesible y su título.
+- **Pruebas:**
+  - en las E2E, `navLink()` abre el grupo antes de pulsar un enlace, como haría una persona;
+  - `tests/e2e/sidebar.spec.ts` comprueba el acordeón, el grupo de la página actual, el teclado y que la cuenta queda a la vista en una pantalla baja.

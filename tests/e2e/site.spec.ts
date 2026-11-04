@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { choosePlan, openTab, quickLink, register, setSitePublished, suffix } from "./helpers";
+import { choosePlan, navLink, openTab, quickLink, register, setSitePublished, suffix } from "./helpers";
 
 async function jpeg(color: string): Promise<Buffer> {
   return sharp({
@@ -27,7 +27,7 @@ test("página pública del local con foto, carta destacada y despublicación", a
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
 
   // Producto con foto
-  await page.getByRole("link", { name: "Productos" }).click();
+  await (await navLink(page, "Productos")).click();
   const form = page.locator("section", {
     has: page.getByRole("heading", { name: "Nuevo producto" }),
   });

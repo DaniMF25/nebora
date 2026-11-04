@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, PASSWORD, register, suffix } from "./helpers";
+import { createOrganization, navLink, PASSWORD, register, suffix } from "./helpers";
 
 test("invitar a una persona: crea su cuenta con el enlace y entra en la organización", async ({ browser }) => {
   const ownerCtx = await browser.newContext();
@@ -7,7 +7,7 @@ test("invitar a una persona: crea su cuenta con el enlace y entra en la organiza
   await register(owner, "Dueña");
   const orgUrl = await createOrganization(owner, "Casa Invitada");
 
-  await owner.getByRole("link", { name: "Miembros" }).click();
+  await (await navLink(owner, "Miembros")).click();
   const inviteeEmail = `nuevo-${suffix()}@example.test`;
   await owner.getByLabel("Correo electrónico").fill(inviteeEmail);
   await owner.getByLabel("Rol").selectOption("manager");

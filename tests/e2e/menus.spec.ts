@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createOrganization, openTab, quickLink, register, suffix } from "./helpers";
+import { createOrganization, navLink, openTab, quickLink, register, suffix } from "./helpers";
 
 async function createProduct(page: Page, name: string, price: string, allergens: string[] = []) {
   const form = page.locator("section", { has: page.getByRole("heading", { name: "Nuevo producto" }) });
@@ -22,7 +22,7 @@ test("crear y publicar una carta; después los cambios se publican solos y lo in
   await page.getByLabel("Identificador (URL)").fill(`puerto-${suffix()}`);
   await page.getByRole("button", { name: "Crear establecimiento" }).click();
 
-  await page.getByRole("link", { name: "Productos" }).click();
+  await (await navLink(page, "Productos")).click();
   await createProduct(page, "Croquetas de jamón", "8,50", ["Gluten", "Lácteos"]);
   await createProduct(page, "Arroz a banda", "16", ["Pescado", "Moluscos"]);
 

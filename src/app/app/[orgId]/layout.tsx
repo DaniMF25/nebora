@@ -71,6 +71,7 @@ export default async function OrganizationLayout({
       ? [
           {
             title: "Gestión",
+            collapsible: true,
             items: [
               { href: `${base}/products`, label: "Productos", icon: "products" as const },
               // Inventario: ingredientes, todo el grupo y cada local.
@@ -101,6 +102,7 @@ export default async function OrganizationLayout({
       : []),
     {
       title: "Organización",
+      collapsible: true,
       items: [
         ...(can.members ? [{ href: `${base}/members`, label: "Miembros", icon: "team" as const }] : []),
         ...(can.staff
@@ -156,10 +158,6 @@ export default async function OrganizationLayout({
         <>
           <SidebarNav label="Secciones de la organización" groups={groups} local={local} localAfter={1} />
           <div className="side-footer">
-            <Link href="/app?elegir" className="side-switch">
-              <PanelIcon name="switch" />
-              {hasOthers ? "Cambiar de organización" : "Crear otra organización"}
-            </Link>
             <div className="side-user">
               <span className="avatar" aria-hidden="true">
                 {initials(user.displayName)}
@@ -168,6 +166,17 @@ export default async function OrganizationLayout({
                 <strong>{user.displayName}</strong>
                 <small>{ROLE_LABELS[role]}</small>
               </span>
+              {/* Cambiar o crear organización: icono junto a «Cerrar sesión», para que el menú quepa. */}
+              <Link
+                href="/app?elegir"
+                className="icon-button"
+                title={hasOthers ? "Cambiar de organización" : "Crear otra organización"}
+              >
+                <PanelIcon name="switch" />
+                <span className="visually-hidden">
+                  {hasOthers ? "Cambiar de organización" : "Crear otra organización"}
+                </span>
+              </Link>
               <form action={logoutAction}>
                 <button type="submit" className="icon-button" title="Cerrar sesión">
                   <PanelIcon name="logout" />

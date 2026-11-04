@@ -18,6 +18,8 @@ export interface NavItem {
 export interface NavGroup {
   title: string;
   items: NavItem[];
+  /** Plegable (acordeón): solo uno abierto a la vez; se abre solo el de la página actual. */
+  collapsible?: boolean;
 }
 
 /** Apartados de cada local: `path` se añade a /app/<org>/establishments/<id>. */
@@ -118,12 +120,44 @@ export function SidebarNav({
       </div>
     ) : null;
 
-  const rendered = groups.map((group, gi) => (
-    <div key={`${group.title}-${gi}`} role={group.title ? "group" : undefined} aria-label={group.title || undefined}>
-      {group.title && <p className="side-group">{group.title}</p>}
-      <NavList items={group.items} isCurrent={isCurrent} />
-    </div>
-  ));
+  // Acordeón de grupos plegables: abierto el que contiene la página actual (al
+  // navegar se vuelve a ajustar, durante el render y sin efecto); al abrir uno
+  // se cierra el otro, para que el menú quepa sin desplazarse.
+  const currentGroup = groups.find((g) => g.collapsible && g.items.some(isCurrent))?.title ?? null;
+  const [openGroup, setOpenGroup] = useState<{ path: string; title: string | null }>({
+    path: pathname,
+    title: currentGroup,
+  });
+  if (openGroup.path !== pathname) setOpenGroup({ path: pathname, title: currentGroup });
+
+  const rendered = groups.map((group, gi) =>
+    group.collapsible && group.title ? (
+      <details
+        key={`${group.title}-${gi}`}
+        className="side-section"
+        open={openGroup.title === group.title}
+        onToggle={(e) => {
+          const open = (e.currentTarget as HTMLDetailsElement).open;
+          setOpenGroup((prev) =>
+            open ? { path: pathname, title: group.title } : prev.title === group.title ? { path: pathname, title: null } : prev,
+          );
+        }}
+      >
+        <summary>
+          <span className="side-group">{group.title}</span>
+          <PanelIcon name="chevron" />
+        </summary>
+        <div role="group" aria-label={group.title}>
+          <NavList items={group.items} isCurrent={isCurrent} />
+        </div>
+      </details>
+    ) : (
+      <div key={`${group.title}-${gi}`} role={group.title ? "group" : undefined} aria-label={group.title || undefined}>
+        {group.title && <p className="side-group">{group.title}</p>}
+        <NavList items={group.items} isCurrent={isCurrent} />
+      </div>
+    ),
+  );
 
   return (
     <nav className="side-nav" aria-label={label}>

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, PASSWORD, register, suffix } from "./helpers";
+import { createOrganization, navLink, PASSWORD, register, suffix } from "./helpers";
 
 test("miembro limitado a un local: solo ve ese local y el acceso se puede cambiar", async ({ browser }) => {
   const ownerCtx = await browser.newContext();
@@ -18,7 +18,7 @@ test("miembro limitado a un local: solo ve ese local y el acceso se puede cambia
   ).toString();
 
   // Invitación de personal solo para Playa.
-  await owner.getByRole("link", { name: "Miembros" }).click();
+  await (await navLink(owner, "Miembros")).click();
   const email = `camarera-${suffix()}@example.test`;
   await owner.getByLabel("Correo electrónico").fill(email);
   await owner.getByLabel("Rol").selectOption("staff");

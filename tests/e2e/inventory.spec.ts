@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, register, suffix } from "./helpers";
+import { createOrganization, navLink, openTab, register, suffix } from "./helpers";
 
 test("inventario: entradas, consumos, stock insuficiente, anulación y aislamiento", async ({ browser }) => {
   const ctx = await browser.newContext();
@@ -12,10 +12,9 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
   await expect(page.getByRole("link", { name: "Local Stock" })).toBeVisible();
 
   // Los ingredientes son un catálogo común; el stock va por local.
-  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await expect(page.getByText("Necesitas al menos un almacén y un ingrediente")).toBeVisible();
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await page
     .getByRole("navigation", { name: "Apartados del inventario" })
     .getByRole("link", { name: "Ingredientes" })
@@ -25,7 +24,7 @@ test("inventario: entradas, consumos, stock insuficiente, anulación y aislamien
   await page.getByLabel("Nivel mínimo en unidad base (opcional)").fill("1000");
   await page.getByRole("button", { name: "Crear ingrediente" }).click();
   await expect(page.getByRole("button", { name: "Archivar Harina" })).toBeVisible();
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await expect(page.getByRole("heading", { level: 2, name: "Inventario" })).toBeVisible();
   await openTab(page, "Almacenes");
   await page.getByText("Nuevo almacén").click();

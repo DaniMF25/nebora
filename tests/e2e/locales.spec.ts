@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, openTab, quickLink, register, suffix } from "./helpers";
+import { createOrganization, navLink, openTab, quickLink, register, suffix } from "./helpers";
 
 test("varios locales: selector de local, inventario y pedidos por local desde Gestión, y vista del grupo", async ({
   page,
@@ -18,9 +18,7 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   const inventory = page.getByRole("navigation", { name: "Apartados del inventario" });
 
   // Gestión común (D-046), además del bloque del local; el local ya no tiene inventario ni compras en el menú.
-  for (const name of ["Productos", "Inventario", "Proveedores"]) {
-    await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
-  }
+  for (const name of ["Productos", "Inventario", "Proveedores"]) await navLink(page, name);
 
   // Cambiar al local Playa desde el selector del menú.
   await nav.getByText("Local", { exact: true }).click();
@@ -30,7 +28,7 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   await expect(local("Playa").getByRole("link", { name: "Inventario" })).toHaveCount(0);
 
   // Inventario de Playa desde Gestión → Inventario: crear un almacén.
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await expect(page.getByRole("heading", { level: 2, name: "Inventario del grupo" })).toBeVisible();
   await inventory.getByRole("link", { name: "Playa" }).click();
   await expect(page.getByRole("heading", { level: 2, name: "Inventario · Playa" })).toBeVisible();
@@ -43,13 +41,13 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   await expect(page.getByRole("listitem").filter({ hasText: /^Bodega de la playa$/ })).toBeVisible();
 
   // El último local visitado se mantiene en las páginas comunes.
-  await nav.getByRole("link", { name: "Productos", exact: true }).click();
+  await (await navLink(page, "Productos")).click();
   await expect(local("Playa")).toBeVisible();
   await page.reload();
   await expect(local("Playa")).toBeVisible();
 
   // Centro no ve el almacén de Playa.
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await inventory.getByRole("link", { name: "Centro" }).click();
   // Esperar a la página de Centro: la del grupo también tiene la pestaña «Almacenes».
   await expect(page.getByRole("heading", { level: 2, name: "Inventario · Centro" })).toBeVisible();
@@ -58,7 +56,7 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   await expect(page.getByText("Bodega de la playa")).toHaveCount(0);
 
   // Pedidos de Centro desde Gestión → Proveedores.
-  await nav.getByRole("link", { name: "Proveedores", exact: true }).click();
+  await (await navLink(page, "Proveedores")).click();
   await page
     .getByRole("navigation", { name: "Apartados de proveedores" })
     .getByRole("link", { name: "Pedidos de Centro" })
@@ -68,7 +66,7 @@ test("varios locales: selector de local, inventario y pedidos por local desde Ge
   await expect(page.getByRole("link", { name: "Crear un almacén" })).toBeVisible();
 
   // La vista del grupo reúne los almacenes de todos los locales.
-  await nav.getByRole("link", { name: "Inventario", exact: true }).click();
+  await (await navLink(page, "Inventario")).click();
   await inventory.getByRole("link", { name: "Todos los locales" }).click();
   await expect(page.getByRole("heading", { level: 2, name: "Inventario del grupo" })).toBeVisible();
   await openTab(page, "Almacenes");
@@ -84,8 +82,7 @@ test("producto disponible solo en un local: solo lo ofrecen las cartas de ese lo
     await page.getByRole("button", { name: "Crear establecimiento" }).click();
     await expect(page.getByRole("main").getByRole("link", { name })).toBeVisible();
   }
-  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
-  await nav.getByRole("link", { name: "Productos", exact: true }).click();
+  await (await navLink(page, "Productos")).click();
   const form = page.locator("section", { has: page.getByRole("heading", { name: "Nuevo producto" }) });
   await form.getByLabel("Nombre").fill("Paella de marisco");
   await form.getByLabel("Precio (€)").fill("19");
@@ -97,7 +94,7 @@ test("producto disponible solo en un local: solo lo ofrecen las cartas de ese lo
   await page.getByRole("button", { name: "Guardar locales" }).click();
   await expect(page.getByText("Locales guardados")).toBeVisible();
   await expect(page.getByText("Disponible en: Playa")).toBeVisible();
-  await nav.getByRole("link", { name: "Productos", exact: true }).click();
+  await (await navLink(page, "Productos")).click();
   await expect(page.getByText("solo en Playa")).toBeVisible();
 
   for (const [local, offered] of [

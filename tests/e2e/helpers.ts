@@ -97,3 +97,22 @@ export function quickLink(page: Page, title: string) {
     .getByRole("region", { name: "Accesos rápidos" })
     .getByRole("link", { name: new RegExp(`^${title} `) });
 }
+
+/**
+ * Enlace del menú lateral. Gestión y Organización son plegables (acordeón):
+ * si el enlace está en un grupo cerrado, se abre el grupo primero, como haría
+ * una persona.
+ */
+export async function navLink(page: Page, name: string) {
+  const nav = page.getByRole("navigation", { name: "Secciones de la organización" });
+  const link = nav.getByRole("link", { name, exact: true });
+  if (!(await link.isVisible())) {
+    await nav
+      .locator("details.side-section")
+      .filter({ has: page.getByRole("link", { name, exact: true, includeHidden: true }) })
+      .locator("summary")
+      .click();
+  }
+  await expect(link).toBeVisible();
+  return link;
+}
