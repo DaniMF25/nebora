@@ -457,3 +457,57 @@ export async function copyPreviousWeek(
   });
   return { copied, skipped };
 }
+
+// ---------------------------------------------------------------------------
+// «Mis turnos»: los próximos turnos de quien tiene su cuenta vinculada a una ficha
+
+export interface MyShift extends Shift {
+  establishmentName: string;
+  /** Zona horaria del local: el día y las horas del turno son locales. */
+  timezone: string;
+  /** El turno está en curso en este momento. */
+  ongoing: boolean;
+}
+
+/** Días hacia delante que muestra «Mis próximos turnos». */
+export const MY_SHIFTS_DAYS = 14;
+
+/**
+ * Próximos turnos (incluido el que está en curso) de la ficha vinculada a la
+ * cuenta de la sesión, en los locales a los que esa cuenta accede (RLS).
+ * Sin puesto propio en el turno, se muestra el de la ficha. Devuelve null si
+ * la cuenta no tiene ficha activa en la organización. La
+ * ficha se busca por la sesión, nunca por un dato que envíe el cliente.
+ */
+export async function listMyShifts(
+  tx: Tx,
+  ctx: TenantContext,
+  now: Date = new Date(),
+): Promise<MyShift[] | null> {
+  requirePermission(ctx, "staff.read");
+  const member = await tx.query<{ id: string }>(
+    "SELECT id FROM staff_members WHERE organization_id = $1 AND user_id = $2 AND active",
+    [ctx.organizationId, ctx.userId],
+  );
+  if (!member.rows[0]) return null;
+  const { rows } = await tx.query<ShiftRow & { establishmentName: string; timezone: string }>(
+    `SELECT s.id, s.staff_member_id AS "staffMemberId", s.establishment_id AS "establishmentId",
+            s.starts_at AS "startsAt", s.ends_at AS "endsAt",
+            coalesce(s.position, m.position) AS position, s.notes,
+            e.name AS "establishmentName", e.timezone
+       FROM staff_shifts s
+       JOIN staff_members m ON m.organization_id = s.organization_id AND m.id = s.staff_member_id
+       JOIN establishments e ON e.organization_id = s.organization_id AND e.id = s.establishment_id
+      WHERE s.organization_id = $1 AND s.staff_member_id = $2
+        AND s.ends_at > $3 AND s.starts_at < $3::timestamptz + make_interval(days => $4)
+      ORDER BY s.starts_at, s.id
+      LIMIT 100`,
+    [ctx.organizationId, member.rows[0].id, now, MY_SHIFTS_DAYS],
+  );
+  return rows.map(({ establishmentName, timezone, ...r }) => ({
+    ...toShift(r, timezone),
+    establishmentName,
+    timezone,
+    ongoing: r.startsAt <= now && now < r.endsAt,
+  }));
+}

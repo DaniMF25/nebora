@@ -767,3 +767,26 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Falta una revisión manual con lector de pantalla (NVDA, VoiceOver) y con zoom al 200–400 %.
 - La prueba de accesibilidad repasa los estilos con los colores por defecto; los colores de marca se ajustan para el contraste aparte (D-051).
 - Las medidas de rendimiento son locales y con pocos datos; en producción dependerán de la latencia de la BD y del volumen de datos.
+
+## D-054 — «Mis próximos turnos» en Inicio
+**Fecha:** 2026-11-04. **Estado:** aceptada.
+
+**Contexto:**
+- El cuadrante (D-045) solo se veía por local y semana.
+- Quien trabaja en el restaurante quería ver sus turnos sin buscarse en el cuadrante.
+
+**Decisión:**
+- **Inicio** muestra «Mis próximos turnos» a quien tenga su cuenta vinculada a una ficha activa del personal.
+  - Incluye el turno en curso, marcado «Ahora», y los turnos de los próximos 14 días.
+  - Cada turno muestra el día («Hoy», «Mañana» o la fecha), el horario en la hora del local, el local, el puesto (el del turno o, si no tiene, el de la ficha) y las notas.
+  - Cada turno enlaza al cuadrante de esa semana.
+  - Sin ficha vinculada (por ejemplo, el propietario) la sección no aparece; con ficha y sin turnos, se indica.
+- **Servicio `listMyShifts`:**
+  - Exige `staff.read`, que tienen todos los roles desde el plan Avanzado.
+  - La ficha se busca por la cuenta de la sesión (`ctx.userId`), nunca por un dato del cliente.
+  - RLS limita los turnos a los locales a los que accede la cuenta.
+  - Sin migración: usa `staff_members.user_id`, que ya existía.
+
+**Límites conocidos:**
+- Un turno en un local al que la cuenta no tiene acceso no aparece. Lo coherente es asignarle ese local o no ponerle turnos allí.
+- No hay avisos por correo ni calendario (.ics): no hay proveedor de correo.

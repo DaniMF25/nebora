@@ -163,6 +163,16 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
 .dash-card ul { margin: 0; padding-left: 1.1rem; }
 .dash-card p { margin: 0; }
 .dash-alert { border-color: #f3c9c4; }
+/* «Mis próximos turnos» (D-054): una fila por turno; en móvil, el enlace pasa debajo. */
+.my-shifts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+.my-shifts li { display: grid; grid-template-columns: 9rem 7rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; padding: 0.55rem 0.75rem; border-radius: 10px; }
+.my-shifts li.is-ongoing { background: var(--ok-soft); }
+.my-shift-day { display: inline-flex; align-items: center; gap: 0.4rem; }
+.my-shift-time { font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .my-shifts li { grid-template-columns: auto minmax(0, 1fr); gap: 0.15rem 0.75rem; }
+  .my-shifts li > :nth-child(3), .my-shifts li > a { grid-column: 1 / -1; }
+}
 
 /* ------------------------------------------------------- estructura del panel */
 .panel { display: grid; grid-template-columns: 264px minmax(0, 1fr); min-height: 100vh; }

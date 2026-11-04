@@ -75,7 +75,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Pruebas de concurrencia.
 
 ## Fase 6 — Personal, clientes e informes
-- [x] Gestión de miembros y turnos: miembros limitados a locales concretos (D-031); fichas del personal y cuadrante semanal de turnos (D-045). Pendiente: fichaje y avisos.
+- [x] Gestión de miembros y turnos: miembros limitados a locales concretos (D-031); fichas del personal y cuadrante semanal de turnos (D-045); «Mis próximos turnos» en Inicio (D-054). Pendiente: fichaje y avisos.
 - [ ] CRM opcional con minimización de datos.
 - [ ] Informes operativos — hecho: estadísticas de visitas (web, cartas, QR) y resumen de reservas por local (D-029); pendientes informes de inventario y compras.
 - [ ] Exportaciones seguras.

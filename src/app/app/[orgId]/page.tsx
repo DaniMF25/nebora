@@ -6,6 +6,8 @@ import { NotFoundError } from "@/server/errors";
 import { formatQuantity } from "@/lib/quantity";
 import { unreadMessageCounts } from "@/server/modules/contact/service";
 import { getDashboard, type Dashboard } from "@/server/modules/dashboard/service";
+import { addDays, localDateOf } from "@/server/modules/schedules/time";
+import { listMyShifts, MY_SHIFTS_DAYS, type MyShift } from "@/server/modules/staff/service";
 import { withTenant } from "@/server/tenancy/context";
 import { createEstablishmentAction } from "./actions";
 import { OpenStatus } from "@/components/panel/open-status";
@@ -20,6 +22,8 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
       dashboard: await getDashboard(tx, ctx),
       // Mensajes de contacto sin leer por local (D-049); vacío sin permiso.
       unread: Object.fromEntries(await unreadMessageCounts(tx, ctx)),
+      // Turnos propios (ficha vinculada a esta cuenta); null si no hay ficha o el plan no incluye turnos.
+      myShifts: ctx.permissions.has("staff.read") ? await listMyShifts(tx, ctx) : null,
       // Solo controla qué se muestra; el servidor vuelve a comprobarlo en la acción.
       canCreate: ctx.permissions.has("establishments.create"),
     }));
@@ -30,6 +34,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
 
   return (
     <>
+      {data.myShifts && <MyShifts orgId={orgId} shifts={data.myShifts} />}
       <Today orgId={orgId} dashboard={data.dashboard} unread={data.unread} />
       <Alerts orgId={orgId} dashboard={data.dashboard} />
       {data.canCreate && (
@@ -60,6 +65,58 @@ export default async function OrganizationPage({ params }: { params: Promise<{ o
 }
 
 const MAX_LISTED = 5;
+
+/** «Hoy», «Mañana» o el día abreviado («jue 12 mar»), en la hora del local. */
+function dayLabel(s: MyShift, now: Date): string {
+  const today = localDateOf(now, s.timezone);
+  if (s.date === today) return "Hoy";
+  if (s.date === addDays(today, 1)) return "Mañana";
+  const label = new Intl.DateTimeFormat("es-ES", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${s.date}T12:00:00Z`));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Próximos turnos de quien tiene su cuenta vinculada a una ficha del personal (D-054). */
+function MyShifts({ orgId, shifts }: { orgId: string; shifts: MyShift[] }) {
+  const now = new Date();
+  return (
+    <section aria-labelledby="mis-turnos">
+      <h2 id="mis-turnos">Mis próximos turnos</h2>
+      {shifts.length === 0 ? (
+        <p className="muted">No tienes turnos en los próximos {MY_SHIFTS_DAYS} días.</p>
+      ) : (
+        <ul className="my-shifts">
+          {shifts.map((s) => (
+            <li key={s.id} className={s.ongoing ? "is-ongoing" : undefined}>
+              <span className="my-shift-day">
+                {dayLabel(s, now)}
+                {s.ongoing && <span className="badge badge-ok">Ahora</span>}
+              </span>
+              <strong className="my-shift-time">
+                {s.start}–{s.end}
+              </strong>
+              <span>
+                {s.establishmentName}
+                {s.position && <span className="muted"> · {s.position}</span>}
+                {s.notes && <span className="muted"> · {s.notes}</span>}
+              </span>
+              <Link
+                href={`/app/${orgId}/establishments/${s.establishmentId}/staff?week=${s.date}`}
+                aria-label={`Ver cuadrante: ${dayLabel(s, now)}, ${s.start}–${s.end} en ${s.establishmentName}`}
+              >
+                Ver cuadrante
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 /** Locales de la organización con su resumen del día (es también la lista de locales). */
 function Today({
