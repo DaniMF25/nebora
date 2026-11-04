@@ -78,7 +78,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Gestión de miembros y turnos: miembros limitados a locales concretos (D-031); fichas del personal y cuadrante semanal de turnos (D-045); «Mis próximos turnos» en Inicio (D-054). Pendiente: fichaje y avisos.
 - [ ] CRM opcional con minimización de datos.
 - [ ] Informes operativos — hecho: estadísticas de visitas (web, cartas, QR) y resumen de reservas por local (D-029); pendientes informes de inventario y compras.
-- [ ] Exportaciones seguras.
+- [x] Exportaciones seguras a CSV (D-058): reservas, mensajes, turnos, stock y movimientos.
 
 ## Fase 7 — Suscripciones e integraciones
 - [ ] Evaluar proveedor de suscripción (los planes Básico, Avanzado y PRO ya existen, D-046; falta cobrarlos).

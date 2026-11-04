@@ -45,6 +45,8 @@ export const PERMISSIONS = [
   // Mensajes del formulario de contacto de la web (D-049): todos los leen; los encargados los archivan y borran.
   "messages.read",
   "messages.manage",
+  // Exportar a CSV reservas, mensajes, turnos e inventario (D-058): encargados y por encima.
+  "data.export",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -77,6 +79,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "site.customize",
     "messages.read",
     "messages.manage",
+    "data.export",
   ],
   // El personal registra consumos, mermas y recepciones de mercancía, pero no
   // corrige, no configura ni ve costes o precios de compra.
@@ -131,6 +134,7 @@ const PERMISSION_PLAN: Partial<Record<Permission, Plan>> = {
   "site.customize": "advanced",
   "messages.read": "advanced",
   "messages.manage": "advanced",
+  "data.export": "advanced",
   // PRO: gestión (costes y recetas, inventario, proveedores y compras).
   "costs.read": "pro",
   "inventory.read": "pro",

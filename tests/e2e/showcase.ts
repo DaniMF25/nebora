@@ -177,6 +177,7 @@ export async function seedShowcase(page: Page, browser: Browser) {
     `${org}/suppliers`,
     `${org}/members`,
     `${org}/staff`,
+    `${org}/exports`,
     `${org}/privacy`,
     `${org}/plan`,
     est,

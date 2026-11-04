@@ -39,6 +39,7 @@ export default async function OrganizationLayout({
       establishments: await listEstablishments(tx, ctx),
       can: {
         privacy: ctx.permissions.has("privacy.manage"),
+        exports: ctx.permissions.has("data.export"),
         stats: ctx.permissions.has("stats.read"),
         menus: ctx.permissions.has("menus.read"),
         inventory: ctx.permissions.has("inventory.read"),
@@ -115,6 +116,7 @@ export default async function OrganizationLayout({
               },
             ]
           : []),
+        ...(can.exports ? [{ href: `${base}/exports`, label: "Exportar datos", icon: "download" as const }] : []),
         ...(can.privacy ? [{ href: `${base}/privacy`, label: "Privacidad", icon: "shield" as const }] : []),
         ...(can.plan ? [{ href: `${base}/plan`, label: "Plan", icon: "summary" as const }] : []),
       ],

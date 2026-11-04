@@ -856,3 +856,35 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 **Alternativas descartadas:**
 - Precargar las fuentes del panel: la precarga de next/font se aplicaría a todas las páginas, incluida la web pública, que no las usa.
 - Subir el límite de CLS.
+
+## D-058 — Exportaciones a CSV
+**Fecha:** 2026-11-04. **Estado:** aceptada.
+
+**Decisión:**
+- **Página «Exportar datos»** en Organización. Tiene un formulario por tipo, con el local o todos y el periodo:
+  - reservas;
+  - mensajes de la web;
+  - turnos;
+  - stock actual, sin periodo;
+  - movimientos de inventario.
+  - Solo aparecen las exportaciones que permiten el rol y el plan.
+- **Permisos:**
+  - permiso nuevo `data.export` para propietario, administrador y encargado, desde el plan Avanzado;
+  - además, cada exportación exige la lectura de su módulo: reservas, mensajes, turnos o inventario (PRO);
+  - RLS limita las filas a la organización y a los locales de la cuenta.
+- **Descarga:**
+  - `POST /app/<org>/exports/<tipo>` con comprobación de origen, como la exportación de privacidad;
+  - respuesta `private, no-store` y en la auditoría queda `data.exported` con el tipo, el local, el periodo y el número de filas (sin datos personales).
+- **Límites:**
+  - periodo con las dos fechas incluidas, en la hora de cada local, de como máximo 366 días;
+  - como máximo 50.000 filas por archivo; si hay más, se pide acotar.
+- **Formato** pensado para Excel en español (`src/lib/csv.ts`):
+  - separador «;», decimales con coma, CRLF y marca UTF-8;
+  - fechas «AAAA-MM-DD» y horas «HH:MM» locales;
+  - cantidades de inventario en la unidad base (g, ml, ud.).
+- **Fórmulas inyectadas (CSV injection):** los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro se preceden de un apóstrofo; los números no.
+
+**Límites conocidos:**
+- Si la descarga se rechaza por un error de validación, el navegador muestra un texto plano: los campos obligatorios y las fechas se validan antes en el formulario, pero el límite de días no.
+- No hay exportación de la carta ni de los clientes como lista aparte; los datos de un cliente concreto se exportan desde Privacidad.
+- Los CSV contienen datos personales: la página lo advierte y su custodia es responsabilidad de quien los descarga.

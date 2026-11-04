@@ -163,6 +163,11 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
 .dash-card ul { margin: 0; padding-left: 1.1rem; }
 .dash-card p { margin: 0; }
 .dash-alert { border-color: #f3c9c4; }
+/* Exportar datos (D-058): una tarjeta por tipo de exportación. */
+.export-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin-top: 1rem; }
+.export-grid > .export-card { margin-top: 0; display: grid; gap: 0.5rem; align-content: start; }
+.export-card h3 { margin: 0; }
+.export-card p { margin: 0; }
 /* «Mis próximos turnos» (D-054): una fila por turno; en móvil, el enlace pasa debajo. */
 .my-shifts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
 .my-shifts li { display: grid; grid-template-columns: 9rem 7rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; padding: 0.55rem 0.75rem; border-radius: 10px; }
