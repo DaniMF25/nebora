@@ -95,8 +95,25 @@ async function measure(page: Page, url: string): Promise<Metrics> {
   return { url: new URL(page.url()).pathname, ...timing, ...sizes };
 }
 
+/**
+ * Peor caso para el CLS, igual en cualquier máquina: las fuentes tardan en
+ * llegar y la fuente de reserva no tiene las medidas de Arial (como en los
+ * servidores de la CI, sin Arial ni Liberation Sans). Así se detectó que, con
+ * `font-display: swap`, el texto se recolocaba al llegar Inter (D-057).
+ */
+async function worstCaseFonts(page: Page): Promise<void> {
+  await page.route(/\.woff2$/, async (r) => {
+    await new Promise((ok) => setTimeout(ok, 600));
+    await r.continue();
+  });
+  await page.route(/\.css(\?|$)/, async (r) => {
+    const res = await r.fetch();
+    await r.fulfill({ response: res, body: (await res.text()).replaceAll("local(Arial)", 'local("DejaVu Sans")') });
+  });
+}
+
 test("rendimiento: peso de JavaScript y CSS y estabilidad visual dentro de los límites", async ({ browser }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   const { org, est, menu, orgSlug } = await seedShowcase(page, browser);
@@ -123,6 +140,22 @@ test("rendimiento: peso de JavaScript y CSS y estabilidad visual dentro de los l
       if (m.css > BUDGET.css) problems.push(`${m.url}: ${Math.round(m.css / KB)} KB de CSS (límite ${BUDGET.css / KB})`);
       if (m.cls > BUDGET.cls)
         problems.push(`${m.url}: CLS ${m.cls.toFixed(3)} (límite ${BUDGET.cls}): ${m.shifted.join("; ")}`);
+    }
+  }
+  // Segunda pasada solo para el CLS, con el peor caso de fuentes (el CSS
+  // reescrito ya no llega comprimido, así que su peso no vale aquí).
+  await worstCaseFonts(visitor);
+  await worstCaseFonts(page);
+  for (const [p, urls] of [
+    [visitor, publicPages],
+    [page, panelPages],
+  ] as const) {
+    for (const url of urls) {
+      const m = await measure(p, url);
+      if (m.cls > BUDGET.cls)
+        problems.push(
+          `${m.url} (fuentes lentas, sin Arial): CLS ${m.cls.toFixed(3)} (límite ${BUDGET.cls}): ${m.shifted.join("; ")}`,
+        );
     }
   }
   const table = rows

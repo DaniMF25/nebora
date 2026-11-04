@@ -831,3 +831,28 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - **Pruebas:**
   - en las E2E, `navLink()` abre el grupo antes de pulsar un enlace, como haría una persona;
   - `tests/e2e/sidebar.spec.ts` comprueba el acordeón, el grupo de la página actual, el teclado y que la cuenta queda a la vista en una pantalla baja.
+
+## D-057 — Fuentes del panel con `font-display: optional`
+**Fecha:** 2026-11-04. **Estado:** aceptada.
+
+**Contexto:**
+- La prueba de rendimiento falló en la CI con un CLS de 0,225 en una carta y 0,101 en reservas.
+- El diagnóstico añadido mostró que el contenido subía 48 px: las pestañas pasaban de dos líneas a una.
+- Next genera la fuente de reserva de Inter a partir de Arial con sus medidas ajustadas. En los servidores de la CI no hay Arial ni Liberation Sans (en local Arial se resuelve con Liberation Sans, que tiene sus mismas medidas). Allí se usaba una fuente más ancha y, al llegar Inter (`swap`), el texto se recolocaba.
+- Reproducido en local cambiando la fuente de reserva por DejaVu Sans y retrasando las fuentes: CLS de 0,274 (carta) y 0,105 (reservas) con `swap`; 0 con `optional`.
+
+**Decisión:**
+- **Fuentes del panel (Inter y Fraunces) con `display: "optional"`:**
+  - si no llegan a tiempo para la primera pintura, esa carga se queda con la de reserva y no se recoloca nada;
+  - la página siguiente las toma de la caché;
+  - el cambio está en el generador (`scripts/fetch-fonts.mjs`) y en su salida.
+  - La web pública sigue con `swap`: sus fuentes son parte del estilo elegido y, en el peor caso, no superan el límite (CLS ≤ 0,003).
+- **La prueba de rendimiento mide ahora el CLS también en el peor caso:**
+  - fuentes que tardan 600 ms en llegar;
+  - fuente de reserva sin las medidas de Arial;
+  - en una segunda pasada que no cuenta el peso del CSS.
+- **Mutación:** con `swap` en el panel, la prueba falla en 3 páginas (CLS de 0,105 a 0,274).
+
+**Alternativas descartadas:**
+- Precargar las fuentes del panel: la precarga de next/font se aplicaría a todas las páginas, incluida la web pública, que no las usa.
+- Subir el límite de CLS.

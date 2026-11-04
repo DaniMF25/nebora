@@ -12,7 +12,7 @@ export const panelsans = localFont({
       style: "normal",
     },
   ],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-panel-sans",
 });
@@ -31,7 +31,7 @@ export const panelserif = localFont({
       style: "normal",
     },
   ],
-  display: "swap",
+  display: "optional",
   preload: false,
   variable: "--font-panel-serif",
 });

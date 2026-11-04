@@ -80,6 +80,15 @@ function cssUrl(family, weights) {
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(path.join(outDir, "licenses"), { recursive: true });
 const calls = [];
+/**
+ * Fuentes del panel con `display: "optional"` (D-057): con `swap`, el cambio de
+ * la fuente de reserva a la definitiva recolocaba el texto (por ejemplo, las
+ * pestañas pasaban de dos líneas a una) y desplazaba la página. Con
+ * `optional` se usa la definitiva si llega a tiempo para la primera pintura;
+ * si no, esa carga se queda con la de reserva y la siguiente la toma de la caché.
+ */
+const OPTIONAL_DISPLAY = new Set(["panelsans", "panelserif"]);
+
 for (const [key, family, weights, cssVar] of FONTS) {
   // La misma familia con los mismos pesos comparte archivos (p. ej. Inter del panel y de la web).
   const same = calls.find((c) => c.family === family && c.weights === String(weights));
@@ -140,7 +149,7 @@ ${calls
     (c) => `/** ${c.family} */
 export const ${c.key} = localFont({
   src: ${JSON.stringify(c.src, null, 2).replaceAll('"path"', "path").replaceAll('"weight"', "weight").replaceAll('"style"', "style")},
-  display: "swap",
+  display: "${OPTIONAL_DISPLAY.has(c.key) ? "optional" : "swap"}",
   preload: false,
   variable: "${c.cssVar}",
 });`,
