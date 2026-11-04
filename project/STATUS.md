@@ -150,7 +150,7 @@ Accesibilidad y rendimiento automáticos (D-053) y «Mis turnos» (D-054) hechos
 - Web en Básico: una foto de la galería cuyo enlace directo se conocía sigue accesible aunque la web ya no la muestre.
 - Contacto: el horario de la página es el semanal (no refleja festivos ni excepciones).
 - Accesibilidad: axe solo detecta una parte de los problemas de WCAG; falta probar con NVDA o VoiceOver y con zoom al 200–400 %. Los colores de marca se ajustan para el contraste (D-051); los demás colores del estilo se revisan con la prueba automática solo en el estilo y el color del recorrido de muestra.
-- Rendimiento: medido en local con pocos datos; en producción dependerá de la latencia de la BD. Las páginas se generan en cada visita (sin caché, D-044).
+- Rendimiento: en la CI del 2026-11-04 (commit 93c98c2) la página de reservas dio un CLS de 0,101 (límite 0,1) una vez. No se reprodujo en local (4 intentos: CPU ralentizada, fuentes retrasadas y en paralelo con la prueba de accesibilidad: 0–0,001). La prueba informa ahora de qué elementos se desplazan para localizar la causa si vuelve a ocurrir. Medido en local con pocos datos; en producción dependerá de la latencia de la BD. Las páginas se generan en cada visita (sin caché, D-044).
 - Fondos decorativos: se aplican como máscara CSS; navegadores muy antiguos sin `mask-image` simplemente no los muestran. Probado en Chromium.
 - Contacto: los mensajes solo se ven en el panel (sin aviso por correo); las traducciones de la página de contacto deben revisarlas hablantes nativos.
 - Cartas: cada cambio visible crea una versión nueva; la lista de versiones crece con el uso. Un cambio que deja la carta sin poder publicarse (categoría vacía) no llega a la web hasta corregirlo.

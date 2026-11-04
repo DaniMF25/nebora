@@ -26,6 +26,8 @@ interface Metrics {
   ttfb: number;
   lcp: number;
   cls: number;
+  /** Elementos que se desplazaron (para diagnosticar el CLS). */
+  shifted: string[];
   js: number;
   css: number;
   requests: number;
@@ -56,7 +58,13 @@ async function measure(page: Page, url: string): Promise<Metrics> {
   await Promise.all(pending);
   const timing = await page.evaluate(
     () =>
-      new Promise<{ ttfb: number; lcp: number; cls: number }>((resolve) => {
+      new Promise<{ ttfb: number; lcp: number; cls: number; shifted: string[] }>((resolve) => {
+        interface LayoutShift extends PerformanceEntry {
+          value: number;
+          hadRecentInput: boolean;
+          sources?: { node: Node | null; previousRect: DOMRectReadOnly; currentRect: DOMRectReadOnly }[];
+        }
+        const shifted: string[] = [];
         const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
         let lcp = 0;
         let cls = 0;
@@ -64,10 +72,22 @@ async function measure(page: Page, url: string): Promise<Metrics> {
           for (const e of l.getEntries()) lcp = Math.max(lcp, e.startTime);
         }).observe({ type: "largest-contentful-paint", buffered: true });
         new PerformanceObserver((l) => {
-          for (const e of l.getEntries() as unknown as { value: number; hadRecentInput: boolean }[])
-            if (!e.hadRecentInput) cls += e.value;
+          for (const e of l.getEntries() as unknown as LayoutShift[]) {
+            if (e.hadRecentInput) continue;
+            cls += e.value;
+            // Qué se movió, para poder corregirlo si se supera el límite.
+            for (const src of e.sources ?? []) {
+              const n = src.node as Element | null;
+              if (!n || !(n instanceof Element)) continue;
+              const cls_ = n.getAttribute("class") ?? "";
+              const text = (n.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 40);
+              shifted.push(
+                `${e.value.toFixed(3)} ${n.tagName.toLowerCase()}${cls_ ? `.${cls_.split(" ").join(".")}` : ""} «${text}» y ${Math.round(src.previousRect.y)}→${Math.round(src.currentRect.y)}`,
+              );
+            }
+          }
         }).observe({ type: "layout-shift", buffered: true });
-        setTimeout(() => resolve({ ttfb: nav.responseStart - nav.requestStart, lcp, cls }), 300);
+        setTimeout(() => resolve({ ttfb: nav.responseStart - nav.requestStart, lcp, cls, shifted }), 300);
       }),
   );
   page.off("requestfinished", onFinished);
@@ -101,7 +121,8 @@ test("rendimiento: peso de JavaScript y CSS y estabilidad visual dentro de los l
       rows.push(m);
       if (m.js > jsBudget) problems.push(`${m.url}: ${Math.round(m.js / KB)} KB de JavaScript (límite ${jsBudget / KB})`);
       if (m.css > BUDGET.css) problems.push(`${m.url}: ${Math.round(m.css / KB)} KB de CSS (límite ${BUDGET.css / KB})`);
-      if (m.cls > BUDGET.cls) problems.push(`${m.url}: CLS ${m.cls.toFixed(3)} (límite ${BUDGET.cls})`);
+      if (m.cls > BUDGET.cls)
+        problems.push(`${m.url}: CLS ${m.cls.toFixed(3)} (límite ${BUDGET.cls}): ${m.shifted.join("; ")}`);
     }
   }
   const table = rows
