@@ -912,7 +912,9 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - **Web:** círculos arriba de la portada y visor a pantalla completa en un `<dialog>` modal.
   - **Apertura automática:** la primera vez que un navegador entra, la primera historia se abre sola. Lo visto se recuerda en `localStorage`, por versión, así que una historia editada vuelve a contar como nueva. No hay cookies ni datos en el servidor.
   - **Avance:** pasa sola cada 7 s. Se puede pausar, ir adelante o atrás con botones y con las flechas del teclado, y cerrar con Esc.
-  - **Movimiento reducido:** si el sistema lo pide, no avanza sola.
+  - **Movimiento reducido:** la barra avanza a saltos de un segundo en lugar de deslizarse, pero el temporizador sigue, con pausa.
+    - Primero se hizo que no avanzara sola. En un ordenador con las animaciones desactivadas, habitual en Windows, la barra se quedaba quieta y el visor no se cerraba.
+    - La preferencia pide menos animación, no que nada avance; la pausa cubre WCAG 2.2.2.
   - **Legibilidad:** sobre una foto, un velo oscuro asegura que el texto se lea; sin foto, la tarjeta usa el color del acento del estilo.
   - **Idiomas:** los textos del visor están en los 7 idiomas.
 

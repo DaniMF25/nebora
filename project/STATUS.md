@@ -44,7 +44,7 @@
 - [x] Separación entre botones: formularios seguidos (p. ej. «Guardar» y «Eliminar») ya no quedan pegados; `tests/e2e/layout-spacing.spec.ts` recorre 27 páginas con datos (panel y web pública) a 1280 px y 390 px y falla si dos botones están a menos de 6 px o si dos botones vecinos de una fila están desalineados.
 - [x] Historias en la portada de la web (migración 0036, D-059):
   - Avisos con foto opcional, botón (reservar, carta, contacto o enlace https) y fechas, en la pestaña «Historias» de «Web pública»; desde el plan Avanzado.
-  - En la web: círculos arriba de la portada; la primera se abre sola la primera vez y el visor a pantalla completa avanza solo, con pausa, teclado y Esc, y sin avance automático si el sistema pide menos movimiento.
+  - En la web: círculos arriba de la portada; la primera se abre sola la primera vez y el visor a pantalla completa avanza solo, con pausa, teclado y Esc, y se cierra solo tras la última; con las animaciones del sistema desactivadas, la barra avanza a saltos.
   - De paso, la galería ya no sirve sus fotos en Básico.
   - Pruebas: `tests/integration/site-stories.test.ts`, que falla sin el filtro de fechas, y `tests/e2e/stories.spec.ts`, con axe, móvil, pausa, avance, teclado y Básico.
 - [x] Exportaciones a CSV (D-058):

@@ -1725,11 +1725,10 @@
   }
 }
 
-/* Con menos movimiento no avanza sola: la barra se muestra llena y se pasa con los botones. */
+/* Con menos movimiento la barra no se desliza: avanza a saltos de un segundo (7 pasos). */
 @media (prefers-reduced-motion: reduce) {
   .storyProgress > span > .storyBarNow {
-    animation: none;
-    width: 100%;
+    animation-timing-function: steps(7, end);
   }
 }
 

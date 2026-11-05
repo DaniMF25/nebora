@@ -65,19 +65,15 @@ function markSeen(key: string, version: string): void {
   for (const cb of listeners) cb();
 }
 
-function subscribeMotion(cb: () => void): () => void {
-  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-  media.addEventListener("change", cb);
-  return () => media.removeEventListener("change", cb);
-}
-const reducedMotionNow = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
  * Historias de la portada (D-059): círculos arriba y visor a pantalla completa
  * en un <dialog> modal (foco atrapado y Esc de serie). La primera vez que un
  * navegador entra, la primera historia no vista se abre sola; lo visto se
  * recuerda en este navegador (sin cookies ni datos en el servidor). Avanza
- * sola salvo si se pausa o el sistema pide menos movimiento.
+ * sola cada pocos segundos y se cierra tras la última, salvo si se pausa
+ * (WCAG 2.2.2). Con menos movimiento la barra avanza a saltos (CSS), pero el
+ * temporizador sigue: la preferencia pide menos animación, no menos avance.
  */
 export function StoriesBar({ stories, texts, storageKey }: { stories: StoryView[]; texts: StoryTexts; storageKey: string }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -86,7 +82,6 @@ export function StoriesBar({ stories, texts, storageKey }: { stories: StoryView[
   const key = `nebora:stories:${storageKey}`;
   const seenRaw = useSyncExternalStore(subscribeSeen, () => readSeenRaw(key), () => "[]");
   const seen = useMemo(() => parseSeen(seenRaw), [seenRaw]);
-  const reducedMotion = useSyncExternalStore(subscribeMotion, reducedMotionNow, () => false);
 
   const show = useCallback(
     (n: number) => {
@@ -122,7 +117,7 @@ export function StoriesBar({ stories, texts, storageKey }: { stories: StoryView[
   const current = index === null ? null : stories[index];
   const fill = (t: string, values: Record<string, string | number>) =>
     t.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? ""));
-  const autoAdvance = !paused && !reducedMotion;
+  const autoAdvance = !paused;
 
   return (
     <>
@@ -192,11 +187,9 @@ export function StoriesBar({ stories, texts, storageKey }: { stories: StoryView[
             <div className={styles.storyTop}>
               <p className={styles.storyCount}>{fill(texts.storyCount, { n: index + 1, total: stories.length })}</p>
               <div className={styles.storyControls}>
-                {!reducedMotion && (
-                  <button type="button" onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
-                    {paused ? texts.storyPlay : texts.storyPause}
-                  </button>
-                )}
+                <button type="button" onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
+                  {paused ? texts.storyPlay : texts.storyPause}
+                </button>
                 <button type="button" onClick={close} autoFocus>
                   {texts.storyClose}
                 </button>

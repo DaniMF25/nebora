@@ -88,14 +88,16 @@ test("historias: se crean en el panel, se abren solas la primera vez y se navega
   await expect(visitor.getByRole("dialog")).toHaveCount(0);
   expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-  // Con menos movimiento no avanza sola ni ofrece pausa.
-  const calm = await (await browser.newContext({ reducedMotion: "reduce" })).newPage();
+  // En escritorio y con las animaciones del sistema desactivadas (habitual en Windows) también avanza
+  // sola, con pausa, y el visor se cierra solo tras la última historia.
+  const calm = await (
+    await browser.newContext({ viewport: { width: 1366, height: 768 }, reducedMotion: "reduce" })
+  ).newPage();
   await calm.goto(home);
-  const calmDialog = calm.getByRole("dialog", { name: "Nueva terraza" });
-  await expect(calmDialog).toBeVisible();
-  await expect(calmDialog.getByRole("button", { name: "Pausar" })).toHaveCount(0);
-  await calm.waitForTimeout(8000);
-  await expect(calmDialog).toBeVisible();
+  await expect(calm.getByRole("dialog", { name: "Nueva terraza" })).toBeVisible();
+  await expect(calm.getByRole("button", { name: "Pausar" })).toBeVisible();
+  await expect(calm.getByRole("dialog", { name: "Cambio de horario" })).toBeVisible({ timeout: 10_000 });
+  await expect(calm.getByRole("dialog")).toHaveCount(0, { timeout: 10_000 });
 
   // Básico: la web no muestra historias.
   await page.goto(org);
