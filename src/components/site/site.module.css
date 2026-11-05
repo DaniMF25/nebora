@@ -1521,3 +1521,278 @@
   outline-offset: 2px;
 }
 
+
+/* --------------------------------------------------------------- historias */
+/* Historias de la portada (D-059): círculos sobre la portada y visor a pantalla completa. */
+.storyStrip {
+  margin: 0 0 1.75rem;
+}
+
+.storyStrip ul {
+  display: flex;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0.25rem 0.1rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.storyStrip li {
+  flex: none;
+}
+
+.storyBubble {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  width: 4.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--s-hero-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.storyBubble:hover {
+  background: none;
+}
+
+.storyBubble:focus-visible {
+  outline: 2px solid var(--s-hero-fg);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.storyRing {
+  display: grid;
+  place-items: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  padding: 3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--s-accent-2), var(--s-accent));
+}
+
+.storySeen .storyRing {
+  background: color-mix(in srgb, var(--s-hero-fg) 35%, transparent);
+}
+
+.storyRing img,
+.storyInitial {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Redonda aunque otra regla dé a las imágenes alto automático. */
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid rgb(var(--s-hero-tint));
+  object-fit: cover;
+}
+
+.storyInitial {
+  display: grid;
+  place-items: center;
+  background: rgb(var(--s-hero-tint));
+  color: var(--s-hero-fg);
+  font-family: var(--s-font-display);
+  font-size: 1.5rem;
+}
+
+.storyName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.storyDialog {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.storyDialog[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storyDialog::backdrop {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.storyCard {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.5rem;
+  width: min(100vw, 26rem);
+  height: min(100dvh, 48rem);
+  padding: 0.9rem 1rem 1rem;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(160deg, var(--s-accent), color-mix(in srgb, var(--s-accent) 60%, #000000));
+  color: var(--s-on-accent);
+}
+
+/* En el móvil, a pantalla completa (sin el borde de la cabecera ni de la barra inferior). */
+@media (max-width: 480px) {
+  .storyCard {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+}
+
+.storyWithImage {
+  background: #000000;
+  color: #ffffff;
+}
+
+.storyImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Velo para que el texto blanco se lea sobre cualquier foto. */
+.storyWithImage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6) 0,
+    rgba(0, 0, 0, 0) 28%,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+}
+
+.storyCard > :not(.storyImage) {
+  position: relative;
+  z-index: 1;
+}
+
+.storyProgress {
+  display: flex;
+  gap: 4px;
+}
+
+.storyProgress > span {
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.storyProgress > span > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: currentColor;
+}
+
+.storyProgress > span > .storyBarDone {
+  width: 100%;
+}
+
+.storyProgress > span > .storyBarNow {
+  animation-name: storyFill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes storyFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Con menos movimiento no avanza sola: la barra se muestra llena y se pasa con los botones. */
+@media (prefers-reduced-motion: reduce) {
+  .storyProgress > span > .storyBarNow {
+    animation: none;
+    width: 100%;
+  }
+}
+
+.storyTop,
+.storyNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.storyCount {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.storyControls {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.storyTop button,
+.storyNav button {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.storyNav button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.storyContent {
+  align-self: end;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  padding-bottom: 0.75rem;
+}
+
+.storyTitle {
+  margin: 0;
+  color: inherit;
+  font-family: var(--s-font-display);
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  line-height: 1.1;
+}
+
+.storyBody {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+/* Sin foto, la tarjeta es del color del acento: el botón va invertido para verse. */
+.storyCard:not(.storyWithImage) .buttonPrimary {
+  background: var(--s-on-accent);
+  border-color: var(--s-on-accent);
+  color: var(--s-accent);
+}

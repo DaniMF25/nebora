@@ -163,6 +163,13 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
 .dash-card ul { margin: 0; padding-left: 1.1rem; }
 .dash-card p { margin: 0; }
 .dash-alert { border-color: #f3c9c4; }
+/* Historias de la web en el panel (D-059). */
+.story-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 0.75rem; }
+.story-list > li { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; }
+.story-row { display: flex; align-items: center; gap: 0.85rem; }
+.story-row p { margin: 0.2rem 0 0; }
+.story-thumb { flex: none; width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; }
+.story-thumb-empty { display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-strong); font-family: var(--font-serif); font-size: 1.2rem; font-weight: 600; }
 /* Exportar datos (D-058): una tarjeta por tipo de exportación. */
 .export-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin-top: 1rem; }
 .export-grid > .export-card { margin-top: 0; display: grid; gap: 0.5rem; align-content: start; }

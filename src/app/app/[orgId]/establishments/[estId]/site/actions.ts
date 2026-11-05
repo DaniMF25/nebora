@@ -20,6 +20,13 @@ import {
   removeGalleryImage,
   setGalleryCaption,
 } from "@/server/modules/site/gallery";
+import {
+  createStory,
+  deleteStory,
+  moveStory,
+  removeStoryImage,
+  updateStory,
+} from "@/server/modules/site/stories";
 import { saveSiteTranslations } from "@/server/modules/translations/service";
 
 const path = (orgId: string, estId: string) => `/app/${orgId}/establishments/${estId}/site`;
@@ -231,4 +238,78 @@ export async function setDecorAction(orgId: string, estId: string, _p: FormState
     (tx, ctx) => setSiteDecor(tx, ctx, estId, { decor: decor === "" ? null : decor }),
     "Fondo guardado",
   );
+}
+
+// Historias (D-059). Los ids ligados llegan del cliente: el servicio comprueba local y organización.
+
+function storyInput(fd: FormData) {
+  return {
+    title: formString(fd, "title"),
+    body: formString(fd, "body"),
+    ctaKind: formString(fd, "ctaKind"),
+    ctaLabel: formString(fd, "ctaLabel"),
+    ctaUrl: formString(fd, "ctaUrl"),
+    startsOn: formString(fd, "startsOn"),
+    endsOn: formString(fd, "endsOn"),
+  };
+}
+
+export async function createStoryAction(orgId: string, estId: string, _p: FormState, fd: FormData): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    async (tx, ctx) => createStory(tx, ctx, estId, storyInput(fd), await readImageField(fd)),
+    "Historia creada",
+  );
+}
+
+export async function updateStoryAction(
+  orgId: string,
+  estId: string,
+  storyId: string,
+  _p: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    async (tx, ctx) => updateStory(tx, ctx, estId, storyId, storyInput(fd), await readImageField(fd)),
+    "Historia guardada",
+  );
+}
+
+export async function removeStoryImageAction(
+  orgId: string,
+  estId: string,
+  storyId: string,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(
+    orgId,
+    path(orgId, estId),
+    (tx, ctx) => removeStoryImage(tx, ctx, estId, storyId),
+    "Foto quitada",
+  );
+}
+
+export async function moveStoryAction(
+  orgId: string,
+  estId: string,
+  storyId: string,
+  direction: "up" | "down",
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => moveStory(tx, ctx, estId, storyId, direction));
+}
+
+export async function deleteStoryAction(
+  orgId: string,
+  estId: string,
+  storyId: string,
+  _p: FormState,
+  _fd: FormData,
+): Promise<FormState> {
+  return runTenantAction(orgId, path(orgId, estId), (tx, ctx) => deleteStory(tx, ctx, estId, storyId), "Historia eliminada");
 }

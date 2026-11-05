@@ -47,6 +47,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Fuera de carta: platos con precio especial y vigencia, visibles al momento (D-037).
 - [x] Formatos de precio por plato (D-038).
 - [x] Galería de imágenes en la web del local (D-039).
+- [x] Historias en la portada de la web (D-059): avisos con foto, botón y fechas; se abren solas la primera vez.
 - [x] Reserva online traducida (D-040).
 - [x] Cancelación de reservas online por el cliente con su enlace (D-041).
 - [x] Lista de espera desde la web cuando no quedan horas online (D-042).

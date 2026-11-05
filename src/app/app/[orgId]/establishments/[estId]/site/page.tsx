@@ -13,6 +13,9 @@ import { listMenus } from "@/server/modules/menus/menus";
 import { getOrganization } from "@/server/modules/organizations/service";
 import { getSiteProfile } from "@/server/modules/site/service";
 import { listGallery, MAX_CAPTION_LENGTH, MAX_GALLERY_IMAGES } from "@/server/modules/site/gallery";
+import { listStories } from "@/server/modules/site/stories";
+import { localDateOf } from "@/server/modules/schedules/time";
+import { StoriesTab } from "./stories-tab";
 import { withTenant } from "@/server/tenancy/context";
 import { TranslationInput, TranslationStatusBadge } from "@/components/panel/translation-field";
 import { LANGUAGE_LABELS } from "@/lib/languages";
@@ -37,7 +40,7 @@ import {
   updateSiteAction,
 } from "./actions";
 
-const TABS = ["estilo", "marca", "contenido", "foto", "galeria", "traducciones"] as const;
+const TABS = ["estilo", "marca", "contenido", "foto", "galeria", "historias", "traducciones"] as const;
 
 export default async function SiteProfilePage({
   params,
@@ -60,6 +63,7 @@ export default async function SiteProfilePage({
       canEdit: ctx.permissions.has("establishments.update"),
       translations: tab === "traducciones" ? await getSiteTranslationForm(tx, ctx, estId, search.lang) : null,
       gallery: tab === "galeria" ? await listGallery(tx, ctx, estId) : [],
+      stories: tab === "historias" ? await listStories(tx, ctx, estId) : [],
       // Estilo, color, tipografía y galería: desde el plan Avanzado (D-047).
       customLook: planAllowsCustomLook(ctx.plan),
       canChangePlan: ctx.role === "owner" || ctx.role === "admin",
@@ -68,7 +72,7 @@ export default async function SiteProfilePage({
     if (err instanceof NotFoundError || err instanceof ForbiddenError) notFound();
     throw err;
   }
-  const { establishment: est, profile: saved, menus, canEdit, orgSlug, translations: tr, gallery } = data;
+  const { establishment: est, profile: saved, menus, canEdit, orgSlug, translations: tr, gallery, stories } = data;
   const { customLook, canChangePlan } = data;
   // En Básico se muestra (y se publica) el aspecto del plan, sin perder lo guardado.
   const p = effectiveLook(saved, customLook ? "advanced" : "basic");
@@ -85,6 +89,7 @@ export default async function SiteProfilePage({
     { id: "contenido", label: "Contenido" },
     { id: "foto", label: "Foto principal" },
     { id: "galeria", label: "Galería" },
+    { id: "historias", label: "Historias" },
     ...(est.languages.length > 0 ? [{ id: "traducciones", label: "Traducciones" }] : []),
   ];
   const slots = Array.from({ length: MAX_HIGHLIGHTS }, (_, n) => p.highlights[n]);
@@ -378,6 +383,17 @@ export default async function SiteProfilePage({
             </ActionForm>
           )}
         </section>
+      )}
+      {tab === "historias" && (
+        <StoriesTab
+          orgId={orgId}
+          estId={est.id}
+          stories={stories}
+          today={localDateOf(new Date(), est.timezone)}
+          canEdit={canCustomize}
+          published={p.published}
+          planNote={customLook ? null : planNote("La sección de historias")}
+        />
       )}
       {tab === "traducciones" && (
         <section>

@@ -5,6 +5,7 @@ import type { SiteHighlight } from "@/lib/site";
 import { Icon } from "./icons";
 import { MenuShowcase } from "./menu-showcase";
 import { SiteShell, type SiteChrome } from "./site-shell";
+import { StoriesBar, type StoryView } from "./stories";
 import styles from "./site.module.css";
 
 export interface SiteHomeContent {
@@ -24,6 +25,8 @@ export function SiteHome({
   heroImageUrl,
   menuSections,
   gallery = [],
+  stories = [],
+  storiesKey = "",
   banner,
 }: {
   chrome: SiteChrome;
@@ -32,6 +35,9 @@ export function SiteHome({
   menuSections: MenuSnapshot["sections"] | null;
   /** Galería (D-039): URL de cada foto (pública o privada en la vista previa) y su pie. */
   gallery?: { url: string; caption: string | null }[];
+  /** Historias vigentes (D-059) y clave para recordar en el navegador cuáles se vieron. */
+  stories?: StoryView[];
+  storiesKey?: string;
   banner?: React.ReactNode;
 }) {
   const menuHref = menuSections ? chrome.links.menu : null;
@@ -46,6 +52,23 @@ export function SiteHome({
           style={heroImageUrl ? { ["--hero-image" as string]: `url(${heroImageUrl})` } : undefined}
         >
           <div className={styles.heroInner}>
+            {stories.length > 0 && (
+              <StoriesBar
+                stories={stories}
+                storageKey={storiesKey}
+                // Solo los textos del visor viajan al navegador.
+                texts={{
+                  stories: t.stories,
+                  storyOpen: t.storyOpen,
+                  storyClose: t.storyClose,
+                  storyPrev: t.storyPrev,
+                  storyNext: t.storyNext,
+                  storyPause: t.storyPause,
+                  storyPlay: t.storyPlay,
+                  storyCount: t.storyCount,
+                }}
+              />
+            )}
             {site.heroEyebrow && <p className={styles.eyebrow}>{site.heroEyebrow}</p>}
             <h1 className={styles.heroTitle}>{site.heroTitle}</h1>
             <span className={styles.rule} aria-hidden="true" />

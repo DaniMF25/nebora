@@ -888,3 +888,35 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Si la descarga se rechaza por un error de validación, el navegador muestra un texto plano: los campos obligatorios y las fechas se validan antes en el formulario, pero el límite de días no.
 - No hay exportación de la carta ni de los clientes como lista aparte; los datos de un cliente concreto se exportan desde Privacidad.
 - Los CSV contienen datos personales: la página lo advierte y su custodia es responsabilidad de quien los descarga.
+
+## D-059 — Historias en la portada de la web
+**Fecha:** 2026-11-05. **Estado:** aceptada.
+
+**Contexto:** los restaurantes quieren destacar algo nada más entrar en su web (un evento, una apertura, un cambio de horario), al estilo de las historias de Instagram.
+
+**Decisión:**
+- **Migración 0036, `site_stories` por local:**
+  - titular (hasta 60 caracteres), texto opcional (hasta 280) y foto opcional, que es un archivo propio y se borra con la historia o al sustituirla;
+  - botón opcional: reservar, ver la carta, contactar o un enlace propio, este solo `https://` y con su texto;
+  - fechas de inicio y fin opcionales (días del local, ambas incluidas) y orden;
+  - como máximo 10 historias por local;
+  - RLS por local; las comprobaciones (CHECK) de la BD repiten las del servicio, incluida la del enlace `https://`.
+- **Plan:** desde Avanzado, como la galería (`site.customize`).
+  - En Básico no se muestran ni se sirven sus fotos.
+  - Lo guardado se conserva y vuelve al subir de plan.
+- **Lectura pública:**
+  - `app.public_site_stories` y `app.story_is_public`: solo las vigentes hoy, en la hora del local, de una web publicada y con plan Avanzado o superior;
+  - `app.public_media` sirve la foto solo mientras la historia lo está.
+- **Corrección incluida:** `app.public_media` deja de servir las fotos de la galería en el plan Básico. Antes seguían accesibles por su enlace directo.
+- **Panel:** pestaña «Historias» en «Web pública», con el estado de cada historia (se ve ahora, programada o terminada), edición, cambio de orden y borrado.
+- **Web:** círculos arriba de la portada y visor a pantalla completa en un `<dialog>` modal.
+  - **Apertura automática:** la primera vez que un navegador entra, la primera historia se abre sola. Lo visto se recuerda en `localStorage`, por versión, así que una historia editada vuelve a contar como nueva. No hay cookies ni datos en el servidor.
+  - **Avance:** pasa sola cada 7 s. Se puede pausar, ir adelante o atrás con botones y con las flechas del teclado, y cerrar con Esc.
+  - **Movimiento reducido:** si el sistema lo pide, no avanza sola.
+  - **Legibilidad:** sobre una foto, un velo oscuro asegura que el texto se lea; sin foto, la tarjeta usa el color del acento del estilo.
+  - **Idiomas:** los textos del visor están en los 7 idiomas.
+
+**Límites conocidos:**
+- El titular y el texto de las historias no se traducen; se muestran igual en todos los idiomas.
+- Sin vídeo: haría falta almacenamiento de archivos fuera de la BD.
+- Que se recuerde lo visto depende del almacenamiento del navegador; en modo privado puede volver a abrirse sola.
