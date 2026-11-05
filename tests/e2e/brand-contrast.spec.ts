@@ -35,7 +35,7 @@ test("color de marca oscuro: separadores con la marca y contraste AA en página,
   await page.getByLabel("Usar mi color de marca").check();
   await page.locator('input[name="accentColor"]').fill("#1d2f4a");
   await page.getByRole("button", { name: "Guardar color y tipografía" }).click();
-  await expect(page.getByText("Marca guardada")).toBeVisible();
+  await expect(page.getByText("Marca guardada", { exact: true })).toBeVisible();
   await expect(page.getByText("tu web usará este color ajustado")).toBeVisible();
   const home = (await page.getByRole("link", { name: "Ver página pública" }).getAttribute("href"))!;
 
