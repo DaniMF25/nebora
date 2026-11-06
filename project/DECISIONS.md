@@ -940,3 +940,32 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
   - al crear o editar una historia se ve en directo la misma tarjeta que el visor (`StoryCard`, compartida), con el estilo, la tipografía y el color de la web (`siteLook`, compartida con la web);
   - incluye la foto elegida antes de subirla, que se carga como `blob:` (la CSP ya lo permite);
   - avisa de que «Reservar» solo sale con las reservas online activadas y «Ver la carta», con una carta publicada.
+
+## D-061 — Inicio de sesión con Google, Apple y Facebook
+**Fecha:** 2026-11-06. **Estado:** aceptada.
+
+**Decisión:**
+- **Flujo:** OAuth 2.0 con código de autorización, canjeado en el servidor.
+  - **Google:** OpenID Connect con PKCE y nonce.
+  - **Apple:** OpenID Connect con nonce y vuelta por POST (`form_post`). El secreto de cliente es un JWT ES256 firmado con la clave `.p8`.
+  - **Facebook:** Graph API con `appsecret_proof`.
+- **Tokens:** los de identidad de Google y Apple se comprueban con sus claves públicas: firma RS256, emisor, destinatario, caducidad y nonce. Para eso se añade la dependencia `jose` 6.2.13, sin dependencias propias y de referencia para JWT/JWKS; escribir esa verificación a mano sería más arriesgado.
+- **Protección del intento:**
+  - el intento (`state`, verificador PKCE, nonce y la página de destino) viaja en una cookie HttpOnly de 10 minutos y un solo uso, con prefijo `__Host-` en producción;
+  - la vuelta solo se acepta con el mismo `state`, comparado en tiempo constante. Eso evita que alguien inicie sesión en el navegador de otra persona con su propia cuenta (login CSRF);
+  - para Apple la cookie es `SameSite=None; Secure`, porque vuelve con un POST desde su dominio.
+- **Cuentas** (tabla `user_identities`, migración 0038; `users.password_hash` pasa a ser opcional):
+  - la identidad se reconoce por el identificador del proveedor, no por el correo;
+  - **vinculación:** si el proveedor garantiza el correo (Google y Apple), se vincula a la cuenta existente con ese correo. Facebook no lo garantiza, así que no se vincula: se pide entrar con contraseña, para evitar apropiarse de cuentas ajenas;
+  - **alta:** sin cuenta, se crea sin contraseña, solo si `AUTH_ALLOW_SIGNUP` está activo;
+  - **concurrencia:** dos vueltas simultáneas no duplican la cuenta, gracias a las restricciones únicas y a un reintento;
+  - el rol de la aplicación no puede cambiar ni borrar identidades.
+- **Activación:** cada proveedor se activa solo con todas sus credenciales y `APP_BASE_URL`. Sin ellas no hay botón y sus rutas responden 404; no se simula nada.
+- **Errores:** se muestran en la página de acceso por código conocido (`?error=`); nunca el texto que llega en el enlace.
+- **Límites:** 30 vueltas por IP cada 15 minutos.
+
+**Límites conocidos:**
+- No probado contra los proveedores reales: requiere sus credenciales y, para Apple, un dominio con https. Las pruebas cubren la verificación de tokens con claves locales, la resolución de cuentas, el inicio del flujo y el rechazo de vueltas con otro `state`.
+- Sin pantalla para vincular o desvincular proveedores desde una cuenta ya abierta.
+- Las cuentas sin contraseña no pueden crearla mientras no haya proveedor de correo.
+- Con el registro desactivado, una persona invitada no puede darse de alta con un proveedor: debe usar el enlace de la invitación.

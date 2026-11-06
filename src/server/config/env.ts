@@ -30,6 +30,23 @@ const envSchema = z.object({
   // Cabecera con la IP real del cliente que pone el proxy de la plataforma y que
   // el cliente no puede falsear (p. ej. `fly-client-ip` en Fly.io). Si se define,
   // es la única fuente de la IP para los límites de peticiones.
+  // Inicio de sesión con proveedores externos (D-061). Cada uno se activa solo
+  // si están todas sus variables (y APP_BASE_URL, para la dirección de vuelta).
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  FACEBOOK_APP_ID: z.string().regex(/^\d{5,32}$/, { message: "FACEBOOK_APP_ID debe ser numérico" }).optional(),
+  FACEBOOK_APP_SECRET: z.string().min(1).optional(),
+  // Versión de la Graph API (caducan a los dos años); por defecto, una vigente.
+  FACEBOOK_GRAPH_VERSION: z.string().regex(/^v\d{1,2}\.\d$/).default("v23.0"),
+  APPLE_CLIENT_ID: z.string().min(1).optional(),
+  APPLE_TEAM_ID: z.string().regex(/^[A-Z0-9]{10}$/, { message: "APPLE_TEAM_ID tiene 10 caracteres" }).optional(),
+  APPLE_KEY_ID: z.string().regex(/^[A-Z0-9]{10}$/, { message: "APPLE_KEY_ID tiene 10 caracteres" }).optional(),
+  // Clave privada .p8 (PEM). Admite saltos de línea escritos como \n.
+  APPLE_PRIVATE_KEY: z
+    .string()
+    .min(1)
+    .transform((v) => v.replace(/\\n/g, "\n"))
+    .optional(),
   CLIENT_IP_HEADER: z
     .string()
     .regex(/^[a-z0-9-]{1,64}$/i, { message: "CLIENT_IP_HEADER debe ser un nombre de cabecera" })

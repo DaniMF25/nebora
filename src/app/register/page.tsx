@@ -4,6 +4,8 @@ import { ActionForm } from "@/components/action-form";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { getEnv } from "@/server/config/env";
 import { PASSWORD_MIN_LENGTH } from "@/server/auth/password";
+import { SocialLogin } from "@/components/auth/social-login";
+import { enabledProviders } from "@/server/auth/oauth/providers";
 import { registerAction } from "./actions";
 
 export default async function RegisterPage() {
@@ -20,6 +22,7 @@ export default async function RegisterPage() {
   return (
     <main className="auth">
       <h1>Crear cuenta</h1>
+      <SocialLogin providers={enabledProviders()} />
       <ActionForm action={registerAction} submitLabel="Crear cuenta">
         <label>
           Nombre

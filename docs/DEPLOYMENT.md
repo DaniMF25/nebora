@@ -34,6 +34,22 @@ Los secretos se inyectan al ejecutar (gestor de secretos del proveedor). No se i
 - Comprobación de salud: `GET /api/health` → 200 `{"status":"ok"}` o 503 si la base de datos no responde. La imagen trae también un `HEALTHCHECK` de Docker.
 - Recomendado: HSTS en el dominio.
 
+## Inicio de sesión con Google, Apple y Facebook (opcional)
+
+Cada proveedor se activa al configurar sus variables (ver `.env.example`) junto con `APP_BASE_URL`; sin ellas no aparece su botón. En cada proveedor hay que registrar la dirección de vuelta exacta `<APP_BASE_URL>/auth/<proveedor>/callback` (D-061).
+
+- **Google** (Google Cloud Console → APIs y servicios → Credenciales): ID de cliente OAuth de tipo «Aplicación web», con la dirección de vuelta autorizada. Pantalla de consentimiento con los permisos `openid`, `email` y `profile`. Variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
+- **Apple** (Apple Developer, requiere el programa de pago):
+  - un App ID con «Sign in with Apple»;
+  - un Services ID (`APPLE_CLIENT_ID`) con el dominio y la dirección de vuelta, que exige https y un dominio real: no funciona en `localhost`;
+  - una clave con «Sign in with Apple» (`APPLE_KEY_ID` y el contenido del `.p8` en `APPLE_PRIVATE_KEY`) y el Team ID (`APPLE_TEAM_ID`).
+- **Facebook** (Meta for Developers): app con «Inicio de sesión con Facebook», la dirección de vuelta en «URI de redireccionamiento de OAuth válidos» y el permiso `email`.
+  - Variables `FACEBOOK_APP_ID` y `FACEBOOK_APP_SECRET`.
+  - Para usuarios reales, la app debe pasar a modo «Activo», lo que exige política de privacidad y la revisión de Meta.
+  - `FACEBOOK_GRAPH_VERSION` debe ser una versión vigente: caducan a los dos años.
+
+Las cuentas creadas así no tienen contraseña. Mientras no haya proveedor de correo, no pueden crearla ni recuperarla.
+
 ## Construir las imágenes
 
 ```sh

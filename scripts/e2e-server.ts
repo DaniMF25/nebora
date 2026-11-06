@@ -43,6 +43,16 @@ const child = spawn("pnpm", ["exec", "next", "start", "-p", port], {
     DATABASE_URL: appUrl.toString(),
     AUTH_ALLOW_SIGNUP: "true",
     APP_BASE_URL: `http://localhost:${port}`,
+    // Credenciales de prueba (D-061): activan los botones y el inicio del flujo
+    // con Google, Apple y Facebook. Las pruebas nunca llegan a los proveedores.
+    GOOGLE_CLIENT_ID: "e2e-google-client",
+    GOOGLE_CLIENT_SECRET: "e2e-google-secret",
+    FACEBOOK_APP_ID: "1234567890",
+    FACEBOOK_APP_SECRET: "e2e-facebook-secret",
+    APPLE_CLIENT_ID: "test.nebora.e2e",
+    APPLE_TEAM_ID: "E2ETEAM001",
+    APPLE_KEY_ID: "E2EKEY0001",
+    APPLE_PRIVATE_KEY: "e2e-no-es-una-clave",
   },
 });
 const stop = () => child.kill("SIGTERM");

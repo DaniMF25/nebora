@@ -98,7 +98,8 @@ export async function login(
     id: string;
     email: string;
     display_name: string;
-    password_hash: string;
+    // Sin contraseña si la cuenta se creó con Google, Apple o Facebook (D-061).
+    password_hash: string | null;
     status: string;
   }>("SELECT id, email, display_name, password_hash, status FROM users WHERE email = $1", [email]);
   const user = rows[0];
