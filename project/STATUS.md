@@ -138,9 +138,9 @@
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test:all` (unitarias + integración) | PASÓ — 67 archivos, 428 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:all` (unitarias + integración) | PASÓ — 68 archivos, 434 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ |
-| `pnpm exec playwright test` (E2E) | PASÓ — 52 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`). |
+| `pnpm exec playwright test` (E2E) | PASÓ — 53 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`). |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |
 | `docker build` (runtime y tools) + ensayo en contenedores | PASÓ en local (2026-11-01; con espejo `mirror.gcr.io` por límite de Docker Hub y el certificado del proxy del entorno) |
 
