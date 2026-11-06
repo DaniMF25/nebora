@@ -1,6 +1,6 @@
-import { panelsans, panelserif } from "@/fonts";
+import { panelsans } from "@/fonts";
 
-// Tipografías del panel, alojadas en el repositorio (src/fonts, D-043). Sin
-// precarga: la web pública del local no las usa y no debe descargarlas.
+// Tipografía del panel, alojada en el repositorio (src/fonts, D-043): Archivo,
+// la misma de la web pública (D-066). Sin precarga: la web pública de cada
+// local no la usa y no debe descargarla.
 export const panelSans = panelsans;
-export const panelSerif = panelserif;

@@ -25,9 +25,8 @@ const fontData = JSON.parse(
 
 /** [clave, familia, pesos (null = variable), variable CSS]. Mismos pesos que antes. */
 const FONTS = [
-  // Panel
-  ["panelsans", "Inter", null, "--font-panel-sans"],
-  ["panelserif", "Fraunces", ["500", "600"], "--font-panel-serif"],
+  // Panel (D-066): Archivo, la misma de la web pública; los títulos, condensados.
+  ["panelsans", "Archivo", "wdth,wght@62..125,100..900", "--font-panel-sans"],
   // Web pública (D-034)
   ["inter", "Inter", null, "--font-inter"],
   ["orbitron", "Orbitron", null, "--font-orbitron"],
@@ -92,13 +91,13 @@ const calls = [];
  * `optional` se usa la definitiva si llega a tiempo para la primera pintura;
  * si no, esa carga se queda con la de reserva y la siguiente la toma de la caché.
  */
-const OPTIONAL_DISPLAY = new Set(["panelsans", "panelserif", "marketing", "marketingmono"]);
+const OPTIONAL_DISPLAY = new Set(["panelsans", "marketing", "marketingmono"]);
 
 for (const [key, family, weights, cssVar] of FONTS) {
   // La misma familia con los mismos pesos comparte archivos (p. ej. Inter del panel y de la web).
   const same = calls.find((c) => c.family === family && c.weights === String(weights));
   if (same) {
-    calls.push({ key, family, weights: String(weights), cssVar, src: same.src });
+    calls.push({ key, family, weights: String(weights), cssVar, src: same.src, stretchRange: same.stretchRange });
     continue;
   }
   const css = get(cssUrl(family, weights)).toString("utf8");

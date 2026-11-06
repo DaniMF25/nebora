@@ -3,8 +3,8 @@
 Fuentes de Google Fonts incluidas en la aplicación (subconjunto latino), generadas con
 `scripts/fetch-fonts.mjs`. Cada una se distribuye con su licencia:
 
+- Archivo: SIL Open Font License 1.1 (licenses/archivo.ofl.txt)
 - Inter: SIL Open Font License 1.1 (licenses/inter.ofl.txt)
-- Fraunces: SIL Open Font License 1.1 (licenses/fraunces.ofl.txt)
 - Orbitron: SIL Open Font License 1.1 (licenses/orbitron.ofl.txt)
 - Caveat: SIL Open Font License 1.1 (licenses/caveat.ofl.txt)
 - Oswald: SIL Open Font License 1.1 (licenses/oswald.ofl.txt)
@@ -37,4 +37,3 @@ Fuentes de Google Fonts incluidas en la aplicación (subconjunto latino), genera
 - IBM Plex Sans: SIL Open Font License 1.1 (licenses/ibm-plex-sans.ofl.txt)
 - DM Serif Display: SIL Open Font License 1.1 (licenses/dm-serif-display.ofl.txt)
 - DM Sans: SIL Open Font License 1.1 (licenses/dm-sans.ofl.txt)
-- Archivo: SIL Open Font License 1.1 (licenses/archivo.ofl.txt)

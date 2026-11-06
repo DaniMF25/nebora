@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { panelSans, panelSerif } from "@/components/panel/fonts";
+import { panelSans } from "@/components/panel/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   await connection();
   return (
     <html lang="es">
-      <body className={`${panelSans.variable} ${panelSerif.variable}`}>{children}</body>
+      <body className={panelSans.variable}>{children}</body>
     </html>
   );
 }

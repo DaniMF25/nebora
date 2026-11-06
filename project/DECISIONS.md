@@ -1059,3 +1059,21 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
   - Las fuentes de la web pública van en `src/fonts/marketing.ts` con precarga y `display: optional`. Así llegan a la primera pintura sin desplazar la página, y el panel no las descarga.
 
 **Límites:** el contenido de las demos es fijo (no cambia con los datos del cliente) y las capturas no tienen fotos de platos.
+
+## D-066 — El panel adopta la identidad de la web pública
+**Fecha:** 2026-11-06. **Estado:** aceptada (sustituye el acento violeta y las fuentes Inter y Fraunces del panel, D-027 y D-043).
+
+**Contexto:** tras D-065, el panel (violeta, Inter y Fraunces) chocaba con la web pública y con sus propias capturas. El violeta con Inter es además la combinación más repetida en productos genéricos.
+
+**Decisión:**
+- **Colores:**
+  - fondo crema, tarjetas en papel, texto en tinta cálida y barra lateral en tinta casi negra;
+  - acento rojo tomate oscuro (`--accent: #b2311a`, 6,3:1 sobre el papel) para enlaces, foco, la sección activa y la marca;
+  - estados: verde oliva para «correcto», rojo más oscuro y siempre con su texto para errores, y mostaza para avisos.
+- **Botones principales en tinta** (`--ink`), que pasan a tomate al pasar el ratón; así un botón no se confunde con un error.
+  - En la web de cada local, `--ink` y el color al pasar el ratón toman el color de su estilo (`site.module.css`), como antes.
+- **Tipografía:**
+  - Archivo en todo el panel (el mismo archivo que la web pública), con los títulos condensados (`font-stretch: 80%`);
+  - Inter y Fraunces dejan de usarse en el panel (Fraunces se elimina del repositorio; Inter sigue disponible para las webs de los locales);
+  - `--font-serif` queda como alias de la sans para no romper estilos existentes.
+- **Comprobación:** las pruebas de accesibilidad (axe, contraste incluido) pasan en todas las pantallas del panel y en todos los estilos de web, y las capturas de la web pública se han regenerado con el panel nuevo.

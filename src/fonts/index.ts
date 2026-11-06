@@ -3,37 +3,19 @@
 // precarga: el navegador solo baja las que usa la página.
 import localFont from "next/font/local";
 
-/** Inter */
+/** Archivo */
 export const panelsans = localFont({
   src: [
     {
-      path: "./inter-100-900.woff2",
+      path: "./archivo-100-900-w62-125.woff2",
       weight: "100 900",
       style: "normal",
     },
   ],
   display: "optional",
+  declarations: [{ prop: "font-stretch", value: "62% 125%" }],
   preload: false,
   variable: "--font-panel-sans",
-});
-
-/** Fraunces */
-export const panelserif = localFont({
-  src: [
-    {
-      path: "./fraunces-500.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./fraunces-600.woff2",
-      weight: "600",
-      style: "normal",
-    },
-  ],
-  display: "optional",
-  preload: false,
-  variable: "--font-panel-serif",
 });
 
 /** Inter */

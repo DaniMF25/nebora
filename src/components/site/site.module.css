@@ -991,6 +991,12 @@
   --on-accent: var(--s-on-accent);
   --surface: var(--s-surface);
   --border: var(--s-line);
+  /* Los botones del panel van en tinta (D-066); en la web del local, con el color de su estilo. */
+  --ink: var(--s-accent);
+  --on-ink: var(--s-on-accent);
+  --border-strong: var(--s-line);
+  --btn-hover: var(--accent-strong);
+  --on-btn-hover: var(--s-on-accent);
 }
 
 /* El contenido de las páginas interiores mide 52rem; cabecera y pestañas se alinean con él. */
