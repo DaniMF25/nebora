@@ -14,7 +14,7 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Inicializar aplicación y scripts de calidad.
 - [x] Configurar base de datos y migraciones.
 - [x] Implementar autenticación y sesiones (sin MFA ni recuperación: requieren correo).
-- [x] Inicio de sesión con Google, Apple y Facebook (D-061); pendiente de credenciales reales.
+- [ ] Inicio de sesión con Google, Apple y Facebook (D-061): implementado; **pendiente de revisar** con credenciales y cuentas reales.
 - [x] Implementar organizaciones y establecimientos.
 - [x] Implementar membresías y permisos (roles, invitaciones, cambio de rol, baja, regla de último propietario). Permisos por establecimiento: pendientes hasta que un módulo los necesite.
 - [x] Implementar aislamiento multiempresa (RLS + servicios).
