@@ -37,3 +37,4 @@ Fuentes de Google Fonts incluidas en la aplicación (subconjunto latino), genera
 - IBM Plex Sans: SIL Open Font License 1.1 (licenses/ibm-plex-sans.ofl.txt)
 - DM Serif Display: SIL Open Font License 1.1 (licenses/dm-serif-display.ofl.txt)
 - DM Sans: SIL Open Font License 1.1 (licenses/dm-sans.ofl.txt)
+- Archivo: SIL Open Font License 1.1 (licenses/archivo.ofl.txt)

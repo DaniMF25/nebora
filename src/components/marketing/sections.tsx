@@ -4,17 +4,26 @@ import { primaryCta, type MarketingAccess } from "./shell";
 import styles from "./marketing.module.css";
 
 /** Llamada principal según la sesión y el registro, con un enlace secundario opcional. */
-export function Actions({ access, secondary }: { access: MarketingAccess; secondary?: { href: string; label: string } }) {
+export function Actions({
+  access,
+  secondary,
+  invert = false,
+}: {
+  access: MarketingAccess;
+  secondary?: { href: string; label: string };
+  invert?: boolean;
+}) {
   const cta = primaryCta(access);
   return (
     <>
       <div className={styles.ctaRow}>
         {cta ? (
-          <Link href={cta.href} className={styles.cta}>
-            {access.loggedIn ? cta.label : `Probar ${TRIAL_DAYS} días gratis`}
+          <Link href={cta.href} className={invert ? styles.ctaInvert : styles.cta}>
+            {access.loggedIn ? cta.label : `Empezar la prueba gratis`}
+            <span aria-hidden="true">→</span>
           </Link>
         ) : (
-          <Link href="/login" className={styles.cta}>
+          <Link href="/login" className={invert ? styles.ctaInvert : styles.cta}>
             Iniciar sesión
           </Link>
         )}
@@ -29,49 +38,79 @@ export function Actions({ access, secondary }: { access: MarketingAccess; second
   );
 }
 
+/** Sello giratorio de la prueba gratuita (decorativo: el texto está al lado). */
+export function TrialStamp() {
+  const text = `${TRIAL_DAYS} días gratis · sin tarjeta · plan PRO · `;
+  return (
+    <svg className={styles.stamp} viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <defs>
+        <path id="stamp-circle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
+      </defs>
+      <g className={styles.stampRing}>
+        <text>
+          <textPath href="#stamp-circle" textLength="488">
+            {text.toUpperCase()}
+          </textPath>
+        </text>
+      </g>
+      <circle cx="100" cy="100" r="58" className={styles.stampDisc} />
+      <text x="100" y="112" textAnchor="middle" className={styles.stampNum}>
+        {TRIAL_DAYS}
+      </text>
+      <text x="100" y="138" textAnchor="middle" className={styles.stampDays}>
+        DÍAS
+      </text>
+    </svg>
+  );
+}
+
 /** La prueba gratuita (D-062), explicada sin letra pequeña. */
 export function TrialBand({ access }: { access: MarketingAccess }) {
   return (
-    <section className={styles.section} aria-labelledby="prueba">
-      <div className={styles.wrap}>
-        <div className={styles.trial}>
-          <p className={styles.trialDays} aria-hidden="true">
-            {TRIAL_DAYS}
-            <span>días con el plan PRO</span>
-          </p>
-          <div>
-            <h2 id="prueba">Pruébalo con tu restaurante, no con uno de ejemplo</h2>
-            <ol>
-              <li>Te das de alta con tu correo. No te pedimos tarjeta.</li>
-              <li>Durante {TRIAL_DAYS} días tienes todo: reservas, equipo, turnos, inventario y compras.</li>
-              <li>
-                Al acabar, tu cuenta pasa sola al plan Básico, que es gratis. Tu web y tus cartas siguen publicadas y
-                no se borra nada.
-              </li>
-            </ol>
-            {!access.loggedIn && <Actions access={access} />}
-          </div>
+    <section className={styles.trialSection} aria-labelledby="prueba">
+      <div className={`${styles.wrap} ${styles.trial}`}>
+        <TrialStamp />
+        <div>
+          <h2 id="prueba">Una semana con todo. Con tu restaurante, no con uno de ejemplo.</h2>
+          <ol className={styles.trialSteps}>
+            <li>
+              <strong>Hoy</strong> Te das de alta con tu correo. No te pedimos tarjeta.
+            </li>
+            <li>
+              <strong>Durante {TRIAL_DAYS} días</strong> Tienes el plan PRO: reservas, equipo, turnos, escandallos,
+              inventario y compras.
+            </li>
+            <li>
+              <strong>El día {TRIAL_DAYS + 1}</strong> Pasas solo al plan Básico, que es gratis. La web y la carta
+              siguen publicadas y no se borra nada.
+            </li>
+          </ol>
+          {!access.loggedIn && <Actions access={access} invert />}
         </div>
       </div>
     </section>
   );
 }
 
-/** Los tres planes con su precio (src/lib/plans.ts). */
-export function PlanCards() {
+/** Los planes como una carta de restaurante (precios de src/lib/plans.ts). */
+export function PlanMenu() {
   return (
-    <>
-      <div className={styles.plans}>
+    <div className={styles.planMenu}>
+      <p className={styles.planMenuTitle}>Carta de planes</p>
+      <div className={styles.planCols}>
         {PLAN_INFO.map((p, i) => (
-          <section key={p.id} className={styles.plan} aria-labelledby={`plan-${p.id}`}>
-            <h3 id={`plan-${p.id}`}>{p.name}</h3>
-            <p>{p.audience}</p>
-            <div className={styles.price}>
-              {formatPrice(p.monthlyPrice)}
-              {p.monthlyPrice > 0 && <small>al mes + IVA</small>}
-            </div>
-            <ul className={styles.planFeatures}>
-              {i > 0 && <li className={styles.inherit}>Lo del {PLAN_INFO[i - 1]!.name}, y además:</li>}
+          <section key={p.id} className={styles.planCol} aria-labelledby={`plan-${p.id}`}>
+            <h3 id={`plan-${p.id}`} className={styles.dishLine}>
+              <span>{p.name}</span>
+              <span className={styles.dots} aria-hidden="true" />
+              <span className={styles.planPrice}>
+                {formatPrice(p.monthlyPrice)}
+                {p.monthlyPrice > 0 && <small> /mes</small>}
+              </span>
+            </h3>
+            <p className={styles.planFor}>{p.audience}</p>
+            <ul>
+              {i > 0 && <li className={styles.planInherit}>Todo lo del {PLAN_INFO[i - 1]!.name}, más:</li>}
               {p.features.map((f) => (
                 <li key={f}>{f}</li>
               ))}
@@ -79,11 +118,10 @@ export function PlanCards() {
           </section>
         ))}
       </div>
-      <p className={styles.plansNote}>
-        Precios al mes, sin IVA. Todas las cuentas nuevas empiezan con {TRIAL_DAYS} días del PRO; después siguen en
-        Básico hasta que elijas otro plan.
+      <p className={styles.planMenuNote}>
+        Precios sin IVA. Toda cuenta nueva empieza con {TRIAL_DAYS} días del PRO por cuenta de la casa.
       </p>
-    </>
+    </div>
   );
 }
 
@@ -93,8 +131,8 @@ export const FAQ: { q: string; a: string }[] = [
     a: `No. Para la prueba de ${TRIAL_DAYS} días basta con tu correo, y el plan Básico es gratis.`,
   },
   {
-    q: "¿Y cuando acaba la prueba?",
-    a: "Tu cuenta pasa al plan Básico. La web y las cartas siguen como estaban; las reservas online se desactivan y lo de los planes de pago deja de verse, pero no se borra. Si subes de plan, vuelve todo.",
+    q: "¿Qué pasa cuando acaba la prueba?",
+    a: "Tu cuenta pasa al plan Básico. La web y las cartas siguen como estaban; la reserva online se desactiva y lo de los planes de pago deja de verse, pero no se borra. Si subes de plan, vuelve todo.",
   },
   {
     q: "Tengo dos locales. ¿Pago dos veces?",
@@ -116,13 +154,13 @@ export const FAQ: { q: string; a: string }[] = [
 
 export function Faq({ items = FAQ }: { items?: { q: string; a: string }[] }) {
   return (
-    <dl className={styles.faq}>
+    <div className={styles.faq}>
       {items.map((f) => (
-        <div key={f.q}>
-          <dt>{f.q}</dt>
-          <dd>{f.a}</dd>
-        </div>
+        <details key={f.q}>
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
       ))}
-    </dl>
+    </div>
   );
 }

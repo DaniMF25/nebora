@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Faq, FAQ, PlanCards, TrialBand } from "@/components/marketing/sections";
+import { Faq, FAQ, PlanMenu, TrialBand } from "@/components/marketing/sections";
 import { MarketingShell } from "@/components/marketing/shell";
 import styles from "@/components/marketing/marketing.module.css";
 import { TRIAL_DAYS } from "@/lib/plans";
@@ -37,16 +37,18 @@ export default async function PricingPage() {
         <div className={styles.wrap}>
           <h1 id="titular">Precios</h1>
           <p className={styles.lead}>
-            Los primeros {TRIAL_DAYS} días tienes el PRO completo sin pagar nada.
-            Después sigues gratis en el Básico o eliges el plan que te encaje.
+            Los primeros {TRIAL_DAYS} días tienes el PRO completo sin pagar nada. Después sigues gratis en el Básico o
+            eliges el plan que te encaje.
           </p>
-          <PlanCards />
+          <PlanMenu />
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.sectionDeep}`} aria-labelledby="comparativa">
+      <section className={`${styles.section} ${styles.sectionPaper}`} aria-labelledby="comparativa">
         <div className={styles.wrap}>
-          <h2 id="comparativa">Plan por plan</h2>
+          <div className={styles.headPlain}>
+            <h2 id="comparativa">Plan por plan</h2>
+          </div>
           <div>
             <table className={styles.compare}>
               <thead>
@@ -86,7 +88,9 @@ export default async function PricingPage() {
 
       <section className={styles.section} aria-labelledby="preguntas-titulo">
         <div className={styles.wrap}>
-          <h2 id="preguntas-titulo">Preguntas frecuentes</h2>
+          <div className={styles.headPlain}>
+            <h2 id="preguntas-titulo">Preguntas frecuentes</h2>
+          </div>
           <Faq items={[FAQ[0]!, FAQ[1]!, FAQ[2]!, FAQ[5]!]} />
         </div>
       </section>

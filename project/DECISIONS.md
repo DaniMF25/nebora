@@ -1032,3 +1032,30 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
   Con «reducir movimiento» no hay avance automático ni animaciones.
 
 **Pendiente:** fotos de platos reales para las capturas de la web (ahora sin fotos) y regenerar las capturas si cambia el diseño del panel.
+
+## D-065 — Web pública con dirección de arte propia y demos interactivas
+**Fecha:** 2026-11-06. **Estado:** aceptada (sustituye el estilo de D-064; se mantienen sus capturas).
+
+**Contexto:** la versión de D-064 resultó sobria pero sin personalidad ni movimiento, y la combinación Inter + Fraunces seguía pareciendo de plantilla.
+
+**Decisión:**
+- **Concepto «la cocina en marcha»:** papel crema, tinta, rojo tomate y mostaza.
+  - Titulares en Archivo con anchura variable, condensada como la rotulación de mercado.
+  - Detalles en Courier Prime, como los tickets de la impresora de cocina.
+  - Botones con sombra dura.
+  - Precios presentados como una carta de restaurante, con puntos guía.
+  - Sello giratorio de «7 días gratis».
+  - Cinta con los tipos de local.
+  - Las secciones aparecen al desplazarse, solo en navegadores con animaciones ligadas al scroll.
+- **Demos que funcionan,** con los datos del restaurante de ejemplo (`src/components/marketing/demo-data.ts`, los mismos que crea el script de capturas):
+  - **Impresora de comandas:** cada pocos segundos imprime un aviso del panel. Se detiene si la pestaña no se ve.
+  - **Plano de sala con control de hora:** las mesas ocupadas salen de las reservas del día.
+  - **Escandallo:** al mover el precio del jamón o el de la carta se recalculan coste, margen y porcentaje, con la misma fórmula que el panel.
+  - **Carta en cuatro idiomas** en un móvil.
+  - **Galería** desplazable con las capturas reales.
+  Los controles son nativos (deslizadores con `aria-valuetext`, botones con `aria-pressed`) y el resultado se anuncia con `aria-live`. Lo decorativo va con `aria-hidden`. Con «reducir movimiento» no hay animaciones.
+- **Fuentes:**
+  - Archivo se añade con `scripts/fetch-fonts.mjs`, que ahora admite ejes explícitos (`wdth,wght`) y declara el rango de `font-stretch`; sin él, la anchura no se aplica.
+  - Las fuentes de la web pública van en `src/fonts/marketing.ts` con precarga y `display: optional`. Así llegan a la primera pintura sin desplazar la página, y el panel no las descarga.
+
+**Límites:** el contenido de las demos es fijo (no cambia con los datos del cliente) y las capturas no tienen fotos de platos.

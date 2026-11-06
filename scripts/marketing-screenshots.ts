@@ -251,15 +251,19 @@ const ids = await withTenant(user, orgId, async (tx, ctx) => {
     await moveTable(tx, ctx, t.id, { x, y });
     tables.push(t.id);
   }
+  // Las mismas reservas que la demo del plano en la portada (src/components/marketing/demo-data.ts).
   const bookings: [string, number, string, string, number, string][] = [
     ["13:30", 2, "Elena Ferrer", "+34 611 234 567", 0, ""],
     ["14:00", 4, "Familia Soler", "+34 622 345 678", 2, "Trona para un bebé"],
-    ["14:15", 6, "Comida de empresa Vinalopó", "+34 633 456 789", 4, "Menú cerrado acordado"],
+    ["14:15", 6, "Comida de empresa", "+34 633 456 789", 4, "Menú cerrado acordado"],
     ["14:30", 2, "Jordi Martí", "", 1, ""],
+    ["20:30", 2, "Marta y Joan", "+34 677 890 123", 9, ""],
     ["21:00", 4, "Lucía Romero", "+34 644 567 890", 7, "Celiaca: sin gluten"],
-    ["21:30", 2, "Pablo y Ana", "+34 655 678 901", 9, "Aniversario"],
-    ["22:00", 4, "Grupo Iborra", "+34 666 789 012", 3, ""],
+    ["21:00", 4, "Grupo Iborra", "+34 666 789 012", 3, ""],
+    ["21:30", 2, "Pablo y Ana", "+34 655 678 901", 10, "Aniversario"],
+    ["22:00", 3, "Hugo Navarro", "+34 688 901 234", 5, ""],
   ];
+
   for (const [time, partySize, customerName, customerPhone, table, notes] of bookings) {
     await createReservation(tx, ctx, est.id, {
       date: today,

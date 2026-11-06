@@ -13,17 +13,15 @@ async function check(page: Page): Promise<void> {
   }
 }
 
-// Web pública de Nébora (D-063, D-064) y prueba gratuita (D-062).
-test("web pública: escaparate con capturas reales, recorrido, precios y entrada al panel", async ({ page }) => {
-  test.setTimeout(60_000);
+// Web pública de Nébora (D-063, D-065) y prueba gratuita (D-062).
+test("web pública: portada con demos que calculan, capturas reales, precios y entrada al panel", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Menos papeles y más servicio en tu restaurante.");
-  await expect(page.getByRole("heading", { level: 2, name: "Pruébalo con tu restaurante, no con uno de ejemplo" })).toBeVisible();
-  // Precios desde la única fuente (src/lib/plans.ts).
-  const plans = page.locator("section", { has: page.getByRole("heading", { level: 2, name: /Tres planes/ }) });
-  await expect(plans.getByRole("region", { name: "Básico" })).toContainText("Gratis");
-  await expect(plans.getByRole("region", { name: "Avanzado" })).toContainText("29 €");
-  await expect(plans.getByRole("region", { name: "PRO" })).toContainText("59 €");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Más mesas llenas");
+  // Precios desde la única fuente (src/lib/plans.ts), presentados como una carta.
+  await expect(page.getByRole("region", { name: /Básico/ })).toContainText("Gratis");
+  await expect(page.getByRole("region", { name: /Avanzado/ })).toContainText("29 €");
+  await expect(page.getByRole("region", { name: /PRO/ })).toContainText("59 €");
 
   // Las capturas del panel y de la web cargan de verdad.
   const broken = await page.evaluate(async () => {
@@ -36,18 +34,34 @@ test("web pública: escaparate con capturas reales, recorrido, precios y entrada
   });
   expect(broken).toEqual([]);
 
-  // Recorrido por el panel: pestañas con ratón y con teclado.
-  const tour = page.getByRole("tablist", { name: "Secciones del panel" });
-  await expect(tour.getByRole("tab", { name: "Reservas" })).toHaveAttribute("aria-selected", "true");
-  await tour.getByRole("tab", { name: "Escandallos" }).click();
-  await expect(page.getByRole("tabpanel", { name: "Escandallos" })).toContainText("3,01 €");
-  await expect(page.getByRole("img", { name: /Escandallo de croquetas/ })).toBeVisible();
+  // Plano de sala: las mesas ocupadas salen de las reservas del día.
+  const hour = page.getByRole("slider", { name: "Hora" });
+  await hour.focus();
+  await page.keyboard.press("Home");
+  await expect(page.getByText("0 mesas ocupadas")).toBeVisible();
+  await expect(page.getByText(/Siguiente: 13:30, Elena Ferrer \(2\)/)).toBeVisible();
+  for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight"); // 14:00
+  await expect(page.getByText("2 mesas ocupadas")).toBeVisible();
+  await expect(page.getByText(/6 comensales en sala/)).toBeVisible();
+
+  // Escandallo: el mismo cálculo que el panel (3,01 € de coste sobre 9,50 €).
+  const cost = page.locator("section", { has: page.getByRole("heading", { name: "Croquetas de jamón ibérico" }) });
+  await expect(cost.getByText("31,7 %")).toBeVisible();
+  await cost.getByRole("slider", { name: /Jamón ibérico/ }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(tour.getByRole("tab", { name: "Inventario" })).toBeFocused();
-  await expect(page.getByRole("tabpanel", { name: "Inventario" })).toBeVisible();
-  // Elegida una pestaña, ya no avanza sola.
-  await page.waitForTimeout(7500);
-  await expect(tour.getByRole("tab", { name: "Inventario" })).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowRight"); // 50 €/kg: 45 g cuestan 2,25 €
+  await expect(cost.getByText("3,10 €")).toBeVisible();
+  await expect(cost.getByText("2,25 €")).toBeVisible();
+
+  // Carta en otros idiomas.
+  await page.getByRole("button", { name: "English" }).click();
+  await expect(page.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Iberian ham croquettes")).toBeVisible();
+
+  // Galería de capturas.
+  const strip = page.getByRole("list", { name: "Capturas del panel" });
+  await page.getByRole("button", { name: "Captura siguiente" }).click();
+  await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
   await check(page);
 
   // Precios con la comparativa.
@@ -66,7 +80,7 @@ test("web pública: escaparate con capturas reales, recorrido, precios y entrada
   await expect(page).toHaveURL(/\/$/);
 
   // La llamada principal lleva al alta, que recuerda la prueba.
-  await page.getByRole("banner").getByRole("link", { name: "Probar gratis" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "Prueba 7 días" }).click();
   await expect(page).toHaveURL(/\/register$/);
   await expect(page.getByText("7 días gratis del plan PRO")).toBeVisible();
 

@@ -62,6 +62,9 @@ const FONTS = [
   ["plexsans", "IBM Plex Sans", ["400", "500", "600"], "--font-plexsans"],
   ["dmserif", "DM Serif Display", ["400"], "--font-dmserif"],
   ["dmsans", "DM Sans", null, "--font-dmsans"],
+  // Web pública de Nébora (D-065): Archivo con anchura variable y Courier Prime para los tickets.
+  ["marketing", "Archivo", "wdth,wght@62..125,100..900", "--font-marketing"],
+  ["marketingmono", "Courier Prime", ["400", "700"], "--font-marketing-mono"],
 ];
 
 // Un navegador moderno: Google responde con woff2.
@@ -71,6 +74,8 @@ const get = (url) => execFileSync("curl", ["-sSfL", "-A", UA, url], { maxBuffer:
 
 function cssUrl(family, weights) {
   const name = family.replaceAll(" ", "+");
+  // Ejes explícitos (p. ej. anchura y peso): "wdth,wght@62..125,100..900".
+  if (typeof weights === "string") return `https://fonts.googleapis.com/css2?family=${name}:${weights}&display=swap`;
   if (weights) return `https://fonts.googleapis.com/css2?family=${name}:wght@${weights.join(";")}&display=swap`;
   const wght = fontData[family]?.axes?.find((a) => a.tag === "wght");
   if (!wght) throw new Error(`${family}: sin eje de peso; indica pesos fijos`);
@@ -87,7 +92,7 @@ const calls = [];
  * `optional` se usa la definitiva si llega a tiempo para la primera pintura;
  * si no, esa carga se queda con la de reserva y la siguiente la toma de la caché.
  */
-const OPTIONAL_DISPLAY = new Set(["panelsans", "panelserif"]);
+const OPTIONAL_DISPLAY = new Set(["panelsans", "panelserif", "marketing", "marketingmono"]);
 
 for (const [key, family, weights, cssVar] of FONTS) {
   // La misma familia con los mismos pesos comparte archivos (p. ej. Inter del panel y de la web).
@@ -103,11 +108,16 @@ for (const [key, family, weights, cssVar] of FONTS) {
   const src = blocks.map((b) => {
     const url = /src:\s*url\(([^)]+)\)/.exec(b)[1];
     const weight = /font-weight:\s*([^;]+);/.exec(b)[1].trim();
-    const file = `${family.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${weight.replace(" ", "-")}.woff2`;
+    // Solo las de anchura variable (un rango) llevan la anchura en el nombre.
+    const stretch = /font-stretch:\s*([^;]+ [^;]+);/.exec(b)?.[1].trim();
+    const file = `${family.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${weight.replace(" ", "-")}${stretch ? `-w${stretch.replace(/[% ]+/g, "-").replace(/-$/, "")}` : ""}.woff2`;
     writeFileSync(path.join(outDir, file), get(url));
-    return { path: `./${file}`, weight, style: "normal" };
+    return { path: `./${file}`, weight, style: "normal", stretch };
   });
-  calls.push({ key, family, weights: String(weights), cssVar, src });
+  // Anchura variable: el @font-face debe declarar su rango para que font-stretch funcione.
+  const stretchRange = src.find((s) => s.stretch)?.stretch;
+  for (const s of src) delete s.stretch;
+  calls.push({ key, family, weights: String(weights), cssVar, src, stretchRange });
   console.log(`${family}: ${src.map((s) => s.weight).join(", ")}`);
 }
 
@@ -139,23 +149,35 @@ writeFileSync(
   `# Licencias de las fuentes\n\nFuentes de Google Fonts incluidas en la aplicación (subconjunto latino), generadas con\n\`scripts/fetch-fonts.mjs\`. Cada una se distribuye con su licencia:\n\n${licenses.join("\n")}\n`,
 );
 
-const ts = `// Generado por scripts/fetch-fonts.mjs: no editar a mano (D-043).
-// Fuentes alojadas en el repositorio: la compilación no descarga nada. Sin
-// precarga: el navegador solo baja las que usa la página.
-import localFont from "next/font/local";
-
-${calls
-  .map(
-    (c) => `/** ${c.family} */
+// Fuentes de la web pública de Nébora (D-065): en un módulo aparte y con
+// precarga, para que lleguen a la primera pintura de la portada sin que el
+// panel, que importa src/fonts/index.ts, las descargue.
+const isMarketing = (c) => c.key.startsWith("marketing");
+const render = (c, preload) => `/** ${c.family} */
 export const ${c.key} = localFont({
   src: ${JSON.stringify(c.src, null, 2).replaceAll('"path"', "path").replaceAll('"weight"', "weight").replaceAll('"style"', "style")},
-  display: "${OPTIONAL_DISPLAY.has(c.key) ? "optional" : "swap"}",
-  preload: false,
+  display: "${OPTIONAL_DISPLAY.has(c.key) ? "optional" : "swap"}",${c.stretchRange ? `\n  declarations: [{ prop: "font-stretch", value: "${c.stretchRange}" }],` : ""}
+  preload: ${preload},
   variable: "${c.cssVar}",
-});`,
-  )
+});`;
+const header = (note) => `// Generado por scripts/fetch-fonts.mjs: no editar a mano (D-043).
+// ${note}
+import localFont from "next/font/local";
+`;
+const ts = `${header("Fuentes alojadas en el repositorio: la compilación no descarga nada. Sin\n// precarga: el navegador solo baja las que usa la página.")}
+${calls
+  .filter((c) => !isMarketing(c))
+  .map((c) => render(c, false))
+  .join("\n\n")}
+`;
+const marketingTs = `${header("Web pública de Nébora (D-065): con precarga, solo en sus páginas.")}
+${calls
+  .filter(isMarketing)
+  .map((c) => render(c, true))
   .join("\n\n")}
 `;
 writeFileSync(path.join(outDir, "index.ts"), ts);
+writeFileSync(path.join(outDir, "marketing.ts"), marketingTs);
+execFileSync("npx", ["prettier", "--print-width", "120", "--write", path.join(outDir, "marketing.ts")], { stdio: "ignore" });
 execFileSync("npx", ["prettier", "--print-width", "120", "--write", path.join(outDir, "index.ts")], { stdio: "ignore" });
 console.log(`Escrito ${path.relative(root, path.join(outDir, "index.ts"))}`);
