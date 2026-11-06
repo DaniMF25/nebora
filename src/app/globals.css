@@ -224,7 +224,20 @@ fieldset.story-layout legend { padding: 0 0.35rem; font-weight: 600; font-size: 
   background: #d23a1e; color: #fff; font-weight: 800; font-size: 0.85rem; font-stretch: 90%;
 }
 /* El menú se desplaza solo si no cabe; la cabecera y el pie (cuenta y salir) quedan siempre a la vista. */
-.side-nav { display: grid; gap: 1.1rem; flex: 1; align-content: start; min-height: 0; overflow-y: auto; margin: 0 -0.35rem; padding: 0 0.35rem; }
+.side-nav {
+  display: grid; gap: 1.1rem; flex: 1; align-content: start; min-height: 0; overflow-y: auto; margin: 0 -0.35rem; padding: 0 0.35rem;
+  /* Barra de desplazamiento fina y oscura, del color del menú (la del sistema era gris claro). */
+  scrollbar-width: thin; scrollbar-color: #4a4036 transparent;
+  /* Sombras que indican que hay más opciones arriba o abajo (solo cuando se puede desplazar). */
+  background:
+    linear-gradient(var(--sidebar) 30%, transparent) top / 100% 1.5rem no-repeat local,
+    linear-gradient(transparent, var(--sidebar) 70%) bottom / 100% 1.5rem no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.55), transparent) top / 100% 0.75rem no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.55), transparent) bottom / 100% 0.75rem no-repeat scroll;
+}
+.side-nav::-webkit-scrollbar { width: 6px; }
+.side-nav::-webkit-scrollbar-thumb { background: #4a4036; border-radius: 3px; }
+.side-nav::-webkit-scrollbar-track { background: transparent; }
 /* Gestión y Organización plegables (acordeón). */
 .side-section { margin: 0; }
 .side-section > summary { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.75rem 0.4rem 0; border-radius: 9px; cursor: pointer; list-style: none; color: var(--sidebar-muted); }
@@ -243,6 +256,24 @@ fieldset.story-layout legend { padding: 0 0.35rem; font-weight: 600; font-size: 
 .side-nav a[aria-current="page"] { background: var(--sidebar-active); color: #fff; box-shadow: inset 3px 0 0 #e2553a; }
 .side-nav a[aria-current="page"] svg { color: #f0a58f; }
 .side-footer { display: grid; gap: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.85rem; }
+/* Pantallas bajas (portátiles de 13", ventanas no maximizadas o con zoom): menú más compacto. */
+@media (max-height: 820px) {
+  .panel-sidebar { padding: 0.9rem 0.75rem 0.75rem; gap: 0.8rem; }
+  .brand-mark { width: 2.1rem; height: 2.1rem; }
+  .side-nav { gap: 0.65rem; }
+  .side-nav a { padding: 0.36rem 0.75rem; }
+  .side-group { margin-bottom: 0.2rem; }
+  .side-section > summary { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .side-footer { padding-top: 0.6rem; gap: 0.3rem; }
+  .side-user { padding: 0.2rem 0.5rem; }
+}
+@media (max-height: 620px) {
+  .brand-link small { display: none; }
+  .side-nav { gap: 0.45rem; }
+  .side-nav a { padding: 0.28rem 0.7rem; font-size: 0.88rem; }
+  .side-nav a svg { width: 18px; height: 18px; }
+  .avatar { width: 1.9rem; height: 1.9rem; }
+}
 .side-switch { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.75rem; border-radius: 9px; font-size: 0.85rem; color: var(--sidebar-muted) !important; }
 .side-switch:hover { background: rgba(255, 255, 255, 0.05); }
 .side-user { display: flex; align-items: center; gap: 0.65rem; padding: 0.35rem 0.5rem; }
