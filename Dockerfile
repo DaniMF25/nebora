@@ -45,6 +45,8 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
+# Archivos estáticos de la web pública (capturas en public/marketing, D-064).
+COPY --from=build --chown=node:node /app/public ./public
 # Usuario sin privilegios; el proceso web solo necesita DATABASE_URL (rol nebora_app).
 USER node
 EXPOSE 3000
