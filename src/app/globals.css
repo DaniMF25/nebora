@@ -26,6 +26,7 @@
   --sidebar-muted: #9b9080;
   --sidebar-active: #2a241d;
   --radius: 12px;
+  --topbar-h: 3.75rem;
   --shadow: 0 1px 2px rgba(40, 28, 10, 0.05), 0 4px 16px rgba(40, 28, 10, 0.05);
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: Georgia, serif;
@@ -225,7 +226,7 @@ fieldset.story-layout legend { padding: 0 0.35rem; font-weight: 600; font-size: 
 }
 /* El menú se desplaza solo si no cabe; la cabecera y el pie (cuenta y salir) quedan siempre a la vista. */
 .side-nav {
-  display: grid; gap: 1.1rem; flex: 1; align-content: start; min-height: 0; overflow-y: auto; margin: 0 -0.35rem; padding: 0 0.35rem;
+  display: grid; gap: 1.1rem; flex: 1; align-content: start; min-height: 0; overflow-y: auto; margin: 0 -0.35rem; padding: 2px 0.35rem;
   /* Barra de desplazamiento fina y oscura, del color del menú (la del sistema era gris claro). */
   scrollbar-width: thin; scrollbar-color: #4a4036 transparent;
   /* Sombras que indican que hay más opciones arriba o abajo (solo cuando se puede desplazar). */
@@ -256,6 +257,13 @@ fieldset.story-layout legend { padding: 0 0.35rem; font-weight: 600; font-size: 
 .side-nav a[aria-current="page"] { background: var(--sidebar-active); color: #fff; box-shadow: inset 3px 0 0 #e2553a; }
 .side-nav a[aria-current="page"] svg { color: #f0a58f; }
 .side-footer { display: grid; gap: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.85rem; }
+/* Pantallas táctiles: cada opción y cada desplegable, de al menos 44 px de alto para el dedo. */
+@media (pointer: coarse) {
+  .side-nav a { min-height: 2.75rem; }
+  .side-section > summary { min-height: 2.75rem; padding: 0.5rem 0.75rem 0.5rem 0; }
+  .side-section > summary svg { width: 20px; height: 20px; }
+  .side-section > summary .side-group { font-size: 0.78rem; }
+}
 /* Pantallas bajas (portátiles de 13", ventanas no maximizadas o con zoom): menú más compacto. */
 @media (max-height: 820px) {
   .panel-sidebar { padding: 0.9rem 0.75rem 0.75rem; gap: 0.8rem; }
@@ -345,13 +353,18 @@ main.auth button[type="submit"] { width: 100%; }
   .panel { grid-template-columns: minmax(0, 1fr); align-content: start; }
   .panel-topbar {
     position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between;
-    padding: 0.6rem 0.85rem; background: var(--sidebar); color: var(--sidebar-fg);
+    height: var(--topbar-h); padding: 0 0.85rem; background: var(--sidebar); color: var(--sidebar-fg);
   }
   .panel-sidebar { display: none; }
   .panel-brand { display: none; }
+  /* Menú abierto: ocupa la pantalla bajo la barra superior (que mide --topbar-h, para no tapar «Inicio»),
+     y solo se desplaza el menú, nunca la página de detrás. */
   .panel[data-menu-open] .panel-sidebar {
-    display: flex; position: fixed; inset: 3.4rem 0 0 0; z-index: 39; height: auto;
+    display: flex; position: fixed; inset: var(--topbar-h) 0 0 0; z-index: 39; height: auto;
+    padding-top: 0.75rem; overscroll-behavior: contain;
   }
+  .panel[data-menu-open] .side-nav { overscroll-behavior: contain; }
+  html:has(.panel[data-menu-open]) { overflow: hidden; }
   .panel-main { padding: 1.25rem 0.9rem 3rem; }
   .panel-main > section { padding: 1rem; border-radius: 14px; }
 }
