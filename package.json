@@ -19,6 +19,7 @@
     "db:setup-local": "tsx --env-file-if-exists=.env.local scripts/db-setup-local.ts",
     "test:e2e": "next build && playwright test",
     "privacy:retention": "tsx --env-file-if-exists=.env.local scripts/privacy-retention.ts",
+    "marketing:screenshots": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/marketing-screenshots.ts",
     "db:provision": "tsx --env-file-if-exists=.env.local scripts/db-provision.ts"
   },
   "dependencies": {

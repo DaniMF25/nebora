@@ -2,11 +2,12 @@
 
 **Estado:** Fases 0 y 1 completadas; Fase 2 completada (horarios, edición del local, panel de inicio, navegación adaptada al móvil y cambio de organización); Fase 3 completa (idiomas con traducción manual); Fase 4 casi completa (faltan subrecetas y devoluciones a proveedor); Fase 5 completa (lista de espera interna; alta pública pendiente). Puerta de salida de la Fase 1 superada: las pruebas negativas de aislamiento pasan y el proyecto compila. CI de GitHub en verde.
 
-**Última actualización:** 2026-11-06 — prueba gratuita de 7 días del plan PRO (D-062) y web pública de Nébora en `/` y `/precios` (D-063).
+**Última actualización:** 2026-11-06 — web pública rediseñada con capturas reales del panel y recorrido por pestañas (D-064), prueba gratuita de 7 días (D-062).
 
 ## Completado y verificado
 - [x] Prueba gratuita de 7 días del plan PRO (migración 0039, D-062): la primera organización de cada persona empieza en PRO con fecha de fin; una prueba por persona, también con altas simultáneas; al vencer pasa sola al Básico (reserva online desactivada, invitaciones abiertas anuladas, sin borrar datos), en el panel en el acto y en las páginas públicas en ≤30 s; elegir plan la termina. Aviso con los días restantes en el panel, en «Plan», en el alta y en la bienvenida. 6 pruebas de integración y E2E de entrada.
 - [x] Web pública de Nébora (D-063): `/` es ahora el escaparate (portada con la prueba como gancho, funciones con su plan, cómo funciona, planes con precio, preguntas frecuentes) y `/precios` añade la comparativa; «Iniciar sesión» lleva al panel y, con sesión, «Ir al panel». Precios de ejemplo en `src/lib/plans.ts`, la misma fuente que la página «Plan». Sin JavaScript propio; axe WCAG 2.2 AA a 1280 y 360 px sin desplazamiento horizontal; incluida en la prueba de rendimiento. Pendiente: textos legales y precios definitivos.
+- [x] Web pública rediseñada (D-064): estilo editorial sin los recursos típicos de plantilla, capturas reales del panel y de la web de un restaurante de ejemplo generadas con `pnpm marketing:screenshots`, recorrido por el panel con pestañas que avanzan solas (accesible por teclado; se detiene al elegir y con «reducir movimiento») y móvil animado solo con CSS.
 - [x] Aplicación Next.js 16 + TypeScript estricto con scripts reales: `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `build`.
 - [x] Migración `0001_foundation.sql`: usuarios, sesiones, intentos de login, organizaciones, membresías, establecimientos, auditoría; RLS y privilegios mínimos para `nebora_app`.
 - [x] Ejecutor de migraciones con checksum, transacción por migración y bloqueo consultivo.

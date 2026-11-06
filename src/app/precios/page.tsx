@@ -33,26 +33,21 @@ export default async function PricingPage() {
   const access = { loggedIn: Boolean(await getCurrentUser()), signupEnabled: getEnv().AUTH_ALLOW_SIGNUP === "true" };
   return (
     <MarketingShell access={access} current="pricing">
-      <section className={styles.hero} aria-labelledby="titular">
+      <section className={styles.pricingHero} aria-labelledby="titular">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <span className={styles.pill}>{TRIAL_DAYS} días gratis del plan PRO · sin tarjeta</span>
-            <h1 id="titular">Planes y precios</h1>
-            <p className={styles.lead}>
-              Empieza probando todo durante {TRIAL_DAYS} días. Después eliges: sigue gratis con el Básico o sube al plan
-              que necesites.
-            </p>
-          </div>
-          <PlanCards access={access} />
+          <h1 id="titular">Precios</h1>
+          <p className={styles.lead}>
+            Los primeros {TRIAL_DAYS} días tienes el PRO completo sin pagar nada.
+            Después sigues gratis en el Básico o eliges el plan que te encaje.
+          </p>
+          <PlanCards />
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.sectionAlt}`} aria-labelledby="comparativa">
+      <section className={`${styles.section} ${styles.sectionDeep}`} aria-labelledby="comparativa">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <h2 id="comparativa">Compara los planes</h2>
-          </div>
-          <div className={styles.compareWrap}>
+          <h2 id="comparativa">Plan por plan</h2>
+          <div>
             <table className={styles.compare}>
               <thead>
                 <tr>
@@ -91,10 +86,8 @@ export default async function PricingPage() {
 
       <section className={styles.section} aria-labelledby="preguntas-titulo">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <h2 id="preguntas-titulo">Preguntas frecuentes</h2>
-          </div>
-          <Faq items={FAQ.slice(0, 4)} />
+          <h2 id="preguntas-titulo">Preguntas frecuentes</h2>
+          <Faq items={[FAQ[0]!, FAQ[1]!, FAQ[2]!, FAQ[5]!]} />
         </div>
       </section>
     </MarketingShell>

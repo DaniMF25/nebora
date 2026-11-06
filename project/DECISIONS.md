@@ -1013,3 +1013,22 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - textos legales (aviso legal, privacidad y cookies), que debe aportar el titular;
 - dominio propio;
 - precios definitivos y proveedor de cobros.
+
+## D-064 — Web pública con capturas reales y menos aspecto de plantilla
+**Fecha:** 2026-11-06. **Estado:** aceptada.
+
+**Contexto:** la primera versión de la web (D-063) se veía genérica, «hecha con IA»: etiqueta con punto, antetítulos en mayúsculas en cada sección, palabra en cursiva de color, degradados violetas, rejilla de tarjetas con iconos, ticks en todas las listas, pasos numerados en círculos y textos de marketing intercambiables.
+
+**Decisión:**
+- **Estilo:** papel cálido, tinta y un solo acento; titulares en Fraunces; separadores en lugar de tarjetas; precios en columnas; preguntas como lista y no como acordeón. Textos concretos y en tono directo.
+- **Capturas reales:** el producto se enseña con capturas del panel y de la web de un restaurante de ejemplo («La Lonja del Puerto»), no con ilustraciones. `pnpm marketing:screenshots` (`scripts/marketing-screenshots.ts`) las genera:
+  - recrea la BD de E2E y crea los datos con los servicios de la aplicación, con las mismas reglas que el panel;
+  - fotografía las páginas con Chromium y las guarda en WebP en `public/marketing/` (unos 50 KB cada una);
+  - no añade dependencias: usa `@playwright/test` y `sharp`, que ya estaban.
+  La web indica que son capturas con datos de ejemplo.
+- **Elementos dinámicos:**
+  - recorrido por el panel con pestañas accesibles (flechas, Inicio y Fin) que avanzan solas cada 7 s mientras el recorrido está a la vista; se detienen al pasar el ratón o al elegir una pestaña;
+  - en la portada, un móvil que va pasando por la portada, una historia y la carta de la web del restaurante, solo con CSS.
+  Con «reducir movimiento» no hay avance automático ni animaciones.
+
+**Pendiente:** fotos de platos reales para las capturas de la web (ahora sin fotos) y regenerar las capturas si cambia el diseño del panel.

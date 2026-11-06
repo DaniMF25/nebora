@@ -1,223 +1,229 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MarketingIcon, type MarketingIconName } from "@/components/marketing/icons";
 import { Actions, Faq, PlanCards, TrialBand } from "@/components/marketing/sections";
 import { MarketingShell, type MarketingAccess } from "@/components/marketing/shell";
+import { Tour, type TourStep } from "@/components/marketing/tour";
 import styles from "@/components/marketing/marketing.module.css";
 import { TRIAL_DAYS } from "@/lib/plans";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { getEnv } from "@/server/config/env";
 
 export const metadata: Metadata = {
-  title: "Nébora · Carta digital, web, reservas y gestión para restaurantes",
-  description: `Carta digital con QR, web del restaurante, reservas online, equipo, inventario y compras en un solo sitio. Pruébalo gratis ${TRIAL_DAYS} días, sin tarjeta.`,
+  title: "Nébora · Software para restaurantes: carta con QR, web, reservas y cocina",
+  description: `Carta digital con QR, web del restaurante, reservas, turnos del equipo y coste de cada plato. Pruébalo ${TRIAL_DAYS} días con todo incluido, sin tarjeta.`,
 };
 
-const FEATURES: { icon: MarketingIconName; title: string; text: string; plan: string }[] = [
+const PANEL = { width: 1600, height: 1000 };
+
+// Capturas reales del panel con un restaurante de ejemplo (scripts/marketing-screenshots.ts).
+const TOUR: TourStep[] = [
   {
-    icon: "menu",
-    title: "Cartas digitales con QR",
-    text: "Platos con fotos, alérgenos y precios por ración. Cartas por horario, sugerencias del día y versión para imprimir.",
-    plan: "Todos los planes",
+    id: "reservas",
+    label: "Reservas",
+    title: "Las reservas del día, cada una con su mesa",
+    text: "Las que entran por tu web llegan aquí con la mesa ya asignada y sin solaparse con otras. Las del teléfono las apuntas en un momento, y al llegar el cliente lo marcas como sentado o como que no vino.",
+    plan: "Desde el plan Avanzado",
+    image: { src: "/marketing/panel-reservas.webp", alt: "Lista de reservas de un viernes con hora, nombre, comensales, mesa y teléfono", ...PANEL },
   },
   {
-    icon: "web",
-    title: "La web de tu restaurante",
-    text: "Portada, horario, contacto y tu carta, con tu logotipo. Desde Avanzado, estilos, colores, galería e historias para anunciar novedades.",
-    plan: "Todos los planes",
+    id: "sala",
+    label: "Sala",
+    title: "Tu sala, tal como la tienes montada",
+    text: "Dibuja el salón y la terraza con sus mesas, redondas o cuadradas, y muévelas arrastrando. Al reservar se busca la mesa que mejor encaja con el número de comensales.",
+    plan: "Desde el plan Avanzado",
+    image: { src: "/marketing/panel-sala.webp", alt: "Plano del salón con siete mesas colocadas en una cuadrícula", ...PANEL },
   },
   {
-    icon: "globe",
-    title: "En el idioma de tus clientes",
-    text: "Traduce la carta y la web a inglés, francés, alemán, italiano, portugués y catalán. Cada cliente la ve en el suyo.",
-    plan: "Todos los planes",
+    id: "turnos",
+    label: "Turnos",
+    title: "El cuadrante de la semana, sin hojas sueltas",
+    text: "Quién trabaja cada día y en qué horario, con las horas que suma cada persona. Si alguien ya tiene turno a esa hora, el panel no te deja ponerle otro. Copias la semana anterior con un clic.",
+    plan: "Desde el plan Avanzado",
+    image: { src: "/marketing/panel-turnos.webp", alt: "Cuadrante semanal con cinco personas, sus horarios por día y las horas totales", ...PANEL },
   },
   {
-    icon: "calendar",
-    title: "Reservas online y sala",
-    text: "Reservas desde tu web con mesa asignada sola y sin solapes, plano de sala, lista de espera y cancelación por el cliente.",
-    plan: "Desde Avanzado",
+    id: "escandallo",
+    label: "Escandallos",
+    title: "Lo que te cuesta cada plato",
+    text: "Apuntas la receta con sus cantidades y Nébora calcula el coste por ración con el precio de cada ingrediente. En el ejemplo, una ración de croquetas cuesta 3,01 € y se vende a 9,50 €.",
+    plan: "Plan PRO",
+    image: { src: "/marketing/panel-escandallo.webp", alt: "Escandallo de croquetas: coste 3,01 €, precio 9,50 €, margen 6,49 € y receta con cinco ingredientes", ...PANEL },
   },
   {
-    icon: "team",
-    title: "Equipo y turnos",
-    text: "Invita a tu equipo con su rol y sus locales. Cuadrante semanal de turnos y cada persona ve los suyos al entrar.",
-    plan: "Desde Avanzado",
-  },
-  {
-    icon: "chart",
-    title: "Estadísticas",
-    text: "Visitas a la web y a las cartas, escaneos del QR y, con reservas, el resumen del periodo. Exportación a Excel desde Avanzado.",
-    plan: "Todos los planes",
-  },
-  {
-    icon: "box",
-    title: "Inventario y escandallos",
-    text: "Recetas con coste por plato, stock por almacén, movimientos, traspasos y recuentos, con avisos de stock bajo.",
-    plan: "PRO",
-  },
-  {
-    icon: "truck",
-    title: "Proveedores y compras",
-    text: "Pedidos de compra a tus proveedores y recepción total o parcial, que suma al stock sin hacer cuentas.",
-    plan: "PRO",
+    id: "stock",
+    label: "Inventario",
+    title: "Qué hay en cada almacén",
+    text: "Entradas, salidas, traspasos y recuentos, con el stock al día. Cuando algo baja del mínimo que has marcado, te avisa en el inicio. Los pedidos a proveedores suman al stock al recibirlos.",
+    plan: "Plan PRO",
+    image: { src: "/marketing/panel-stock.webp", alt: "Stock por almacén con dos ingredientes por debajo del mínimo", ...PANEL },
   },
 ];
+
+const PHONE = { width: 780, height: 1688 };
 
 async function access(): Promise<MarketingAccess> {
   return { loggedIn: Boolean(await getCurrentUser()), signupEnabled: getEnv().AUTH_ALLOW_SIGNUP === "true" };
 }
 
-/** Web pública de Nébora (D-063): qué ofrece, la prueba gratuita y los planes. El panel está en /app. */
+/** Web pública de Nébora (D-063, D-064): qué ofrece, con capturas reales, la prueba y los planes. */
 export default async function Home() {
   const a = await access();
   return (
     <MarketingShell access={a} current="home">
       <section className={styles.hero} aria-labelledby="titular">
-        <div className={`${styles.wrap} ${styles.heroGrid}`}>
-          <div>
-            <span className={styles.pill}>{TRIAL_DAYS} días gratis del plan PRO · sin tarjeta</span>
-            <h1 id="titular">
-              Tu restaurante, <em>en orden</em>: de la carta a la cocina.
-            </h1>
+        <div className={styles.wrap}>
+          <div className={styles.heroText}>
+            <h1 id="titular">Menos papeles y más servicio en tu restaurante.</h1>
             <p className={styles.lead}>
-              Nébora reúne la carta digital con QR, la web de tu local, las reservas, el equipo y el control de stock y
-              compras. Sin instalar nada y desde el móvil o el ordenador.
+              Nébora es el programa con el que llevas la carta con QR, la web del local, las reservas, los turnos del
+              equipo y el coste de cada plato. Se monta en una tarde y lo puedes probar {TRIAL_DAYS} días con todo
+              incluido, sin dar la tarjeta.
             </p>
-            <Actions access={a} secondary={{ href: "/precios", label: "Ver planes y precios" }} />
-            <ul className={styles.promises}>
-              <li>
-                <MarketingIcon name="check" className={styles.check} /> Todo el plan PRO durante {TRIAL_DAYS} días
-              </li>
-              <li>
-                <MarketingIcon name="check" className={styles.check} /> Sin tarjeta
-              </li>
-              <li>
-                <MarketingIcon name="check" className={styles.check} /> Después, plan Básico gratis
-              </li>
-            </ul>
+            <Actions access={a} secondary={{ href: "/precios", label: "Ver precios" }} />
           </div>
-          {/* Ilustración: una carta de ejemplo en un móvil. */}
-          <div className={styles.mock} aria-hidden="true">
-            <div className={styles.phone}>
-              <div className={styles.screen}>
-                <div className={styles.screenTop}>
-                  <strong>Casa Ejemplo</strong>
-                  <span>Abierto · cocina hasta las 23:30</span>
-                </div>
-                <div className={styles.stories}>
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <ul className={styles.dishes}>
-                  <li>
-                    <b>Croquetas caseras</b> <span>9,50 €</span>
-                  </li>
-                  <li>
-                    <b>Ensalada de temporada</b> <span>11,00 €</span>
-                  </li>
-                  <li>
-                    <b>Arroz del día</b> <span>16,50 €</span>
-                  </li>
-                  <li>
-                    <b>Tarta de queso</b> <span>6,00 €</span>
-                  </li>
-                </ul>
+          <div className={styles.heroStage}>
+            <div className={styles.browser}>
+              <div className={styles.browserBar} aria-hidden="true">
+                <span />
+                <span />
+                <span />
               </div>
+              {/* eslint-disable-next-line @next/next/no-img-element -- captura estática ya optimizada (WebP) */}
+              <img
+                src="/marketing/panel-inicio.webp"
+                alt="Inicio del panel de un restaurante: reservas de hoy, comensales, stock bajo mínimo y pedidos pendientes"
+                width={1600}
+                height={650}
+                fetchPriority="high"
+              />
             </div>
-            <div className={styles.mockBadge}>
-              <span>Reserva online</span>
-              <strong>4 personas · 21:00</strong>
-            </div>
-            <div className={`${styles.mockBadge} ${styles.mockBadgeRight}`}>
-              <span>Código QR</span>
-              <strong>Carta publicada</strong>
+            <div className={styles.heroPhone} aria-hidden="true">
+              <PhoneCycle />
             </div>
           </div>
         </div>
       </section>
 
-      <section id="funciones" className={`${styles.section} ${styles.sectionAlt}`} aria-labelledby="funciones-titulo">
+      <section id="panel" className={`${styles.section} ${styles.sectionDeep}`} aria-labelledby="panel-titulo">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Qué incluye</p>
-            <h2 id="funciones-titulo">Todo lo que necesita tu restaurante, sin hojas de cálculo</h2>
-            <p>Empieza por la carta y la web, y añade reservas, equipo y cocina cuando lo necesites.</p>
+          <div className={styles.split}>
+            <h2 id="panel-titulo">Un viernes cualquiera en La Lonja del Puerto</h2>
+            <p className={styles.intro}>
+              Un restaurante de ejemplo con dos turnos, once mesas y cinco personas en plantilla. Esto es lo que ve su
+              encargada en el panel.
+            </p>
           </div>
-          <ul className={styles.features}>
-            {FEATURES.map((f) => (
-              <li key={f.title} className={styles.feature}>
-                <span className={styles.featureIcon}>
-                  <MarketingIcon name={f.icon} />
-                </span>
-                <h3>{f.title}</h3>
-                <p>{f.text}</p>
-                <span className={styles.planTag}>{f.plan}</span>
-              </li>
-            ))}
-          </ul>
+          <Tour steps={TOUR} />
+          <p className={styles.caption}>Capturas del panel de Nébora con datos de ejemplo.</p>
         </div>
       </section>
 
-      <section className={styles.section} aria-labelledby="como-funciona">
+      <section id="web" className={styles.section} aria-labelledby="web-titulo">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Cómo funciona</p>
-            <h2 id="como-funciona">En marcha en una tarde</h2>
+          <div className={styles.split}>
+            <h2 id="web-titulo">Y esto es lo que ven tus clientes</h2>
+            <p className={styles.intro}>
+              Cada local tiene su web con la carta, el horario y el botón de reservar. No hay que instalar nada: se
+              abre en el móvil desde el QR de la mesa, desde Google o desde tu Instagram.
+            </p>
           </div>
-          <ol className={styles.steps}>
-            <li>
-              <h3>Crea tu cuenta</h3>
-              <p>Con tu correo, sin tarjeta. Empiezas con {TRIAL_DAYS} días del plan PRO.</p>
-            </li>
-            <li>
-              <h3>Da de alta tu local</h3>
-              <p>Dirección, horario y, si quieres, las mesas y tu equipo.</p>
-            </li>
-            <li>
-              <h3>Publica y comparte</h3>
-              <p>Añade tus platos, elige el estilo de tu web, publica e imprime el QR para las mesas.</p>
-            </li>
-          </ol>
+          <div className={styles.phones}>
+            <figure>
+              <Phone src="/marketing/web-portada.webp" alt="Portada de la web del restaurante en un móvil" />
+              <figcaption>
+                <strong>La portada</strong>
+                <span>Con tu nombre, tu horario y la reserva a un toque.</span>
+              </figcaption>
+            </figure>
+            <figure>
+              <Phone src="/marketing/web-historia.webp" alt="Historia a pantalla completa anunciando la apertura de la terraza" />
+              <figcaption>
+                <strong>Historias</strong>
+                <span>Para avisar de la terraza, un evento o un cambio de horario.</span>
+              </figcaption>
+            </figure>
+            <figure>
+              <Phone src="/marketing/web-carta.webp" alt="Carta digital con platos, precios y alérgenos" />
+              <figcaption>
+                <strong>La carta</strong>
+                <span>Con alérgenos y precios. La cambias y se actualiza al momento.</span>
+              </figcaption>
+            </figure>
+          </div>
+          <dl className={styles.facts}>
+            <div>
+              <dt>Un QR que no caduca</dt>
+              <dd>Imprímelo una vez. Aunque cambies platos o precios, sigue llevando a la carta buena.</dd>
+            </div>
+            <div>
+              <dt>En siete idiomas</dt>
+              <dd>Traduce la carta y la web a inglés, francés, alemán, italiano, portugués y catalán.</dd>
+            </div>
+            <div>
+              <dt>También en papel</dt>
+              <dd>Saca la carta para imprimir en A4, con su QR, desde la misma pantalla.</dd>
+            </div>
+          </dl>
         </div>
       </section>
 
       <TrialBand access={a} />
 
-      <section className={`${styles.section} ${styles.sectionAlt}`} aria-labelledby="planes">
+      <section className={`${styles.section} ${styles.sectionDeep}`} aria-labelledby="planes">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Planes</p>
-            <h2 id="planes">Un plan para cada momento de tu negocio</h2>
-            <p>
-              Empieza gratis con el Básico y sube cuando lo necesites. <Link href="/precios">Compara los planes</Link>.
+          <div className={styles.split}>
+            <h2 id="planes">Tres planes, y el primero es gratis</h2>
+            <p className={styles.intro}>
+              Empieza con la carta y la web, y sube cuando necesites reservas, equipo o cocina.{" "}
+              <Link href="/precios" className={styles.textLink}>
+                Ver la comparativa completa
+              </Link>
+              .
             </p>
           </div>
-          <PlanCards access={a} />
+          <PlanCards />
         </div>
       </section>
 
       <section id="preguntas" className={styles.section} aria-labelledby="preguntas-titulo">
         <div className={styles.wrap}>
-          <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Preguntas frecuentes</p>
-            <h2 id="preguntas-titulo">Lo que suelen preguntarnos</h2>
-          </div>
+          <h2 id="preguntas-titulo">Preguntas que nos hacen</h2>
           <Faq />
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.sectionAlt} ${styles.closing}`} aria-labelledby="cierre">
+      <section className={styles.closing} aria-labelledby="cierre">
         <div className={styles.wrap}>
-          <h2 id="cierre">Pruébalo con tu restaurante esta semana</h2>
-          <p>
-            {TRIAL_DAYS} días con todas las funciones, sin tarjeta. Si no te convence, te quedas en el plan Básico
-            gratis.
-          </p>
+          <h2 id="cierre">Monta tu carta esta tarde y mañana la tienes en las mesas.</h2>
           <Actions access={a} />
+          <p className={styles.fine}>Sin tarjeta. Si no te convence, te quedas en el plan gratuito.</p>
         </div>
       </section>
     </MarketingShell>
+  );
+}
+
+function Phone({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className={styles.phone}>
+      <div className={styles.phoneScreen}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- captura estática ya optimizada (WebP) */}
+        <img src={src} alt={alt} loading="lazy" decoding="async" {...PHONE} />
+      </div>
+    </div>
+  );
+}
+
+/** Móvil de la portada: la web del restaurante pasa por sus tres pantallas (solo CSS). */
+function PhoneCycle() {
+  return (
+    <div className={styles.phone}>
+      <div className={`${styles.phoneScreen} ${styles.cycle}`}>
+        {["web-portada", "web-historia", "web-carta"].map((n) => (
+          // eslint-disable-next-line @next/next/no-img-element -- captura estática ya optimizada (WebP)
+          <img key={n} src={`/marketing/${n}.webp`} alt="" decoding="async" {...PHONE} />
+        ))}
+      </div>
+    </div>
   );
 }

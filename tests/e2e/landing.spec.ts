@@ -13,29 +13,48 @@ async function check(page: Page): Promise<void> {
   }
 }
 
-// Web pública de Nébora (D-063) y prueba gratuita (D-062).
-test("web pública: escaparate con la prueba gratuita, precios y entrada al panel", async ({ page }) => {
+// Web pública de Nébora (D-063, D-064) y prueba gratuita (D-062).
+test("web pública: escaparate con capturas reales, recorrido, precios y entrada al panel", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Tu restaurante");
-  await expect(page.getByText("7 días gratis del plan PRO · sin tarjeta")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "7 días con todo el plan PRO, gratis" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Menos papeles y más servicio en tu restaurante.");
+  await expect(page.getByRole("heading", { level: 2, name: "Pruébalo con tu restaurante, no con uno de ejemplo" })).toBeVisible();
   // Precios desde la única fuente (src/lib/plans.ts).
-  const plans = page.getByRole("list").filter({ has: page.getByRole("heading", { level: 3, name: "Avanzado" }) });
-  await expect(plans.getByRole("listitem").filter({ hasText: "Básico" }).first()).toContainText("Gratis");
-  await expect(plans.getByText("29 €")).toBeVisible();
-  await expect(plans.getByText("59 €")).toBeVisible();
-  await check(page);
+  const plans = page.locator("section", { has: page.getByRole("heading", { level: 2, name: /Tres planes/ }) });
+  await expect(plans.getByRole("region", { name: "Básico" })).toContainText("Gratis");
+  await expect(plans.getByRole("region", { name: "Avanzado" })).toContainText("29 €");
+  await expect(plans.getByRole("region", { name: "PRO" })).toContainText("59 €");
 
-  // Las preguntas se abren.
-  await page.getByText("¿Qué pasa cuando terminan los 7 días?").click();
-  await expect(page.getByText(/pasa sola al plan Básico/)).toBeVisible();
+  // Las capturas del panel y de la web cargan de verdad.
+  const broken = await page.evaluate(async () => {
+    const imgs = [...document.querySelectorAll<HTMLImageElement>("main img")];
+    for (const img of imgs) {
+      img.loading = "eager";
+      await img.decode().catch(() => undefined);
+    }
+    return imgs.filter((i) => i.naturalWidth === 0).map((i) => i.src);
+  });
+  expect(broken).toEqual([]);
+
+  // Recorrido por el panel: pestañas con ratón y con teclado.
+  const tour = page.getByRole("tablist", { name: "Secciones del panel" });
+  await expect(tour.getByRole("tab", { name: "Reservas" })).toHaveAttribute("aria-selected", "true");
+  await tour.getByRole("tab", { name: "Escandallos" }).click();
+  await expect(page.getByRole("tabpanel", { name: "Escandallos" })).toContainText("3,01 €");
+  await expect(page.getByRole("img", { name: /Escandallo de croquetas/ })).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(tour.getByRole("tab", { name: "Inventario" })).toBeFocused();
+  await expect(page.getByRole("tabpanel", { name: "Inventario" })).toBeVisible();
+  // Elegida una pestaña, ya no avanza sola.
+  await page.waitForTimeout(7500);
+  await expect(tour.getByRole("tab", { name: "Inventario" })).toHaveAttribute("aria-selected", "true");
+  await check(page);
 
   // Precios con la comparativa.
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Precios" }).click();
   await expect(page).toHaveURL(/\/precios$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Planes y precios" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Precios" })).toBeVisible();
   const row = page.getByRole("row", { name: /Inventario por almacén/ });
   await expect(row.getByRole("cell")).toHaveText(["— No incluido", "— No incluido", "✓ Incluido"]);
   await check(page);
@@ -47,7 +66,7 @@ test("web pública: escaparate con la prueba gratuita, precios y entrada al pane
   await expect(page).toHaveURL(/\/$/);
 
   // La llamada principal lleva al alta, que recuerda la prueba.
-  await page.getByRole("banner").getByRole("link", { name: "Prueba gratis 7 días" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "Probar gratis" }).click();
   await expect(page).toHaveURL(/\/register$/);
   await expect(page.getByText("7 días gratis del plan PRO")).toBeVisible();
 
