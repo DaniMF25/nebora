@@ -7,6 +7,7 @@
 ## Completado y verificado
 - [x] Prueba gratuita de 7 días del plan PRO (migración 0039, D-062): la primera organización de cada persona empieza en PRO con fecha de fin; una prueba por persona, también con altas simultáneas; al vencer pasa sola al Básico (reserva online desactivada, invitaciones abiertas anuladas, sin borrar datos), en el panel en el acto y en las páginas públicas en ≤30 s; elegir plan la termina. Aviso con los días restantes en el panel, en «Plan», en el alta y en la bienvenida. 6 pruebas de integración y E2E de entrada.
 - [x] Web pública de Nébora (D-063): `/` es ahora el escaparate (portada con la prueba como gancho, funciones con su plan, cómo funciona, planes con precio, preguntas frecuentes) y `/precios` añade la comparativa; «Iniciar sesión» lleva al panel y, con sesión, «Ir al panel». Precios de ejemplo en `src/lib/plans.ts`, la misma fuente que la página «Plan». Sin JavaScript propio; axe WCAG 2.2 AA a 1280 y 360 px sin desplazamiento horizontal; incluida en la prueba de rendimiento. Pendiente: textos legales y precios definitivos.
+- [x] Precios de los planes (D-067): Básico 14,99 €, Avanzado 24,99 € y PRO 34,99 € al mes sin IVA, con precio al día y el PRO como recomendado; los textos ya no presentan el Básico como gratis. Pendiente decidir qué pasa al acabar la prueba cuando haya cobros.
 - [x] Panel con la identidad de la web (D-066): fondo crema, tinta, acento tomate para enlaces, foco y sección activa, botones en tinta y Archivo con títulos condensados; las webs de los locales mantienen sus estilos. axe sin avisos en todo el panel y en todos los estilos de web; capturas de la web pública regeneradas.
 - [x] Web pública con dirección de arte propia (D-065): concepto «la cocina en marcha» (Archivo condensada y Courier Prime, papel, tinta y rojo tomate); impresora de comandas animada, plano de sala con control de hora, escandallo que recalcula al cambiar precios, carta en cuatro idiomas, galería de capturas, precios como una carta y sello de la prueba. Accesible por teclado, sin animaciones con «reducir movimiento»; E2E de las demos con axe a 1280 y 360 px.
 - [x] Web pública rediseñada (D-064, estilo sustituido por D-065): estilo editorial sin los recursos típicos de plantilla, capturas reales del panel y de la web de un restaurante de ejemplo generadas con `pnpm marketing:screenshots`, recorrido por el panel con pestañas que avanzan solas (accesible por teclado; se detiene al elegir y con «reducir movimiento») y móvil animado solo con CSS.
@@ -101,7 +102,8 @@
 
 ## No implementado todavía
 - [ ] **Pendiente de revisar en el futuro** — acceso con Google, Apple y Facebook (D-061): el código está hecho y probado, pero falta crear las credenciales en cada proveedor, configurarlas y probarlo con cuentas reales (empezar por Google; Apple exige programa de pago y dominio con https). Guía en `docs/DEPLOYMENT.md`.
-- [ ] Web pública: aviso legal, privacidad y cookies (textos del titular), dominio propio y precios definitivos (D-063).
+- [ ] Web pública: aviso legal, privacidad y cookies (textos del titular) y dominio propio (D-063).
+- [ ] Qué ocurre al acabar la prueba sin elegir plan cuando haya cobros (hoy pasa al Básico sin pagar, D-067).
 - [ ] Aviso por correo antes de que termine la prueba gratuita (requiere proveedor de correo, D-062).
 - [ ] Envío de invitaciones por correo (hoy el enlace lo entrega quien invita; D-010).
 - [ ] MFA, verificación de correo y recuperación de contraseña (requieren proveedor de correo).

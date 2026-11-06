@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Faq, FAQ, PlanMenu, TrialBand } from "@/components/marketing/sections";
 import { MarketingShell } from "@/components/marketing/shell";
 import styles from "@/components/marketing/marketing.module.css";
-import { TRIAL_DAYS } from "@/lib/plans";
+import { formatPrice, PLAN_INFO, TRIAL_DAYS } from "@/lib/plans";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { getEnv } from "@/server/config/env";
 
@@ -37,8 +37,8 @@ export default async function PricingPage() {
         <div className={styles.wrap}>
           <h1 id="titular">Precios</h1>
           <p className={styles.lead}>
-            Los primeros {TRIAL_DAYS} días tienes el PRO completo sin pagar nada. Después sigues gratis en el Básico o
-            eliges el plan que te encaje.
+            Los primeros {TRIAL_DAYS} días tienes el PRO completo sin pagar nada y sin dar la tarjeta. Después eliges el
+            plan que te encaje, desde {formatPrice(PLAN_INFO[0]!.monthlyPrice)} al mes.
           </p>
           <PlanMenu />
         </div>

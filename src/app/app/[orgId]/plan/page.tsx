@@ -58,7 +58,7 @@ export default async function PlanPage({ params }: { params: Promise<{ orgId: st
               </span>
               <span>
                 <strong>{formatPrice(p.monthlyPrice)}</strong>
-                {p.monthlyPrice > 0 && <span className="muted"> al mes + IVA</span>}
+                <span className="muted"> al mes + IVA</span>
               </span>
               <span className="muted">{p.summary}</span>
               <ul>

@@ -60,7 +60,7 @@ export default async function OrganizationsPage({
           <p className="notice">
             <span>
               <strong>{TRIAL_DAYS} días gratis del plan PRO</strong>: reservas, equipo, inventario y compras incluidos,
-              sin tarjeta. Al terminar pasas al plan Básico sin perder nada.
+              sin tarjeta. Al terminar eliges plan, sin perder nada de lo que hayas montado.
             </span>
           </p>
         )}

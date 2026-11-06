@@ -1,8 +1,8 @@
 /**
  * Planes de Nébora (D-046, D-062): nombre, precio y lo que añade cada uno.
  * Es la única fuente para la web pública, la página «Plan» del panel y la
- * prueba gratuita. Los precios son de ejemplo hasta que se fijen los
- * definitivos y se conecte un proveedor de cobros (no se cobra nada todavía).
+ * prueba gratuita. Precios fijados por el titular (D-067); aún no hay
+ * proveedor de cobros conectado, así que no se cobra nada todavía.
  */
 export type PlanId = "basic" | "advanced" | "pro";
 
@@ -12,8 +12,12 @@ export const TRIAL_DAYS = 7;
 export interface PlanInfo {
   id: PlanId;
   name: string;
-  /** Precio mensual en euros, sin IVA (0 = gratis). */
+  /** Precio mensual en euros, sin IVA. */
   monthlyPrice: number;
+  /** El plan que se destaca en la web (el que más compensa). */
+  recommended?: boolean;
+  /** Frase de venta junto al precio. */
+  pitch: string;
   summary: string;
   /** Para quién es, en la web pública. */
   audience: string;
@@ -25,7 +29,8 @@ export const PLAN_INFO: PlanInfo[] = [
   {
     id: "basic",
     name: "Básico",
-    monthlyPrice: 0,
+    monthlyPrice: 14.99,
+    pitch: "Tu carta con QR y tu web, listas esta tarde.",
     summary: "Para tener web y carta en poco tiempo.",
     audience: "Bares y locales que quieren estar en internet sin complicarse.",
     features: [
@@ -39,7 +44,8 @@ export const PLAN_INFO: PlanInfo[] = [
   {
     id: "advanced",
     name: "Avanzado",
-    monthlyPrice: 29,
+    monthlyPrice: 24.99,
+    pitch: "La sala y el equipo, sin libretas ni grupos de WhatsApp.",
     summary: "Todo lo del Básico, más la operativa de sala.",
     audience: "Restaurantes con reservas y un equipo que organizar.",
     features: [
@@ -55,7 +61,9 @@ export const PLAN_INFO: PlanInfo[] = [
   {
     id: "pro",
     name: "PRO",
-    monthlyPrice: 59,
+    monthlyPrice: 34.99,
+    recommended: true,
+    pitch: "Por 10 € más que el Avanzado, toda la gestión de cocina.",
     summary: "Todo lo del Avanzado, más la gestión de cocina.",
     audience: "Negocios que quieren controlar costes, stock y compras.",
     features: [
@@ -70,8 +78,16 @@ export function planInfo(id: PlanId): PlanInfo {
   return PLAN_INFO.find((p) => p.id === id)!;
 }
 
+const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+
+/** «14,99 €». */
 export function formatPrice(price: number): string {
-  return price === 0 ? "Gratis" : `${price} €`;
+  return EUR.format(price);
+}
+
+/** Lo que sale al día un precio mensual (12 meses entre 365 días), redondeado al céntimo: «0,49 €». */
+export function formatDailyPrice(monthly: number): string {
+  return EUR.format(Math.round(((monthly * 12) / 365) * 100) / 100);
 }
 
 /** Días completos o parciales que quedan de prueba (0 si terminó). */

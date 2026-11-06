@@ -19,9 +19,11 @@ test("web pública: portada con demos que calculan, capturas reales, precios y e
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Más mesas llenas");
   // Precios desde la única fuente (src/lib/plans.ts), presentados como una carta.
-  await expect(page.getByRole("region", { name: /Básico/ })).toContainText("Gratis");
-  await expect(page.getByRole("region", { name: /Avanzado/ })).toContainText("29 €");
-  await expect(page.getByRole("region", { name: /PRO/ })).toContainText("59 €");
+  await expect(page.getByRole("region", { name: /Básico/ })).toContainText("14,99 €");
+  await expect(page.getByRole("region", { name: /Básico/ })).toContainText("Unos 0,49 € al día");
+  await expect(page.getByRole("region", { name: /Avanzado/ })).toContainText("24,99 €");
+  await expect(page.getByRole("region", { name: /PRO/ })).toContainText("34,99 €");
+  await expect(page.getByRole("region", { name: /PRO/ })).toContainText("Recomendado");
 
   // Las capturas del panel y de la web cargan de verdad.
   const broken = await page.evaluate(async () => {

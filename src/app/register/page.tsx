@@ -25,8 +25,8 @@ export default async function RegisterPage() {
       <h1>Crear cuenta</h1>
       <p className="notice">
         <span>
-          Empiezas con <strong>{TRIAL_DAYS} días gratis del plan PRO</strong>, sin tarjeta. Después sigues gratis en el
-          plan Básico.
+          Empiezas con <strong>{TRIAL_DAYS} días gratis del plan PRO</strong>, sin tarjeta. Al acabar eliges plan: no se
+          cobra nada solo.
         </span>
       </p>
       <SocialLogin providers={enabledProviders()} />

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatPrice, PLAN_INFO, TRIAL_DAYS } from "@/lib/plans";
+import { formatDailyPrice, formatPrice, PLAN_INFO, TRIAL_DAYS } from "@/lib/plans";
 import { primaryCta, type MarketingAccess } from "./shell";
 import styles from "./marketing.module.css";
 
@@ -81,8 +81,8 @@ export function TrialBand({ access }: { access: MarketingAccess }) {
               inventario y compras.
             </li>
             <li>
-              <strong>El día {TRIAL_DAYS + 1}</strong> Pasas solo al plan Básico, que es gratis. La web y la carta
-              siguen publicadas y no se borra nada.
+              <strong>El día {TRIAL_DAYS + 1}</strong> Eliges tu plan, desde {formatPrice(PLAN_INFO[0]!.monthlyPrice)} al
+              mes. Como no diste tarjeta, nada se cobra solo, y no se borra nada de lo que hayas montado.
             </li>
           </ol>
           {!access.loggedIn && <Actions access={access} invert />}
@@ -99,15 +99,22 @@ export function PlanMenu() {
       <p className={styles.planMenuTitle}>Carta de planes</p>
       <div className={styles.planCols}>
         {PLAN_INFO.map((p, i) => (
-          <section key={p.id} className={styles.planCol} aria-labelledby={`plan-${p.id}`}>
+          <section
+            key={p.id}
+            className={`${styles.planCol} ${p.recommended ? styles.planRecommended : ""}`}
+            aria-labelledby={`plan-${p.id}`}
+          >
+            {p.recommended && <span className={styles.planBadge}>Recomendado</span>}
             <h3 id={`plan-${p.id}`} className={styles.dishLine}>
               <span>{p.name}</span>
               <span className={styles.dots} aria-hidden="true" />
               <span className={styles.planPrice}>
                 {formatPrice(p.monthlyPrice)}
-                {p.monthlyPrice > 0 && <small> /mes</small>}
+                <small> /mes</small>
               </span>
             </h3>
+            <p className={styles.planDaily}>Unos {formatDailyPrice(p.monthlyPrice)} al día</p>
+            <p className={styles.planPitch}>{p.pitch}</p>
             <p className={styles.planFor}>{p.audience}</p>
             <ul>
               {i > 0 && <li className={styles.planInherit}>Todo lo del {PLAN_INFO[i - 1]!.name}, más:</li>}
@@ -119,7 +126,8 @@ export function PlanMenu() {
         ))}
       </div>
       <p className={styles.planMenuNote}>
-        Precios sin IVA. Toda cuenta nueva empieza con {TRIAL_DAYS} días del PRO por cuenta de la casa.
+        Precios al mes, sin IVA y sin permanencia. Toda cuenta nueva empieza con {TRIAL_DAYS} días del PRO por cuenta
+        de la casa.
       </p>
     </div>
   );
@@ -128,11 +136,11 @@ export function PlanMenu() {
 export const FAQ: { q: string; a: string }[] = [
   {
     q: "¿Me vais a pedir la tarjeta?",
-    a: `No. Para la prueba de ${TRIAL_DAYS} días basta con tu correo, y el plan Básico es gratis.`,
+    a: `No. Para la prueba de ${TRIAL_DAYS} días basta con tu correo. Como no hay tarjeta, al acabar no se cobra nada solo: decides tú si sigues y con qué plan.`,
   },
   {
     q: "¿Qué pasa cuando acaba la prueba?",
-    a: "Tu cuenta pasa al plan Básico. La web y las cartas siguen como estaban; la reserva online se desactiva y lo de los planes de pago deja de verse, pero no se borra. Si subes de plan, vuelve todo.",
+    a: `Eliges tu plan, desde ${formatPrice(PLAN_INFO[0]!.monthlyPrice)} al mes. Tu cuenta pasa al Básico: la web y las cartas siguen como estaban, y lo de los planes superiores (como la reserva online) deja de verse, pero no se borra. Si subes de plan, vuelve todo.`,
   },
   {
     q: "Tengo dos locales. ¿Pago dos veces?",

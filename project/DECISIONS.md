@@ -1077,3 +1077,13 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
   - Inter y Fraunces dejan de usarse en el panel (Fraunces se elimina del repositorio; Inter sigue disponible para las webs de los locales);
   - `--font-serif` queda como alias de la sans para no romper estilos existentes.
 - **Comprobación:** las pruebas de accesibilidad (axe, contraste incluido) pasan en todas las pantallas del panel y en todos los estilos de web, y las capturas de la web pública se han regenerado con el panel nuevo.
+
+## D-067 — Precios de los planes
+**Fecha:** 2026-11-06. **Estado:** aceptada (precios fijados por el titular; sustituyen a los de ejemplo de D-063).
+
+**Decisión:**
+- **Precios:** Básico 14,99 €, Avanzado 24,99 € y PRO 34,99 € al mes, sin IVA, en `src/lib/plans.ts` (única fuente para la web y el panel).
+- **Presentación:** cada plan muestra lo que sale al día (12 meses entre 365 días: 0,49 €, 0,82 € y 1,15 €) y una frase de venta. El PRO se destaca como «Recomendado»: solo cuesta 10 € más que el Avanzado e incluye toda la gestión de cocina.
+- **Textos:** el Básico deja de presentarse como gratis. La web, el alta y la bienvenida dicen ahora que al acabar la prueba se elige plan, desde 14,99 € al mes, y que, al no haber tarjeta, nada se cobra solo.
+
+**Pendiente (decisión del titular):** el sistema sigue pasando la organización al plan Básico cuando termina la prueba (D-062). Mientras no haya proveedor de cobros, eso equivale a un Básico sin pagar. Al conectar los cobros hay que decidir qué ocurre al acabar la prueba sin elegir plan: bloquear el panel en solo lectura, mantener la web publicada unos días o despublicarla.

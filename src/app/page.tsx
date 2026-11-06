@@ -7,7 +7,7 @@ import { Actions, Faq, PlanMenu, TrialBand } from "@/components/marketing/sectio
 import { MarketingShell, type MarketingAccess } from "@/components/marketing/shell";
 import { TicketPrinter } from "@/components/marketing/ticket-printer";
 import styles from "@/components/marketing/marketing.module.css";
-import { TRIAL_DAYS } from "@/lib/plans";
+import { formatPrice, PLAN_INFO, TRIAL_DAYS } from "@/lib/plans";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { getEnv } from "@/server/config/env";
 
@@ -51,7 +51,9 @@ export default async function Home() {
               cada plato. Todo en Nébora, desde el móvil o el ordenador del pase.
             </p>
             <Actions access={a} secondary={{ href: "/precios", label: "Ver precios" }} />
-            <p className={styles.heroNote}>Sin permanencia. Al acabar la prueba sigues gratis en el plan Básico.</p>
+            <p className={styles.heroNote}>
+              Sin tarjeta y sin permanencia. Después, desde {formatPrice(PLAN_INFO[0]!.monthlyPrice)} al mes.
+            </p>
           </div>
           <TicketPrinter />
         </div>
@@ -208,7 +210,8 @@ export default async function Home() {
             </span>
             <h2 id="planes">Precios claros, como una buena carta</h2>
             <p className={styles.intro}>
-              El Básico es gratis para siempre. Subes cuando necesites reservas, equipo o cocina, y bajas cuando quieras.
+              Desde {formatPrice(PLAN_INFO[0]!.monthlyPrice)} al mes, menos que un café al día. Subes cuando necesites
+              reservas, equipo o cocina, y bajas cuando quieras.
             </p>
           </div>
           <div className={styles.reveal}>

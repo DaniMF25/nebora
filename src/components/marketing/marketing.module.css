@@ -245,6 +245,12 @@
 .planPrice { font-family: var(--mono); font-weight: 700; color: var(--tomato-ink); white-space: nowrap; }
 .planPrice small { font-size: 0.65em; color: var(--muted); }
 .planFor { font-style: italic; color: var(--muted); margin: 0 0 1rem; line-height: 1.5; }
+.planCol { position: relative; }
+.planDaily { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); margin: -0.25rem 0 0.75rem; }
+.planPitch { font-weight: 600; margin: 0 0 0.6rem; line-height: 1.4; }
+/* El plan que más compensa, marcado como en una carta («recomendación de la casa»). */
+.planRecommended { background: #fbefe2; outline: 2px solid var(--ink); outline-offset: 0.9rem; }
+.planBadge { position: absolute; top: -2.1rem; right: -0.6rem; background: var(--tomato); color: #ffffff; font-family: var(--mono); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2rem 0.6rem; transform: rotate(3deg); border: 2px solid var(--ink); }
 .planCol ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; font-size: 0.95rem; line-height: 1.45; }
 .planCol li { padding-left: 1.1rem; position: relative; }
 .planCol li::before { content: "·"; position: absolute; left: 0.2rem; font-weight: 900; color: var(--tomato); }
