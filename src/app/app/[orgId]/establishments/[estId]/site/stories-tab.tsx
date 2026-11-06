@@ -1,4 +1,6 @@
 import { ActionForm } from "@/components/action-form";
+import { siteLook } from "@/components/site/site-shell";
+import type { MenuTheme } from "@/lib/menu-snapshot";
 import { privateMediaUrl } from "@/lib/site";
 import {
   MAX_STORIES,
@@ -14,6 +16,7 @@ import {
   removeStoryImageAction,
   updateStoryAction,
 } from "./actions";
+import { StoryEditor } from "./story-editor";
 
 const CTA_LABELS: Record<StoryCtaKind, string> = {
   none: "Sin botón",
@@ -35,68 +38,6 @@ function status(s: Story, today: string): { label: string; live: boolean } {
   return { label: s.endsOn ? `Se ve hasta el ${dateLabel(s.endsOn)}` : "Se ve ahora", live: true };
 }
 
-function StoryFields({ story, n }: { story?: Story; n?: number }) {
-  const suffix = n === undefined ? "" : ` (historia ${n + 1})`;
-  return (
-    <>
-      <label>
-        Titular{suffix}
-        <input name="title" required maxLength={STORY_TITLE_MAX} defaultValue={story?.title} placeholder="Nueva terraza" />
-      </label>
-      <label>
-        Texto (opcional){suffix}
-        <textarea
-          name="body"
-          rows={3}
-          maxLength={STORY_BODY_MAX}
-          defaultValue={story?.body ?? ""}
-          placeholder="Desde este viernes, cenas al aire libre."
-        />
-      </label>
-      <label>
-        {story?.mediaId ? `Cambiar la foto${suffix}` : `Foto (opcional)${suffix}`}
-        <input type="file" name="image" accept="image/jpeg,image/png,image/webp" />
-      </label>
-      <div className="inline-form">
-        <label>
-          Botón{suffix}
-          <select name="ctaKind" defaultValue={story?.ctaKind ?? "none"}>
-            {(Object.keys(CTA_LABELS) as StoryCtaKind[]).map((k) => (
-              <option key={k} value={k}>
-                {CTA_LABELS[k]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Texto del botón (enlace propio){suffix}
-          <input name="ctaLabel" maxLength={30} defaultValue={story?.ctaLabel ?? ""} placeholder="Ver el evento" />
-        </label>
-        <label>
-          Enlace (enlace propio){suffix}
-          <input
-            name="ctaUrl"
-            type="url"
-            maxLength={500}
-            defaultValue={story?.ctaUrl ?? ""}
-            placeholder="https://"
-          />
-        </label>
-      </div>
-      <div className="inline-form">
-        <label>
-          Desde (opcional){suffix}
-          <input type="date" name="startsOn" defaultValue={story?.startsOn ?? ""} />
-        </label>
-        <label>
-          Hasta (opcional){suffix}
-          <input type="date" name="endsOn" defaultValue={story?.endsOn ?? ""} />
-        </label>
-      </div>
-    </>
-  );
-}
-
 /** Pestaña «Historias» de la web (D-059). */
 export function StoriesTab({
   orgId,
@@ -106,6 +47,9 @@ export function StoriesTab({
   canEdit,
   published,
   planNote,
+  theme,
+  accentColor,
+  fontPairing,
 }: {
   orgId: string;
   estId: string;
@@ -114,7 +58,13 @@ export function StoriesTab({
   canEdit: boolean;
   published: boolean;
   planNote: React.ReactNode | null;
+  /** Estilo de la web (el que se publica según el plan), para la vista previa. */
+  theme: MenuTheme;
+  accentColor: string | null;
+  fontPairing: string | null;
 }) {
+  const { className, style } = siteLook(theme, accentColor, fontPairing);
+  const look = { className, style };
   return (
     <section>
       <h3>Historias</h3>
@@ -159,10 +109,18 @@ export function StoriesTab({
                     <ActionForm
                       action={updateStoryAction.bind(null, orgId, estId, s.id)}
                       submitLabel="Guardar historia"
+                      className="form story-form"
                       resetOnSuccess={false}
                       secondary={{ action: deleteStoryAction.bind(null, orgId, estId, s.id), label: "Eliminar historia" }}
                     >
-                      <StoryFields story={s} n={n} />
+                      <StoryEditor
+                        story={s}
+                        n={n}
+                        imageUrl={s.mediaId ? privateMediaUrl(orgId, s.mediaId) : null}
+                        look={look}
+                        titleMax={STORY_TITLE_MAX}
+                        bodyMax={STORY_BODY_MAX}
+                      />
                     </ActionForm>
                     <div className="inline-form">
                       {s.mediaId && (
@@ -197,8 +155,12 @@ export function StoriesTab({
       {canEdit && stories.length < MAX_STORIES && (
         <div className="story-new" aria-labelledby="nueva-historia" role="group">
           <h4 id="nueva-historia">Nueva historia</h4>
-          <ActionForm action={createStoryAction.bind(null, orgId, estId)} submitLabel="Crear historia">
-            <StoryFields />
+          <ActionForm
+            action={createStoryAction.bind(null, orgId, estId)}
+            submitLabel="Crear historia"
+            className="form story-form"
+          >
+            <StoryEditor imageUrl={null} look={look} titleMax={STORY_TITLE_MAX} bodyMax={STORY_BODY_MAX} />
           </ActionForm>
         </div>
       )}

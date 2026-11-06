@@ -251,6 +251,9 @@ function storyInput(fd: FormData) {
     ctaUrl: formString(fd, "ctaUrl"),
     startsOn: formString(fd, "startsOn"),
     endsOn: formString(fd, "endsOn"),
+    textPosition: formString(fd, "textPosition") || "bottom",
+    textAlign: formString(fd, "textAlign") || "left",
+    ctaPosition: formString(fd, "ctaPosition") || "text",
   };
 }
 

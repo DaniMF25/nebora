@@ -393,6 +393,9 @@ export default async function SiteProfilePage({
           canEdit={canCustomize}
           published={p.published}
           planNote={customLook ? null : planNote("La sección de historias")}
+          theme={p.theme}
+          accentColor={p.accentColor}
+          fontPairing={p.fontPairing}
         />
       )}
       {tab === "traducciones" && (

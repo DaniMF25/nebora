@@ -145,6 +145,28 @@ describe("historias de la web", () => {
     await asOwner((tx, ctx) => deleteStory(tx, ctx, est, id));
   });
 
+  it("ubicación del texto y del botón: por defecto abajo, a la izquierda y junto al texto; se puede cambiar", async () => {
+    const id = await asOwner((tx, ctx) => createStory(tx, ctx, est, story({ title: "Ubicación" })));
+    const get = async () => (await asOwner((tx, ctx) => listStories(tx, ctx, est))).find((s) => s.id === id)!;
+    expect(await get()).toMatchObject({ textPosition: "bottom", textAlign: "left", ctaPosition: "text" });
+    await asOwner((tx, ctx) =>
+      updateStory(tx, ctx, est, id, story({ title: "Ubicación", textPosition: "top", textAlign: "center", ctaPosition: "bottom" })),
+    );
+    expect(await get()).toMatchObject({ textPosition: "top", textAlign: "center", ctaPosition: "bottom" });
+    expect((await getPublicStories(est)).find((s) => s.id === id)).toMatchObject({
+      textPosition: "top",
+      textAlign: "center",
+      ctaPosition: "bottom",
+    });
+    for (const bad of [{ textPosition: "left" }, { textAlign: "right" }, { ctaPosition: "top" }]) {
+      await expect(asOwner((tx, ctx) => updateStory(tx, ctx, est, id, story(bad)))).rejects.toThrow(ValidationError);
+    }
+    await expect(
+      withAdminClient((c) => c.query("UPDATE site_stories SET text_position = 'middle' WHERE id = $1", [id])),
+    ).rejects.toMatchObject({ code: "23514" });
+    await asOwner((tx, ctx) => deleteStory(tx, ctx, est, id));
+  });
+
   it("valida titular, texto, enlace (solo https), fechas y el máximo", async () => {
     const rejects = (over: Record<string, unknown>) =>
       expect(asOwner((tx, ctx) => createStory(tx, ctx, est, story(over)))).rejects.toThrow(ValidationError);

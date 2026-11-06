@@ -170,6 +170,16 @@ fieldset.highlight { border: 1px solid var(--border); border-radius: var(--radiu
 .story-row p { margin: 0.2rem 0 0; }
 .story-thumb { flex: none; width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; }
 .story-thumb-empty { display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-strong); font-family: var(--font-serif); font-size: 1.2rem; font-weight: 600; }
+/* Editor de historias con vista previa al lado (debajo en pantallas estrechas). */
+.form.story-form { max-width: 62rem; }
+.story-editor { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 900px) { .story-editor { grid-template-columns: minmax(0, 1fr) 17.5rem; } }
+.story-editor-fields { display: grid; gap: 0.9rem; }
+.story-editor-fields .field-note { align-self: end; margin: 0 0 0.6rem; font-size: 0.85rem; }
+.story-editor-preview { margin: 0; display: grid; gap: 0.5rem; justify-items: center; position: sticky; top: 1rem; }
+.story-editor-preview figcaption { font-size: 0.85rem; text-align: center; }
+fieldset.story-layout { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0; padding: 0.75rem 1rem 1rem; border: 1px solid var(--border); border-radius: 10px; }
+fieldset.story-layout legend { padding: 0 0.35rem; font-weight: 600; font-size: 0.9rem; }
 /* Exportar datos (D-058): una tarjeta por tipo de exportación. */
 .export-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin-top: 1rem; }
 .export-grid > .export-card { margin-top: 0; display: grid; gap: 0.5rem; align-content: start; }

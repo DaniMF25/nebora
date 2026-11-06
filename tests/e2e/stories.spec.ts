@@ -43,6 +43,13 @@ test("historias: se crean en el panel, se abren solas la primera vez y se navega
   await expect(page.getByText("Historia creada")).toBeVisible();
   await create.getByLabel("Titular").fill("Cambio de horario");
   await create.getByLabel("Texto (opcional)").fill("En noviembre cerramos los lunes.");
+  // Ubicación del texto (D-060), con vista previa al momento.
+  await create.getByLabel("Posición del texto").selectOption({ label: "Arriba" });
+  await create.getByLabel("Alineación del texto").selectOption({ label: "Centrado" });
+  const preview = create.locator(".story-editor-preview");
+  await expect(preview).toContainText("Cambio de horario");
+  await expect(preview).toContainText("En noviembre cerramos los lunes.");
+  await expect(preview.locator('[class*="storyAtTop"][class*="storyCentered"]')).toHaveCount(1);
   await create.getByRole("button", { name: "Crear historia" }).click();
   await expect(page.getByText("2. Cambio de horario")).toBeVisible();
   await expect(page.locator(".story-list").getByText("Se abre sola")).toHaveCount(1);
@@ -63,12 +70,23 @@ test("historias: se crean en el panel, se abren solas la primera vez y se navega
   await expect(dialog.getByText("Historia 1 de 2")).toBeVisible();
   await expect(dialog.getByRole("link", { name: "Contactar" })).toHaveAttribute("href", /\/contacto$/);
   expect((await new AxeBuilder({ page: visitor }).withTags(WCAG).analyze()).violations).toEqual([]);
-  // Pausada no avanza; al reanudar pasa sola a la siguiente.
-  await dialog.getByRole("button", { name: "Pausar" }).click();
+  // Como en Instagram: mantener pulsado pausa (y oculta los controles); al soltar, sigue sola.
+  const card = visitor.locator('dialog [class*="storyCard"]');
+  const box = (await card.boundingBox())!;
+  await visitor.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await visitor.mouse.down();
   await visitor.waitForTimeout(8000);
   await expect(dialog.getByText("Historia 1 de 2")).toBeVisible();
-  await dialog.getByRole("button", { name: "Reanudar" }).click();
-  await expect(visitor.getByRole("dialog", { name: "Cambio de horario" })).toBeVisible({ timeout: 10_000 });
+  await visitor.mouse.up();
+  const second = visitor.getByRole("dialog", { name: "Cambio de horario" });
+  await expect(second).toBeVisible({ timeout: 10_000 });
+  // La segunda, con el texto arriba y centrado.
+  await expect(second.locator('[class*="storyAtTop"][class*="storyCentered"]')).toHaveCount(1);
+  // Un toque a la izquierda vuelve; a la derecha, avanza.
+  await visitor.mouse.click(box.x + box.width * 0.15, box.y + box.height / 2);
+  await expect(visitor.getByRole("dialog", { name: "Nueva terraza" })).toBeVisible();
+  await visitor.mouse.click(box.x + box.width * 0.8, box.y + box.height / 2);
+  await expect(second).toBeVisible();
   // Teclado: flecha izquierda vuelve; Esc cierra.
   await visitor.keyboard.press("ArrowLeft");
   await expect(visitor.getByRole("dialog", { name: "Nueva terraza" })).toBeVisible();
@@ -82,9 +100,9 @@ test("historias: se crean en el panel, se abren solas la primera vez y se navega
   await visitor.waitForTimeout(500);
   await expect(visitor.getByRole("dialog")).toHaveCount(0);
   await strip.getByRole("button", { name: "Ver la historia: Cambio de horario" }).click();
-  const second = visitor.getByRole("dialog", { name: "Cambio de horario" });
   await expect(second.getByText("En noviembre cerramos los lunes.")).toBeVisible();
-  await second.getByRole("button", { name: "Cerrar →" }).click();
+  // En la última, la flecha derecha cierra.
+  await visitor.keyboard.press("ArrowRight");
   await expect(visitor.getByRole("dialog")).toHaveCount(0);
   expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
@@ -95,7 +113,11 @@ test("historias: se crean en el panel, se abren solas la primera vez y se navega
   ).newPage();
   await calm.goto(home);
   await expect(calm.getByRole("dialog", { name: "Nueva terraza" })).toBeVisible();
-  await expect(calm.getByRole("button", { name: "Pausar" })).toBeVisible();
+  // El botón de pausa (y la barra espaciadora) sigue disponible para teclado y lectores de pantalla.
+  await calm.getByRole("button", { name: "Pausar" }).click();
+  await calm.waitForTimeout(8000);
+  await expect(calm.getByRole("dialog", { name: "Nueva terraza" })).toBeVisible();
+  await calm.getByRole("button", { name: "Reanudar" }).click();
   await expect(calm.getByRole("dialog", { name: "Cambio de horario" })).toBeVisible({ timeout: 10_000 });
   await expect(calm.getByRole("dialog")).toHaveCount(0, { timeout: 10_000 });
 

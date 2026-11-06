@@ -99,6 +99,9 @@ export default async function PublicSitePage({ params, searchParams }: { params:
         body: s.body,
         imageUrl: s.mediaId ? publicMediaUrl(s.mediaId) : null,
         cta: ctaFor(s),
+        textPosition: s.textPosition,
+        textAlign: s.textAlign,
+        ctaPosition: s.ctaPosition,
       }))}
       storiesKey={data.site.establishmentId}
       menuSections={

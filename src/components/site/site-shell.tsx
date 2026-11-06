@@ -47,6 +47,40 @@ export function mapsUrl(address: string): string {
  * horario reales y navegación inferior en móvil. Solo enlaza a páginas que
  * existen (la carta si hay una publicada, reservas si están activadas).
  */
+/**
+ * Clases y variables del estilo de la web: tema, tipografías y color de marca
+ * (D-051), con una variante legible para cada fondo. La usan la web y la vista
+ * previa de las historias del panel, para que se vean igual.
+ */
+export function siteLook(
+  theme: MenuTheme,
+  accentColor: string | null | undefined,
+  fontPairing: string | null | undefined,
+): { className: string; style: Record<string, string>; branded: boolean } {
+  const info = THEME_INFO[theme];
+  const brand = accentColor
+    ? brandPalette(accentColor, { page: info.pageBg, hero: info.heroBg, contact: info.contactBg })
+    : null;
+  return {
+    className: `${styles.site} ${styles[theme]} ${brand ? styles.branded : ""} ${themeFontClasses(theme, fontPairing)}`,
+    branded: brand !== null,
+    style: {
+      ...pairingStyle(resolvePairing(theme, fontPairing)),
+      // Una variante por fondo con contraste suficiente (WCAG AA); los separadores, con el mismo color.
+      ...(brand
+        ? {
+            "--s-accent": brand.page,
+            "--s-accent-2": brand.page,
+            "--s-on-accent": brand.onPage,
+            "--s-brand-hero": brand.hero,
+            "--s-brand-on-hero": brand.onHero,
+            "--s-contact-accent": brand.contact,
+          }
+        : {}),
+    },
+  };
+}
+
 export function SiteShell({
   site,
   current,
@@ -68,32 +102,16 @@ export function SiteShell({
     { key: "contact", href: links.contact, label: t.contact, icon: "mail" },
   ];
   const languages = site.languageLinks ?? [];
-  // La marca sustituye variables del tema; el CSS del tema no cambia.
-  const info = THEME_INFO[site.theme];
-  const brand = site.accentColor
-    ? brandPalette(site.accentColor, { page: info.pageBg, hero: info.heroBg, contact: info.contactBg })
-    : null;
+  const look = siteLook(site.theme, site.accentColor, site.fontPairing);
   const brandStyle: Record<string, string> = {
-    ...pairingStyle(resolvePairing(site.theme, site.fontPairing)),
-    // Color de marca (D-051): una variante por fondo con contraste suficiente
-    // (WCAG AA), y los acentos secundarios (separadores) con el mismo color.
-    ...(brand
-      ? {
-          "--s-accent": brand.page,
-          "--s-accent-2": brand.page,
-          "--s-on-accent": brand.onPage,
-          "--s-brand-hero": brand.hero,
-          "--s-brand-on-hero": brand.onHero,
-          "--s-contact-accent": brand.contact,
-        }
-      : {}),
+    ...look.style,
     ...(site.decor ? { "--s-decor": decorCssUrl(site.decor) } : {}),
   };
 
   return (
     <div
       lang={lang}
-      className={`${styles.site} ${styles[site.theme]} ${current === "home" ? styles.overlay : ""} ${site.decor ? styles.decorated : ""} ${brand ? styles.branded : ""} ${themeFontClasses(site.theme, site.fontPairing)}`}
+      className={`${look.className} ${current === "home" ? styles.overlay : ""} ${site.decor ? styles.decorated : ""}`}
       style={brandStyle}
     >
       <a href="#contenido" className="skip-link">

@@ -23,8 +23,17 @@ export const STORY_TITLE_MAX = 60;
 export const STORY_BODY_MAX = 280;
 export const STORY_CTA_KINDS = ["none", "booking", "menu", "contact", "url"] as const;
 export type StoryCtaKind = (typeof STORY_CTA_KINDS)[number];
+/** Ubicación del texto y del botón (D-060). */
+export const STORY_TEXT_POSITIONS = ["top", "center", "bottom"] as const;
+export const STORY_TEXT_ALIGNS = ["left", "center"] as const;
+export const STORY_CTA_POSITIONS = ["text", "bottom"] as const;
+export interface StoryLayout {
+  textPosition: (typeof STORY_TEXT_POSITIONS)[number];
+  textAlign: (typeof STORY_TEXT_ALIGNS)[number];
+  ctaPosition: (typeof STORY_CTA_POSITIONS)[number];
+}
 
-export interface Story {
+export interface Story extends StoryLayout {
   id: string;
   title: string;
   body: string | null;
@@ -36,7 +45,7 @@ export interface Story {
   endsOn: string | null;
 }
 
-export interface PublicStory {
+export interface PublicStory extends StoryLayout {
   id: string;
   title: string;
   body: string | null;
@@ -69,6 +78,9 @@ export const storySchema = z
     ctaUrl: optionalText(500, "El enlace"),
     startsOn: optionalDate,
     endsOn: optionalDate,
+    textPosition: z.enum(STORY_TEXT_POSITIONS).default("bottom"),
+    textAlign: z.enum(STORY_TEXT_ALIGNS).default("left"),
+    ctaPosition: z.enum(STORY_CTA_POSITIONS).default("text"),
   })
   .strict()
   .superRefine((s, issue) => {
@@ -86,7 +98,8 @@ export const storySchema = z
   .transform((s) => (s.ctaKind === "url" ? s : { ...s, ctaLabel: null, ctaUrl: null }));
 
 const COLUMNS = `id, title, body, media_id AS "mediaId", cta_kind AS "ctaKind", cta_label AS "ctaLabel",
-  cta_url AS "ctaUrl", to_char(starts_on, 'YYYY-MM-DD') AS "startsOn", to_char(ends_on, 'YYYY-MM-DD') AS "endsOn"`;
+  cta_url AS "ctaUrl", to_char(starts_on, 'YYYY-MM-DD') AS "startsOn", to_char(ends_on, 'YYYY-MM-DD') AS "endsOn",
+  text_position AS "textPosition", text_align AS "textAlign", cta_position AS "ctaPosition"`;
 
 function requireEditor(ctx: TenantContext): void {
   requirePermission(ctx, "establishments.update");
@@ -141,8 +154,8 @@ export async function createStory(
   const media = image && image.length > 0 ? await storeImage(tx, ctx, image) : null;
   const inserted = await tx.query<{ id: string }>(
     `INSERT INTO site_stories (organization_id, establishment_id, title, body, media_id, cta_kind, cta_label, cta_url,
-                               starts_on, ends_on, position)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+                               starts_on, ends_on, position, text_position, text_align, cta_position)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
     [
       ctx.organizationId,
       est.id,
@@ -155,6 +168,9 @@ export async function createStory(
       d.startsOn,
       d.endsOn,
       rows[0]!.next,
+      d.textPosition,
+      d.textAlign,
+      d.ctaPosition,
     ],
   );
   const id = inserted.rows[0]!.id;
@@ -179,9 +195,24 @@ export async function updateStory(
   if (image && image.length > 0) mediaId = (await storeImage(tx, ctx, image)).id;
   await tx.query(
     `UPDATE site_stories SET title = $3, body = $4, cta_kind = $5, cta_label = $6, cta_url = $7,
-                             starts_on = $8, ends_on = $9, media_id = $10
+                             starts_on = $8, ends_on = $9, media_id = $10,
+                             text_position = $11, text_align = $12, cta_position = $13
       WHERE organization_id = $1 AND id = $2`,
-    [ctx.organizationId, storyId, d.title, d.body, d.ctaKind, d.ctaLabel, d.ctaUrl, d.startsOn, d.endsOn, mediaId],
+    [
+      ctx.organizationId,
+      storyId,
+      d.title,
+      d.body,
+      d.ctaKind,
+      d.ctaLabel,
+      d.ctaUrl,
+      d.startsOn,
+      d.endsOn,
+      mediaId,
+      d.textPosition,
+      d.textAlign,
+      d.ctaPosition,
+    ],
   );
   if (current.mediaId && current.mediaId !== mediaId) await deleteMedia(tx, ctx, current.mediaId);
   await recordAudit(tx, ctx, { action: "site.story_updated", entityType: "site_story", entityId: storyId });
@@ -255,6 +286,9 @@ export async function getPublicStories(establishmentId: string): Promise<PublicS
     cta_kind: StoryCtaKind;
     cta_label: string | null;
     cta_url: string | null;
+    text_position: StoryLayout["textPosition"];
+    text_align: StoryLayout["textAlign"];
+    cta_position: StoryLayout["ctaPosition"];
     updated_at: Date;
   }>("SELECT * FROM app.public_site_stories($1)", [establishmentId]);
   return rows.map((r) => ({
@@ -265,6 +299,9 @@ export async function getPublicStories(establishmentId: string): Promise<PublicS
     ctaKind: r.cta_kind,
     ctaLabel: r.cta_label,
     ctaUrl: r.cta_url,
+    textPosition: r.text_position,
+    textAlign: r.text_align,
+    ctaPosition: r.cta_position,
     version: `${r.id}:${r.updated_at.getTime()}`,
   }));
 }

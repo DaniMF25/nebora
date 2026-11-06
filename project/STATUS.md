@@ -46,6 +46,10 @@
   - Avisos con foto opcional, botón (reservar, carta, contacto o enlace https) y fechas, en la pestaña «Historias» de «Web pública»; desde el plan Avanzado.
   - En la web: círculos arriba de la portada; la primera se abre sola la primera vez y el visor a pantalla completa avanza solo, con pausa, teclado y Esc, y se cierra solo tras la última; con las animaciones del sistema desactivadas, la barra avanza a saltos.
   - De paso, la galería ya no sirve sus fotos en Básico.
+  - Ampliación (migración 0037, D-060):
+    - como en Instagram, mantener pulsado pausa y un toque a los lados avanza o retrocede;
+    - ubicación del texto (arriba, centro o abajo, a la izquierda o centrado) y del botón;
+    - vista previa en directo en el panel, con el estilo de la web.
   - Pruebas: `tests/integration/site-stories.test.ts`, que falla sin el filtro de fechas, y `tests/e2e/stories.spec.ts`, con axe, móvil, pausa, avance, teclado y Básico.
 - [x] Exportaciones a CSV (D-058):
   - página «Exportar datos» con reservas, mensajes, turnos, stock y movimientos, por local o de todos y por periodo;
@@ -117,12 +121,12 @@
 - [ ] Despliegue en Fly.io desde la CI: bloqueado a la espera de autorización expresa del titular (crea recursos de pago).
 - [ ] Despliegue real: hosting, PostgreSQL gestionado, dominio/TLS, almacenamiento de fotos, monitorización y alertas, simulacro de restauración (ver `docs/DEPLOYMENT.md`).
 
-## Pruebas (última ejecución: 2026-11-05, PostgreSQL 16 local)
+## Pruebas (última ejecución: 2026-11-06, PostgreSQL 16 local)
 | Comando | Resultado |
 |---|---|
 | `pnpm lint` | PASÓ (0 avisos) |
 | `pnpm typecheck` | PASÓ |
-| `pnpm test:all` (unitarias + integración) | PASÓ — 65 archivos, 415 pruebas (BD efímera migrada desde cero) |
+| `pnpm test:all` (unitarias + integración) | PASÓ — 65 archivos, 416 pruebas (BD efímera migrada desde cero) |
 | `pnpm build` | PASÓ |
 | `pnpm exec playwright test` (E2E) | PASÓ — 51 pruebas en Chromium (con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`). |
 | CI en GitHub Actions | Ver la ejecución del último commit en `claude/festive-rubin-bxwmo0`: lint, tipos, unitarias, integración, E2E y construcción de las imágenes Docker |

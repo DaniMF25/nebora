@@ -922,3 +922,21 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - El titular y el texto de las historias no se traducen; se muestran igual en todos los idiomas.
 - Sin vídeo: haría falta almacenamiento de archivos fuera de la BD.
 - Que se recuerde lo visto depende del almacenamiento del navegador; en modo privado puede volver a abrirse sola.
+
+## D-060 — Historias: pausa al mantener pulsado, ubicación del texto y vista previa
+**Fecha:** 2026-11-06. **Estado:** aceptada.
+
+**Decisión:**
+- **Visor, como en Instagram:**
+  - mantener pulsado (dedo o ratón) pausa y oculta los controles; al soltar, sigue;
+  - un toque en el 35 % izquierdo de la historia retrocede y en el resto avanza;
+  - se mantienen un botón de pausa pequeño, la barra espaciadora, las flechas del teclado y flechas a los lados (visibles con ratón; con pantalla táctil, solo al recibir el foco). Así se cumple WCAG 2.2.2 sin depender del gesto.
+- **Ubicación, con opciones fijas** (migración 0037):
+  - texto arriba, en el centro o abajo, alineado a la izquierda o centrado;
+  - botón junto al texto o abajo del todo;
+  - se descartó colocarlos libremente, porque en pantallas de otro tamaño quedarían descolocados.
+- **Legibilidad sobre fotos:** el velo oscuro se intensifica donde va el texto, y el texto lleva una sombra suave.
+- **Vista previa en el panel:**
+  - al crear o editar una historia se ve en directo la misma tarjeta que el visor (`StoryCard`, compartida), con el estilo, la tipografía y el color de la web (`siteLook`, compartida con la web);
+  - incluye la foto elegida antes de subirla, que se carga como `blob:` (la CSP ya lo permite);
+  - avisa de que «Reservar» solo sale con las reservas online activadas y «Ver la carta», con una carta publicada.
