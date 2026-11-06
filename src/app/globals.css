@@ -104,6 +104,8 @@ code { overflow-wrap: anywhere; background: var(--bg); border-radius: 6px; paddi
 /* ------------------------------------------------------------------ mensajes */
 .alert { border: 1px solid #efc2ba; background: var(--danger-soft); color: var(--danger); padding: 0.6rem 0.85rem; border-radius: 10px; }
 .alert p { margin: 0; }
+/* Aviso de organización bloqueada (D-068): separado de los planes y con aire entre párrafos. */
+.locked-notice { display: grid; gap: 0.6rem; margin-bottom: 1.5rem; }
 .notice { border: 1px solid #efcfc1; background: var(--accent-soft); padding: 0.65rem 0.9rem; border-radius: 10px; display: grid; gap: 0.5rem; }
 .notice p { margin: 0; }
 .trial-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; margin-bottom: 1rem; }
