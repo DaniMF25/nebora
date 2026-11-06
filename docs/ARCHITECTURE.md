@@ -38,6 +38,12 @@ tests/integration         pruebas contra una base de datos efímera migrada desd
 tests/e2e                 Playwright contra `next start` y una BD recreada
 ```
 
+Zonas de la aplicación:
+- `/` y `/precios`: web pública de Nébora (escaparate, D-063). Los planes y precios salen de `src/lib/plans.ts`.
+- `/login`, `/register`, `/invite/…`, `/auth/…`: acceso.
+- `/app/…`: panel interno (requiere sesión; permisos y plan comprobados en el servidor).
+- `/<org>/<local>`, `/m/…`, `/r/…`, `/q/…`, `/media/…`: páginas públicas de cada restaurante.
+
 ## Capas
 
 1. **Interfaz** (`src/app`): páginas y Server Actions. Una acción solo extrae campos de una lista blanca, obtiene el usuario de la sesión y llama a un servicio. Ocultar botones es cosmético.

@@ -24,6 +24,9 @@ export const timezoneSchema = z.string().refine((tz) => supportedTimezones.has(t
 export const RESERVED_ORGANIZATION_SLUGS = [
   "app", "api", "login", "register", "invite", "logout", "m", "q", "r", "media", "static",
   "public", "admin", "assets", "favicon", "robots", "sitemap", "nebora",
+  // Rutas de la aplicación y de la web pública de Nébora (migración 0039, D-062).
+  "auth", "preview", "print", "precios", "planes", "funciones", "prueba", "demo", "ayuda",
+  "blog", "contacto", "legal", "privacidad", "terminos", "cookies",
 ] as const;
 
 export const organizationSlugSchema = slugSchema.refine(

@@ -83,6 +83,8 @@ Actualizar solo tras verificar trabajo real. Última actualización: 2026-10-22.
 - [x] Exportaciones seguras a CSV (D-058): reservas, mensajes, turnos, stock y movimientos.
 
 ## Fase 7 — Suscripciones e integraciones
+- [x] Prueba gratuita de 7 días del plan PRO, sin tarjeta, que termina en Básico (D-062).
+- [x] Web pública de Nébora con funciones, planes y precios de ejemplo (D-063). Pendiente: textos legales y precios definitivos.
 - [ ] Evaluar proveedor de suscripción (los planes Básico, Avanzado y PRO ya existen, D-046; falta cobrarlos).
 - [ ] Configurar correo u otros proveedores necesarios.
 - [ ] Implementar y verificar integraciones reales.

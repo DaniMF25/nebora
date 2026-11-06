@@ -13,6 +13,7 @@ import type { PriceFormat } from "@/lib/price-formats";
 import type { WeeklySlot } from "../schedules/time";
 import { MAX_AVAILABILITY_RULES, rulesToSlots } from "./availability";
 import { priceCentsSchema } from "./price-schema";
+import { expireTrialsIfDue } from "@/server/modules/organizations/trial";
 
 export const MAX_SECTIONS = 50;
 export const MAX_ITEMS_PER_SECTION = 200;
@@ -799,6 +800,7 @@ export async function getPublicMenus(
 ): Promise<{ timezone: string; menus: PublicMenuRef[] } | null> {
   const slugs = [orgSlug, establishmentSlug].map((s) => s.toLowerCase());
   if (!slugs.every((s) => publicSlug.test(s))) return null;
+  await expireTrialsIfDue();
   const { rows } = await getPool().query<{
     slug: string;
     menu_name: string;

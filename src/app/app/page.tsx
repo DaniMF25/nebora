@@ -2,7 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ActionForm } from "@/components/action-form";
 import { requireUser } from "@/server/auth/current-user";
-import { countAccessibleEstablishments, listMyOrganizations } from "@/server/modules/organizations/service";
+import { TRIAL_DAYS } from "@/lib/plans";
+import {
+  canStartTrial,
+  countAccessibleEstablishments,
+  listMyOrganizations,
+} from "@/server/modules/organizations/service";
 import { withTenant, withUser } from "@/server/tenancy/context";
 import type { Plan } from "@/server/tenancy/permissions";
 import { logoutAction } from "../login/actions";
@@ -23,7 +28,10 @@ export default async function OrganizationsPage({
   searchParams: Promise<{ elegir?: string | string[] }>;
 }) {
   const user = await requireUser();
-  const orgs = await withUser(user, (tx, ctx) => listMyOrganizations(tx, ctx));
+  const { orgs, trial } = await withUser(user, async (tx, ctx) => ({
+    orgs: await listMyOrganizations(tx, ctx),
+    trial: await canStartTrial(tx, ctx),
+  }));
   const choosing = (await searchParams).elegir !== undefined;
   if (orgs.length === 1 && !choosing) redirect(`/app/${orgs[0]!.id}`);
 
@@ -48,6 +56,14 @@ export default async function OrganizationsPage({
         <p className="onboarding-lead">
           En unos minutos tendrás tu carta digital con código QR y la web de tu local, listas para compartir.
         </p>
+        {trial && (
+          <p className="notice">
+            <span>
+              <strong>{TRIAL_DAYS} días gratis del plan PRO</strong>: reservas, equipo, inventario y compras incluidos,
+              sin tarjeta. Al terminar pasas al plan Básico sin perder nada.
+            </span>
+          </p>
+        )}
         <ol className="onboarding-steps">
           <li className="is-current">
             <strong>Tu negocio</strong>
@@ -99,7 +115,7 @@ export default async function OrganizationsPage({
                     {n !== null && ` · ${n === 1 ? "1 local" : `${n} locales`}`}
                   </span>
                 </span>
-                <span className="badge">{PLAN_LABELS[o.plan]}</span>
+                <span className="badge">{o.trialEndsAt ? "Prueba PRO" : PLAN_LABELS[o.plan]}</span>
               </Link>
             </li>
           );

@@ -43,9 +43,12 @@ export default async function LoginPage({
       </ActionForm>
       {signupEnabled && (
         <p className="muted">
-          ¿No tienes cuenta? <Link href="/register">Crear una cuenta</Link>
+          ¿No tienes cuenta? <Link href="/register">Prueba Nébora gratis</Link>
         </p>
       )}
+      <p className="muted">
+        <Link href="/">Conoce Nébora</Link>
+      </p>
     </main>
   );
 }

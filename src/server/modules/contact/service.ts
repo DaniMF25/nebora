@@ -6,6 +6,7 @@ import { ConflictError, NotFoundError, RateLimitedError, ValidationError } from 
 import { fingerprint, hitRateLimit } from "@/server/rate-limit";
 import { requirePermission, type TenantContext } from "@/server/tenancy/context";
 import { isUuid, parseInput } from "@/server/validation";
+import { expireTrialsIfDue } from "@/server/modules/organizations/trial";
 
 // Formulario de contacto de la web y bandeja «Mensajes» del panel (D-049).
 // Sin proveedor de correo, los mensajes solo llegan al panel. Los textos de
@@ -74,6 +75,7 @@ export async function submitContactMessage(
 ): Promise<{ replayed: boolean }> {
   if (!isUuid(establishmentId)) throw new NotFoundError();
   const d = parseInput(contactSchema, input);
+  await expireTrialsIfDue();
   const contact = (d.customerEmail || d.customerPhone).toLowerCase();
   for (const [bucket, seconds, max] of [
     [`ct:client:${fingerprint(clientId)}`, 3600, CONTACT_RATE_LIMITS.perClientPerHour],

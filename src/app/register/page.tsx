@@ -6,6 +6,7 @@ import { getEnv } from "@/server/config/env";
 import { PASSWORD_MIN_LENGTH } from "@/server/auth/password";
 import { SocialLogin } from "@/components/auth/social-login";
 import { enabledProviders } from "@/server/auth/oauth/providers";
+import { TRIAL_DAYS } from "@/lib/plans";
 import { registerAction } from "./actions";
 
 export default async function RegisterPage() {
@@ -22,6 +23,12 @@ export default async function RegisterPage() {
   return (
     <main className="auth">
       <h1>Crear cuenta</h1>
+      <p className="notice">
+        <span>
+          Empiezas con <strong>{TRIAL_DAYS} días gratis del plan PRO</strong>, sin tarjeta. Después sigues gratis en el
+          plan Básico.
+        </span>
+      </p>
       <SocialLogin providers={enabledProviders()} />
       <ActionForm action={registerAction} submitLabel="Crear cuenta">
         <label>

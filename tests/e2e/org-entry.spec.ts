@@ -17,10 +17,14 @@ test("entrada al panel: bienvenida, entrada directa con una organización y sele
   // Sin organizaciones: bienvenida con los pasos y alta solo con el nombre.
   await expect(page.getByRole("heading", { level: 1, name: "Pon en marcha tu restaurante" })).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "Tu primer local" })).toBeVisible();
+  await expect(page.getByText("7 días gratis del plan PRO")).toBeVisible();
   expect(await axe(page)).toEqual([]);
   await page.getByLabel("Nombre del negocio").fill("Casa Pepé");
   await page.getByRole("button", { name: "Crear organización" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Casa Pepé" })).toBeVisible();
+  // La primera organización empieza con la prueba gratuita del PRO (D-062).
+  await expect(page.getByText("Prueba gratuita del plan PRO")).toBeVisible();
+  await expect(page.getByText("te quedan 7 días")).toBeVisible();
   const first = page.url();
 
   // Con una sola organización, /app lleva directamente a ella.
@@ -33,12 +37,15 @@ test("entrada al panel: bienvenida, entrada directa con una organización y sele
   await page.getByLabel("Nombre del negocio").fill("La Viña");
   await page.getByRole("button", { name: "Crear organización" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "La Viña" })).toBeVisible();
+  // Una prueba por persona: la segunda empieza en Básico.
+  await expect(page.getByText("Prueba gratuita del plan PRO")).toBeHidden();
 
   await page.getByRole("link", { name: "Cambiar de organización" }).click();
   await expect(page).toHaveURL(/\/app\?elegir$/);
   const cards = page.getByRole("list").filter({ has: page.getByRole("link", { name: /Casa Pepé/ }) });
   await expect(cards.getByRole("link", { name: /Casa Pepé/ })).toContainText("Propietario · 0 locales");
-  await expect(cards.getByRole("link", { name: /Casa Pepé/ })).toContainText("Básico");
+  await expect(cards.getByRole("link", { name: /Casa Pepé/ })).toContainText("Prueba PRO");
+  await expect(cards.getByRole("link", { name: /La Viña/ })).toContainText("Básico");
   await expect(cards.getByRole("link", { name: /La Viña/ })).toBeVisible();
   // El formulario de otra organización queda recogido cuando ya hay varias.
   await expect(page.getByLabel("Nombre del negocio")).toBeHidden();

@@ -18,6 +18,7 @@ import {
 import { parseInput } from "@/server/validation";
 import { availableStarts, freeTables, rankTables, type Busy, type TableCapacity } from "./slots";
 import type { Language } from "@/lib/languages";
+import { expireTrialsIfDue } from "@/server/modules/organizations/trial";
 
 export interface PublicBookingInfo {
   establishmentId: string;
@@ -50,6 +51,7 @@ const slugPattern = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$/;
 export async function getPublicBookingInfo(orgSlug: string, establishmentSlug: string): Promise<PublicBookingInfo | null> {
   const slugs = [orgSlug, establishmentSlug].map((s) => s.toLowerCase());
   if (!slugs.every((s) => slugPattern.test(s))) return null;
+  await expireTrialsIfDue();
   const { rows } = await getPool().query<{
     establishment_id: string;
     establishment_name: string;

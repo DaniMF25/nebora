@@ -50,7 +50,7 @@ describe("planes", () => {
     est = await asOwner(async (tx, ctx) => (await createEstablishment(tx, ctx, { name: "Local", slug: estSlug })).id);
   });
 
-  it("una organización nueva empieza en Básico: web, cartas, platos y estadísticas", async () => {
+  it("el plan Básico incluye web, cartas, platos y estadísticas", async () => {
     await asOwner(async (tx, ctx) => {
       expect(ctx.plan).toBe("basic");
       expect((await getOrganization(tx, ctx)).plan).toBe("basic");

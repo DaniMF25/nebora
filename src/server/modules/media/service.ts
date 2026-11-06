@@ -5,6 +5,7 @@ import { getPool, type Tx } from "@/server/db/pool";
 import { NotFoundError, ValidationError } from "@/server/errors";
 import type { TenantContext } from "@/server/tenancy/context";
 import { isUuid } from "@/server/validation";
+import { expireTrialsIfDue } from "@/server/modules/organizations/trial";
 
 /** Tamaño máximo del archivo subido (antes de reprocesar). */
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
@@ -118,6 +119,7 @@ export async function getOrganizationMedia(tx: Tx, ctx: TenantContext, id: strin
  */
 export async function getPublicMedia(id: string): Promise<MediaFile | null> {
   if (!isUuid(id)) return null;
+  await expireTrialsIfDue();
   const { rows } = await getPool().query<{ content_type: string; data: Buffer; sha256: string }>(
     "SELECT * FROM app.public_media($1)",
     [id],

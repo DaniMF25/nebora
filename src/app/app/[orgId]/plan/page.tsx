@@ -4,46 +4,9 @@ import { requireUser } from "@/server/auth/current-user";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getOrganization } from "@/server/modules/organizations/service";
 import { withTenant } from "@/server/tenancy/context";
-import type { Plan } from "@/server/tenancy/permissions";
+import { formatPrice, PLAN_INFO, trialDaysLeft } from "@/lib/plans";
 import styles from "./plan.module.css";
 import { changePlanAction } from "./actions";
-
-/** Lo que añade cada plan al anterior (D-046). */
-const PLAN_INFO: { id: Plan; name: string; summary: string; features: string[] }[] = [
-  {
-    id: "basic",
-    name: "Básico",
-    summary: "Para tener web y carta en poco tiempo.",
-    features: [
-      "Web pública del restaurante con contacto, horario y galería",
-      "Cartas digitales con QR, traducciones y precios por formato",
-      "Estadísticas de visitas",
-      "Privacidad y datos de clientes",
-      "Una sola persona en el panel",
-    ],
-  },
-  {
-    id: "advanced",
-    name: "Avanzado",
-    summary: "Todo lo del Básico, más la operativa de sala.",
-    features: [
-      "Reservas online y en el panel, con lista de espera",
-      "Plano de sala con mesas",
-      "Miembros del equipo con roles y acceso por local",
-      "Personal y cuadrante de turnos",
-    ],
-  },
-  {
-    id: "pro",
-    name: "PRO",
-    summary: "Todo lo del Avanzado, más la gestión de cocina.",
-    features: [
-      "Catálogo de productos con recetas, escandallos y costes",
-      "Inventario: ingredientes, almacenes, movimientos y recuentos",
-      "Proveedores y pedidos de compra",
-    ],
-  },
-];
 
 export default async function PlanPage({ params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params;
@@ -66,10 +29,17 @@ export default async function PlanPage({ params }: { params: Promise<{ orgId: st
       <h2>Plan</h2>
       <p>
         Plan actual: <strong>{current.name}</strong>
+        {org.trialEndsAt && <> (prueba gratuita: {trialDaysLeft(org.trialEndsAt)} días restantes)</>}
       </p>
+      {org.trialEndsAt && (
+        <p>
+          Al terminar la prueba, la organización pasa sola al plan Básico. Si eliges ahora un plan, la prueba termina y
+          te quedas en ese plan.
+        </p>
+      )}
       <p className="notice">
-        Todavía no hay cobros configurados: el cambio de plan es inmediato y no se cobra nada. Bajar de plan no borra
-        datos: solo deja de mostrar esas secciones, y vuelven al subir de nuevo.
+        Todavía no hay cobros configurados: el cambio de plan es inmediato y no se cobra nada (los precios son
+        orientativos). Bajar de plan no borra datos: solo deja de mostrar esas secciones, y vuelven al subir de nuevo.
       </p>
       <ActionForm
         action={changePlanAction.bind(null, orgId)}
@@ -85,6 +55,10 @@ export default async function PlanPage({ params }: { params: Promise<{ orgId: st
                 <input type="radio" name="plan" value={p.id} defaultChecked={p.id === org.plan} />
                 <strong>{p.name}</strong>
                 {p.id === org.plan && <span className="badge badge-ok">Actual</span>}
+              </span>
+              <span>
+                <strong>{formatPrice(p.monthlyPrice)}</strong>
+                {p.monthlyPrice > 0 && <span className="muted"> al mes + IVA</span>}
               </span>
               <span className="muted">{p.summary}</span>
               <ul>

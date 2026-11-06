@@ -56,6 +56,13 @@ export async function withTenant<T>(
     // muestra las filas de membership_establishments de la organización activa
     // (y solo si se es miembro, que se comprueba justo después).
     await tx.query("SELECT set_config('app.org_id', $1, true)", [organizationId]);
+    // Prueba gratuita terminada (D-062): pasa al Básico antes de leer el plan,
+    // para que el panel nunca dé permisos del PRO después de la fecha.
+    const trial = await tx.query<{ expired: boolean }>(
+      "SELECT trial_ends_at <= now() AS expired FROM organizations WHERE id = $1",
+      [organizationId],
+    );
+    if (trial.rows[0]?.expired) await tx.query("SELECT app.expire_trials()");
     const { rows } = await tx.query<{
       role: string;
       plan: string;

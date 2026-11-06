@@ -20,15 +20,17 @@ export async function createTestUser(label = "user"): Promise<AuthUser> {
 
 /**
  * Crea una organización. Las pruebas existentes cubren funciones de todos los
- * planes: por defecto queda en PRO (una organización nueva real empieza en
- * Básico, D-046; las pruebas de planes lo indican expresamente).
+ * planes: por defecto queda en PRO, sin prueba gratuita en curso (una
+ * organización nueva real empieza con la prueba del PRO, D-062; las pruebas de
+ * planes y de la prueba lo indican expresamente).
  */
 export async function createTestOrganization(owner: AuthUser, label = "org", plan: Plan = "pro"): Promise<string> {
   const id = await withUser(owner, (tx, ctx) =>
     createOrganization(tx, ctx, { name: `Restaurante ${label}`, slug: `${label}-${uniqueSuffix()}` }),
   );
-  if (plan !== "basic")
-    await withAdminClient((c) => c.query("UPDATE organizations SET plan = $2 WHERE id = $1", [id, plan]));
+  await withAdminClient((c) =>
+    c.query("UPDATE organizations SET plan = $2, trial_ends_at = NULL WHERE id = $1", [id, plan]),
+  );
   return id;
 }
 

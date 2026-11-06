@@ -1,0 +1,102 @@
+import type { Metadata } from "next";
+import { Faq, FAQ, PlanCards, TrialBand } from "@/components/marketing/sections";
+import { MarketingShell } from "@/components/marketing/shell";
+import styles from "@/components/marketing/marketing.module.css";
+import { TRIAL_DAYS } from "@/lib/plans";
+import { getCurrentUser } from "@/server/auth/current-user";
+import { getEnv } from "@/server/config/env";
+
+export const metadata: Metadata = {
+  title: "Precios · Nébora",
+  description: `Planes Básico, Avanzado y PRO de Nébora. Empieza con ${TRIAL_DAYS} días gratis del plan PRO, sin tarjeta.`,
+};
+
+/** Comparativa: cada fila es una función y el plan mínimo que la incluye. */
+const ROWS: { label: string; from: 0 | 1 | 2 }[] = [
+  { label: "Web del restaurante con horario y contacto", from: 0 },
+  { label: "Cartas digitales con QR y versión para imprimir", from: 0 },
+  { label: "Traducciones a 6 idiomas", from: 0 },
+  { label: "Estadísticas de visitas y escaneos", from: 0 },
+  { label: "Estilos, colores, galería e historias en la web", from: 1 },
+  { label: "Reservas online, plano de sala y lista de espera", from: 1 },
+  { label: "Formulario de contacto con bandeja de mensajes", from: 1 },
+  { label: "Equipo con roles y acceso por local", from: 1 },
+  { label: "Personal y cuadrante de turnos", from: 1 },
+  { label: "Exportaciones a Excel", from: 1 },
+  { label: "Recetas, escandallos y coste por plato", from: 2 },
+  { label: "Inventario por almacén y recuentos", from: 2 },
+  { label: "Proveedores y pedidos de compra", from: 2 },
+];
+const COLUMNS = ["Básico", "Avanzado", "PRO"];
+
+export default async function PricingPage() {
+  const access = { loggedIn: Boolean(await getCurrentUser()), signupEnabled: getEnv().AUTH_ALLOW_SIGNUP === "true" };
+  return (
+    <MarketingShell access={access} current="pricing">
+      <section className={styles.hero} aria-labelledby="titular">
+        <div className={styles.wrap}>
+          <div className={styles.sectionHead}>
+            <span className={styles.pill}>{TRIAL_DAYS} días gratis del plan PRO · sin tarjeta</span>
+            <h1 id="titular">Planes y precios</h1>
+            <p className={styles.lead}>
+              Empieza probando todo durante {TRIAL_DAYS} días. Después eliges: sigue gratis con el Básico o sube al plan
+              que necesites.
+            </p>
+          </div>
+          <PlanCards access={access} />
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.sectionAlt}`} aria-labelledby="comparativa">
+        <div className={styles.wrap}>
+          <div className={styles.sectionHead}>
+            <h2 id="comparativa">Compara los planes</h2>
+          </div>
+          <div className={styles.compareWrap}>
+            <table className={styles.compare}>
+              <thead>
+                <tr>
+                  <th scope="col">Función</th>
+                  {COLUMNS.map((c) => (
+                    <th key={c} scope="col">
+                      {c}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ROWS.map((r) => (
+                  <tr key={r.label}>
+                    <th scope="row">{r.label}</th>
+                    {COLUMNS.map((c, i) =>
+                      i >= r.from ? (
+                        <td key={c} className={styles.yes}>
+                          ✓<span className="visually-hidden"> Incluido</span>
+                        </td>
+                      ) : (
+                        <td key={c} className={styles.no}>
+                          —<span className="visually-hidden"> No incluido</span>
+                        </td>
+                      ),
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <TrialBand access={access} />
+
+      <section className={styles.section} aria-labelledby="preguntas-titulo">
+        <div className={styles.wrap}>
+          <div className={styles.sectionHead}>
+            <h2 id="preguntas-titulo">Preguntas frecuentes</h2>
+          </div>
+          <Faq items={FAQ.slice(0, 4)} />
+        </div>
+      </section>
+    </MarketingShell>
+  );
+}

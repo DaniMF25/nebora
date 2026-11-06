@@ -10,6 +10,7 @@ import { nameSchema, organizationSlugSchema } from "@/server/modules/shared-sche
 import { requirePermission, type TenantContext, type UserContext } from "@/server/tenancy/context";
 import { PLANS, type Plan, type Role } from "@/server/tenancy/permissions";
 import { parseInput } from "@/server/validation";
+import { TRIAL_DAYS } from "@/lib/plans";
 import { republishMenus } from "@/server/modules/menus/menus";
 
 export interface OrganizationSummary {
@@ -18,6 +19,8 @@ export interface OrganizationSummary {
   slug: string;
   role: Role;
   plan: Plan;
+  /** Fin de la prueba gratuita del PRO, si está en curso (D-062). */
+  trialEndsAt: Date | null;
 }
 
 /** Base del identificador automático: el nombre sin tildes ni símbolos, o «restaurante». */
@@ -35,6 +38,7 @@ export interface Organization {
   slug: string;
   createdAt: Date;
   plan: Plan;
+  trialEndsAt: Date | null;
 }
 
 // `.strict()` rechaza campos no previstos (asignación masiva: organization_id, role...).
@@ -47,7 +51,10 @@ export const updateOrganizationSchema = z.object({ name: nameSchema }).strict();
 /** Organizaciones en las que el usuario es miembro activo. */
 export async function listMyOrganizations(tx: Tx, ctx: UserContext): Promise<OrganizationSummary[]> {
   const { rows } = await tx.query<OrganizationSummary>(
-    `SELECT o.id, o.name, o.slug::text AS slug, m.role, o.plan
+    `SELECT o.id, o.name, o.slug::text AS slug, m.role,
+            -- Una prueba ya terminada se muestra como Básico aunque aún no se haya aplicado (D-062).
+            CASE WHEN o.trial_ends_at <= now() THEN 'basic' ELSE o.plan END AS plan,
+            CASE WHEN o.trial_ends_at > now() THEN o.trial_ends_at END AS "trialEndsAt"
        FROM organizations o
        JOIN memberships m ON m.organization_id = o.id
       WHERE m.user_id = $1 AND m.status = 'active'
@@ -83,10 +90,17 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
   }
   // La organización recién creada pasa a ser el contexto para auditar su alta.
   await tx.query("SELECT set_config('app.org_id', $1, true)", [id]);
+  // Prueba gratuita del PRO (D-062): solo la primera organización de cada persona.
+  const trial = await tx.query<{ started: boolean }>("SELECT app.start_trial($1, $2) AS started", [id, TRIAL_DAYS]);
   await recordAudit(
     tx,
     { userId: ctx.userId, organizationId: id, role: "owner", plan: "basic", permissions: new Set(), establishments: "all" },
-    { action: "organization.created", entityType: "organization", entityId: id, metadata: { slug } },
+    {
+      action: "organization.created",
+      entityType: "organization",
+      entityId: id,
+      metadata: { slug, trial: trial.rows[0]!.started },
+    },
   );
   return id;
 }
@@ -94,7 +108,7 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
 export async function getOrganization(tx: Tx, ctx: TenantContext): Promise<Organization> {
   requirePermission(ctx, "organization.read");
   const { rows } = await tx.query<Organization>(
-    `SELECT id, name, slug::text AS slug, created_at AS "createdAt", plan
+    `SELECT id, name, slug::text AS slug, created_at AS "createdAt", plan, trial_ends_at AS "trialEndsAt"
        FROM organizations WHERE id = $1`,
     [ctx.organizationId],
   );
@@ -129,11 +143,14 @@ export async function updateOrganization(tx: Tx, ctx: TenantContext, input: unkn
 export async function changePlan(tx: Tx, ctx: TenantContext, input: unknown): Promise<{ from: Plan; to: Plan }> {
   if (ctx.role !== "owner") throw new ForbiddenError();
   const { plan } = parseInput(z.object({ plan: z.enum(PLANS, { message: "Elige un plan" }) }).strict(), input);
-  const { rows } = await tx.query<{ plan: Plan }>("SELECT plan FROM organizations WHERE id = $1 FOR UPDATE", [
-    ctx.organizationId,
-  ]);
+  const { rows } = await tx.query<{ plan: Plan; trial: boolean }>(
+    "SELECT plan, trial_ends_at IS NOT NULL AS trial FROM organizations WHERE id = $1 FOR UPDATE",
+    [ctx.organizationId],
+  );
   const from = rows[0]!.plan;
-  if (from === plan) return { from, to: plan };
+  const inTrial = rows[0]!.trial;
+  // Elegir un plan termina la prueba (D-062), aunque sea el mismo PRO de la prueba.
+  if (from === plan && !inTrial) return { from, to: plan };
   if (plan === "basic") {
     const others = await tx.query<{ members: number; invitations: number }>(
       `SELECT (SELECT count(*)::int FROM memberships WHERE organization_id = $1 AND user_id <> $2) AS members,
@@ -152,14 +169,22 @@ export async function changePlan(tx: Tx, ctx: TenantContext, input: unknown): Pr
       ctx.organizationId,
     ]);
   }
-  await tx.query("UPDATE organizations SET plan = $2 WHERE id = $1", [ctx.organizationId, plan]);
+  await tx.query("UPDATE organizations SET plan = $2, trial_ends_at = NULL WHERE id = $1", [ctx.organizationId, plan]);
   await recordAudit(tx, ctx, {
     action: "organization.plan_changed",
     entityType: "organization",
     entityId: ctx.organizationId,
-    metadata: { from, to: plan },
+    metadata: { from, to: plan, endedTrial: inTrial },
   });
   return { from, to: plan };
+}
+
+/** ¿Puede el usuario empezar aún su prueba gratuita del PRO? (una por persona, D-062). */
+export async function canStartTrial(tx: Tx, ctx: UserContext): Promise<boolean> {
+  const { rows } = await tx.query<{ unused: boolean }>("SELECT trial_used_at IS NULL AS unused FROM users WHERE id = $1", [
+    ctx.userId,
+  ]);
+  return rows[0]?.unused ?? false;
 }
 
 /** Número de locales de la organización a los que accede la cuenta (RLS), para el selector de organizaciones. */

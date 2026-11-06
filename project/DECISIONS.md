@@ -969,3 +969,47 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - Sin pantalla para vincular o desvincular proveedores desde una cuenta ya abierta.
 - Las cuentas sin contraseña no pueden crearla mientras no haya proveedor de correo.
 - Con el registro desactivado, una persona invitada no puede darse de alta con un proveedor: debe usar el enlace de la invitación.
+
+## D-062 — Prueba gratuita de 7 días del plan PRO
+**Fecha:** 2026-11-06. **Estado:** aceptada.
+
+**Decisión:**
+- **Alcance:** al crear su primera organización, el propietario prueba el plan PRO completo durante 7 días (`TRIAL_DAYS` en `src/lib/plans.ts`). Sin tarjeta: no hay proveedor de cobros.
+- **Una prueba por persona:** `users.trial_used_at` (migración 0039). `app.start_trial` (SECURITY DEFINER) bloquea la fila del usuario, así que dos altas a la vez no dan dos pruebas. Solo empieza si quien llama es propietario activo de la organización. El rol de la aplicación no puede borrar la marca.
+- **Caducidad materializada:** durante la prueba se guarda `plan = 'pro'` y `organizations.trial_ends_at`. Todas las comprobaciones de plan existentes (permisos, triggers y funciones públicas en la BD) siguen leyendo `plan` sin cambios. `app.expire_trials()` pasa al Básico las pruebas vencidas con las mismas reglas que bajar de plan a mano: desactiva la reserva online y anula las invitaciones abiertas. Lo demás se conserva.
+- **Cuándo se aplica:**
+  - **Panel:** `withTenant` comprueba la fecha de la organización antes de leer el plan y aplica la caducidad en el acto: el panel nunca da el PRO pasada la fecha.
+  - **Páginas públicas:** web, cartas, reserva, lista de espera, contacto e imágenes llaman a `expireTrialsIfDue()`, una consulta por índice limitada a una cada 30 s por proceso.
+  - **Selector de organizaciones:** muestra como Básico una prueba vencida aunque aún no se haya aplicado.
+- **Elegir plan termina la prueba:** `changePlan` pone `trial_ends_at = NULL`, aunque se elija el mismo PRO.
+- **Interfaz:**
+  - aviso en el panel con los días que quedan y «Elegir plan»;
+  - días restantes en «Plan»;
+  - aviso en el alta de cuenta y en la bienvenida (solo si la persona aún no ha usado su prueba);
+  - etiqueta «Prueba PRO» en el selector.
+
+**Límites conocidos:**
+- Pasada la fecha, las páginas públicas pueden seguir mostrando funciones del PRO durante unos 30 segundos, hasta la siguiente comprobación periódica.
+- Los miembros que se unieron durante la prueba siguen dentro al pasar al Básico, con los permisos del Básico (sin gestión de miembros). Bajar a Básico a mano sigue exigiendo quitarlos antes.
+- Sin aviso por correo antes del fin de la prueba: requiere proveedor de correo.
+- No hay trabajo programado: si nadie entra al panel ni a la web, la caducidad se aplica en la siguiente visita. El resultado es el mismo, porque nada lee el plan sin pasar por esas comprobaciones.
+
+## D-063 — Web pública de Nébora (escaparate)
+**Fecha:** 2026-11-06. **Estado:** aceptada.
+
+**Decisión:**
+- **Rutas:** `/` deja de redirigir al acceso y pasa a ser la web de Nébora. `/precios` añade la comparativa por función. El panel sigue en `/app`, al que se llega con «Iniciar sesión».
+- **Contenido:** portada con la prueba de 7 días como gancho principal; funciones con el plan que las incluye; «cómo funciona»; banda de la prueba; planes con precio; preguntas frecuentes; cierre.
+- **Una sola fuente:** planes, precios y lo que incluye cada uno salen de `src/lib/plans.ts`, compartido con la página «Plan» del panel. Los precios (Básico gratis, Avanzado 29 €/mes y PRO 59 €/mes, sin IVA) son de ejemplo hasta fijar los definitivos.
+- **Llamada principal según el estado:**
+  - con sesión: «Ir al panel»;
+  - con registro abierto: «Prueba gratis 7 días» (lleva a `/register`);
+  - con el registro cerrado: no se ofrece una prueba imposible; se indica que el alta no está abierta.
+- **Sin elementos ficticios:** no hay testimonios, cifras de clientes ni enlaces legales sin contenido. La ilustración de la portada es decorativa (`aria-hidden`).
+- **Implementación:** componentes de servidor sin JavaScript propio, en `src/components/marketing/`. Usan las tipografías y los tokens del panel.
+- **Identificadores reservados:** la migración 0039 reserva rutas futuras de la web (`precios`, `planes`, `funciones`, `prueba`, `demo`, `ayuda`, `blog`, `contacto`, `legal`, `privacidad`, `terminos`, `cookies`), además de `auth`, `preview` y `print`, para que ninguna organización las ocupe.
+
+**Pendiente:**
+- textos legales (aviso legal, privacidad y cookies), que debe aportar el titular;
+- dominio propio;
+- precios definitivos y proveedor de cobros.

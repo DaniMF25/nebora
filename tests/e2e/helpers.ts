@@ -37,7 +37,9 @@ export async function createOrganization(page: Page, name: string, plan: PlanId 
   await page.getByLabel("Identificador (URL)").fill(`${name.toLowerCase().replace(/\s+/g, "-")}-${suffix()}`);
   await page.getByRole("button", { name: "Crear organización" }).click();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-  if (plan !== "basic") await choosePlan(page, plan);
+  // La primera organización de cada persona empieza con la prueba del PRO (D-062).
+  const inTrial = await page.getByText("Prueba gratuita del plan PRO").isVisible();
+  if (!(plan === "pro" && inTrial) && !(plan === "basic" && !inTrial)) await choosePlan(page, plan);
   return page.url();
 }
 
@@ -45,8 +47,9 @@ export type PlanId = "basic" | "advanced" | "pro";
 
 /**
  * Cambia el plan de la organización recién abierta desde la página «Plan»
- * (D-046) y vuelve a su inicio. Las organizaciones nuevas empiezan en Básico;
- * las pruebas que usan reservas, sala, inventario… eligen el plan que necesitan.
+ * (D-046) y vuelve a su inicio. La primera organización de cada persona
+ * empieza con la prueba del PRO (D-062) y las siguientes en Básico; las pruebas
+ * eligen el plan que necesitan.
  */
 export async function choosePlan(page: Page, plan: PlanId): Promise<void> {
   await page.waitForURL(/\/app\/[0-9a-f-]{36}$/);

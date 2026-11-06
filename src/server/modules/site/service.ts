@@ -12,6 +12,7 @@ import { parseInput } from "@/server/validation";
 import type { Language, PublicLanguage } from "@/lib/languages";
 import { normalizeHex } from "@/lib/color";
 import { FONT_PAIRING_IDS } from "@/lib/site-fonts";
+import { expireTrialsIfDue } from "@/server/modules/organizations/trial";
 import { effectiveLook, publicEstablishmentPlan } from "./plan-look";
 import { isSiteDecor, SITE_DECORS, type SiteDecor } from "@/lib/site-decor";
 
@@ -431,6 +432,7 @@ const publicSlug = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$/;
 export async function getPublicSite(orgSlug: string, establishmentSlug: string): Promise<PublicSite | null> {
   const slugs = [orgSlug, establishmentSlug].map((s) => s.toLowerCase());
   if (!slugs.every((s) => publicSlug.test(s))) return null;
+  await expireTrialsIfDue();
   const pool = getPool();
   const { rows } = await pool.query<{
     establishment_id: string;

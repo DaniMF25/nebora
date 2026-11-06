@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PanelIcon } from "@/components/panel/icons";
 import { PanelShell } from "@/components/panel/shell";
+import { trialDaysLeft } from "@/lib/plans";
 import { SidebarNav, type LocalNav, type NavGroup } from "@/components/panel/sidebar-nav";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
@@ -191,7 +192,27 @@ export default async function OrganizationLayout({
       }
     >
       <h1 className="panel-org">{org.name}</h1>
+      {org.trialEndsAt && <TrialBanner endsAt={org.trialEndsAt} planHref={can.plan ? `${base}/plan` : null} />}
       {children}
     </PanelShell>
+  );
+}
+
+/** Aviso de la prueba gratuita del PRO (D-062): cuántos días quedan y qué pasa después. */
+function TrialBanner({ endsAt, planHref }: { endsAt: Date; planHref: string | null }) {
+  const days = trialDaysLeft(endsAt);
+  return (
+    <p className="notice trial-banner">
+      <span>
+        <strong>Prueba gratuita del plan PRO:</strong>{" "}
+        {days <= 1 ? "termina en menos de un día" : `te quedan ${days} días`}. Después la organización pasa al plan
+        Básico, sin perder datos.
+      </span>
+      {planHref && (
+        <Link href={planHref} className="trial-banner-link">
+          Elegir plan
+        </Link>
+      )}
+    </p>
   );
 }

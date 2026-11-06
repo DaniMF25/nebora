@@ -2,6 +2,7 @@ import "server-only";
 import { getPool } from "@/server/db/pool";
 import { isPlan, planIncludes, type Plan } from "@/server/tenancy/permissions";
 import { isUuid } from "@/server/validation";
+import { expireTrialsIfDue } from "@/server/modules/organizations/trial";
 
 // Aspecto de la web según el plan (D-047): en Básico, estilo Clásico sin
 // color ni tipografía propios y sin galería. Lo guardado no se borra: vuelve
@@ -26,6 +27,7 @@ export function effectiveLook<
 /** Plan de la organización de un local, para las páginas públicas (sin sesión). */
 export async function publicEstablishmentPlan(establishmentId: string): Promise<Plan> {
   if (!isUuid(establishmentId)) return "basic";
+  await expireTrialsIfDue();
   const { rows } = await getPool().query<{ plan: string | null }>(
     "SELECT app.public_establishment_plan($1) AS plan",
     [establishmentId],

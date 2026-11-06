@@ -120,6 +120,8 @@ test("rendimiento: peso de JavaScript y CSS y estabilidad visual dentro de los l
 
   const visitor = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   const publicPages = [
+    "/",
+    "/precios",
     `/${orgSlug}/puerto`,
     `/${orgSlug}/puerto/contacto`,
     `/m/${orgSlug}/puerto/carta`,
