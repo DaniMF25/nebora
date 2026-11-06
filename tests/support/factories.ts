@@ -29,7 +29,7 @@ export async function createTestOrganization(owner: AuthUser, label = "org", pla
     createOrganization(tx, ctx, { name: `Restaurante ${label}`, slug: `${label}-${uniqueSuffix()}` }),
   );
   await withAdminClient((c) =>
-    c.query("UPDATE organizations SET plan = $2, trial_ends_at = NULL WHERE id = $1", [id, plan]),
+    c.query("UPDATE organizations SET plan = $2, trial_ends_at = NULL, locked_at = NULL WHERE id = $1", [id, plan]),
   );
   return id;
 }

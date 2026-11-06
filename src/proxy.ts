@@ -30,6 +30,9 @@ export function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  // Ruta pedida, para que el panel de una organización bloqueada lleve a «Plan» (D-068).
+  // Se sobrescribe siempre: el cliente no puede fijarla.
+  requestHeaders.set("x-nebora-path", request.nextUrl.pathname);
   requestHeaders.set("Content-Security-Policy", csp);
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);

@@ -438,7 +438,7 @@ label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-weigh
 .translation-input { gap: 0.25rem; }
 .translation-source { font-weight: 400; color: var(--muted); font-size: 0.85rem; }
 .translation-source::before { content: "ES · "; font-weight: 600; letter-spacing: 0.04em; }
-.badge-warn { border-color: #e7ad2e; color: #7a5200; background: #fdf3dc; }
+.badge-warn, .badge.badge-warn { border-color: #e7ad2e; color: #7a5200; background: #fdf3dc; }
 .lang-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1rem; }
 .lang-tabs a { padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; color: var(--fg); font-size: 0.9rem; background: var(--surface); }
 .lang-tabs a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }

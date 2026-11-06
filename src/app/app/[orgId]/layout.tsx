@@ -1,18 +1,30 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PanelIcon } from "@/components/panel/icons";
 import { PanelShell } from "@/components/panel/shell";
 import { trialDaysLeft } from "@/lib/plans";
-import { SidebarNav, type LocalNav, type NavGroup } from "@/components/panel/sidebar-nav";
+import {
+  SidebarNav,
+  type LocalNav,
+  type NavGroup,
+} from "@/components/panel/sidebar-nav";
 import { requireUser } from "@/server/auth/current-user";
 import { NotFoundError } from "@/server/errors";
 import { listEstablishments } from "@/server/modules/establishments/service";
-import { getOrganization, listMyOrganizations } from "@/server/modules/organizations/service";
+import {
+  getOrganization,
+  listMyOrganizations,
+} from "@/server/modules/organizations/service";
 import { withTenant } from "@/server/tenancy/context";
 import { logoutAction } from "../../login/actions";
 
-const ROLE_LABELS = { owner: "Propietario", admin: "Administrador", manager: "Encargado", staff: "Personal" };
+const ROLE_LABELS = {
+  owner: "Propietario",
+  admin: "Administrador",
+  manager: "Encargado",
+  staff: "Personal",
+};
 
 function initials(name: string): string {
   return name
@@ -34,48 +46,76 @@ export default async function OrganizationLayout({
   const user = await requireUser();
   let data;
   try {
-    data = await withTenant(user, orgId, async (tx, ctx) => ({
-      org: await getOrganization(tx, ctx),
-      role: ctx.role,
-      establishments: await listEstablishments(tx, ctx),
-      can: {
-        privacy: ctx.permissions.has("privacy.manage"),
-        exports: ctx.permissions.has("data.export"),
-        stats: ctx.permissions.has("stats.read"),
-        menus: ctx.permissions.has("menus.read"),
-        inventory: ctx.permissions.has("inventory.read"),
-        purchasing: ctx.permissions.has("purchasing.read"),
-        staff: ctx.permissions.has("staff.read"),
-        reservations: ctx.permissions.has("reservations.read"),
-        tables: ctx.permissions.has("tables.read"),
-        members: ctx.permissions.has("members.read"),
-        messages: ctx.permissions.has("messages.read"),
-        // Gestión (catálogo con costes, inventario, proveedores): plan PRO (D-046).
-        management: ctx.plan === "pro",
-        plan: ctx.role === "owner" || ctx.role === "admin",
-      },
-      // Solo organizaciones en las que el usuario es miembro activo.
-      hasOthers: (await listMyOrganizations(tx, ctx)).some((o) => o.id !== orgId),
-    }));
+    data = await withTenant(user, orgId, async (tx, ctx) => {
+      // Bloqueada (fin de la prueba sin plan, D-068): solo «Plan»; sin consultar nada más.
+      if (ctx.lockedAt)
+        return {
+          locked: true as const,
+          org: await getOrganization(tx, ctx),
+          role: ctx.role,
+        };
+      return {
+        locked: false as const,
+        org: await getOrganization(tx, ctx),
+        role: ctx.role,
+        establishments: await listEstablishments(tx, ctx),
+        can: {
+          privacy: ctx.permissions.has("privacy.manage"),
+          exports: ctx.permissions.has("data.export"),
+          stats: ctx.permissions.has("stats.read"),
+          menus: ctx.permissions.has("menus.read"),
+          inventory: ctx.permissions.has("inventory.read"),
+          purchasing: ctx.permissions.has("purchasing.read"),
+          staff: ctx.permissions.has("staff.read"),
+          reservations: ctx.permissions.has("reservations.read"),
+          tables: ctx.permissions.has("tables.read"),
+          members: ctx.permissions.has("members.read"),
+          messages: ctx.permissions.has("messages.read"),
+          // Gestión (catálogo con costes, inventario, proveedores): plan PRO (D-046).
+          management: ctx.plan === "pro",
+          plan: ctx.role === "owner" || ctx.role === "admin",
+        },
+        // Solo organizaciones en las que el usuario es miembro activo.
+        hasOthers: (await listMyOrganizations(tx, ctx)).some(
+          (o) => o.id !== orgId,
+        ),
+      };
+    });
   } catch (err) {
     if (err instanceof NotFoundError) notFound();
     throw err;
   }
-  const { org, role, establishments, can, hasOthers } = data;
   const base = `/app/${orgId}`;
+  if (data.locked) {
+    const path = (await headers()).get("x-nebora-path") ?? "";
+    if (path !== `${base}/plan`) redirect(`${base}/plan`);
+    return (
+      <LockedShell user={user} orgName={data.org.name} role={data.role} base={base}>
+        {children}
+      </LockedShell>
+    );
+  }
+  const { org, role, establishments, can, hasOthers } = data;
 
   // Menú según el plan (D-046): Básico (web, cartas, estadísticas), Avanzado
   // (+ reservas, sala, miembros, turnos) y PRO (+ gestión). Ocultar enlaces es
   // cosmético: cada página y servicio comprueba el permiso en el servidor.
   const groups: NavGroup[] = [
-    { title: "", items: [{ href: base, label: "Inicio", icon: "home", exact: true }] },
+    {
+      title: "",
+      items: [{ href: base, label: "Inicio", icon: "home", exact: true }],
+    },
     ...(can.management
       ? [
           {
             title: "Gestión",
             collapsible: true,
             items: [
-              { href: `${base}/products`, label: "Productos", icon: "products" as const },
+              {
+                href: `${base}/products`,
+                label: "Productos",
+                icon: "products" as const,
+              },
               // Inventario: ingredientes, todo el grupo y cada local.
               ...(can.inventory
                 ? [
@@ -106,7 +146,15 @@ export default async function OrganizationLayout({
       title: "Organización",
       collapsible: true,
       items: [
-        ...(can.members ? [{ href: `${base}/members`, label: "Miembros", icon: "team" as const }] : []),
+        ...(can.members
+          ? [
+              {
+                href: `${base}/members`,
+                label: "Miembros",
+                icon: "team" as const,
+              },
+            ]
+          : []),
         ...(can.staff
           ? [
               {
@@ -117,9 +165,27 @@ export default async function OrganizationLayout({
               },
             ]
           : []),
-        ...(can.exports ? [{ href: `${base}/exports`, label: "Exportar datos", icon: "download" as const }] : []),
-        ...(can.privacy ? [{ href: `${base}/privacy`, label: "Privacidad", icon: "shield" as const }] : []),
-        ...(can.plan ? [{ href: `${base}/plan`, label: "Plan", icon: "summary" as const }] : []),
+        ...(can.exports
+          ? [
+              {
+                href: `${base}/exports`,
+                label: "Exportar datos",
+                icon: "download" as const,
+              },
+            ]
+          : []),
+        ...(can.privacy
+          ? [
+              {
+                href: `${base}/privacy`,
+                label: "Privacidad",
+                icon: "shield" as const,
+              },
+            ]
+          : []),
+        ...(can.plan
+          ? [{ href: `${base}/plan`, label: "Plan", icon: "summary" as const }]
+          : []),
       ],
     },
   ];
@@ -129,16 +195,49 @@ export default async function OrganizationLayout({
       ? null
       : {
           base,
-          establishments: establishments.map((e) => ({ id: e.id, name: e.name })),
-          initialId: establishments.some((e) => e.id === lastLocal) ? lastLocal : null,
+          establishments: establishments.map((e) => ({
+            id: e.id,
+            name: e.name,
+          })),
+          initialId: establishments.some((e) => e.id === lastLocal)
+            ? lastLocal
+            : null,
           items: [
             { path: "", label: "Resumen", icon: "store", exact: true },
-            ...(can.menus ? [{ path: "/menus", label: "Cartas", icon: "products" as const }] : []),
-            ...(can.reservations ? [{ path: "/reservations", label: "Reservas", icon: "calendar" as const }] : []),
-            ...(can.tables ? [{ path: "/floor", label: "Sala", icon: "floor" as const }] : []),
+            ...(can.menus
+              ? [{ path: "/menus", label: "Cartas", icon: "products" as const }]
+              : []),
+            ...(can.reservations
+              ? [
+                  {
+                    path: "/reservations",
+                    label: "Reservas",
+                    icon: "calendar" as const,
+                  },
+                ]
+              : []),
+            ...(can.tables
+              ? [{ path: "/floor", label: "Sala", icon: "floor" as const }]
+              : []),
             { path: "/site", label: "Web pública", icon: "globe" },
-            ...(can.messages ? [{ path: "/messages", label: "Mensajes", icon: "mail" as const }] : []),
-            ...(can.stats ? [{ path: "/stats", label: "Estadísticas", icon: "summary" as const }] : []),
+            ...(can.messages
+              ? [
+                  {
+                    path: "/messages",
+                    label: "Mensajes",
+                    icon: "mail" as const,
+                  },
+                ]
+              : []),
+            ...(can.stats
+              ? [
+                  {
+                    path: "/stats",
+                    label: "Estadísticas",
+                    icon: "summary" as const,
+                  },
+                ]
+              : []),
           ],
         };
 
@@ -159,7 +258,12 @@ export default async function OrganizationLayout({
       brand={brand}
       sidebar={
         <>
-          <SidebarNav label="Secciones de la organización" groups={groups} local={local} localAfter={1} />
+          <SidebarNav
+            label="Secciones de la organización"
+            groups={groups}
+            local={local}
+            localAfter={1}
+          />
           <div className="side-footer">
             <div className="side-user">
               <span className="avatar" aria-hidden="true">
@@ -173,15 +277,25 @@ export default async function OrganizationLayout({
               <Link
                 href="/app?elegir"
                 className="icon-button"
-                title={hasOthers ? "Cambiar de organización" : "Crear otra organización"}
+                title={
+                  hasOthers
+                    ? "Cambiar de organización"
+                    : "Crear otra organización"
+                }
               >
                 <PanelIcon name="switch" />
                 <span className="visually-hidden">
-                  {hasOthers ? "Cambiar de organización" : "Crear otra organización"}
+                  {hasOthers
+                    ? "Cambiar de organización"
+                    : "Crear otra organización"}
                 </span>
               </Link>
               <form action={logoutAction}>
-                <button type="submit" className="icon-button" title="Cerrar sesión">
+                <button
+                  type="submit"
+                  className="icon-button"
+                  title="Cerrar sesión"
+                >
                   <PanelIcon name="logout" />
                   <span className="visually-hidden">Cerrar sesión</span>
                 </button>
@@ -192,21 +306,32 @@ export default async function OrganizationLayout({
       }
     >
       <h1 className="panel-org">{org.name}</h1>
-      {org.trialEndsAt && <TrialBanner endsAt={org.trialEndsAt} planHref={can.plan ? `${base}/plan` : null} />}
+      {org.trialEndsAt && (
+        <TrialBanner
+          endsAt={org.trialEndsAt}
+          planHref={can.plan ? `${base}/plan` : null}
+        />
+      )}
       {children}
     </PanelShell>
   );
 }
 
 /** Aviso de la prueba gratuita del PRO (D-062): cuántos días quedan y qué pasa después. */
-function TrialBanner({ endsAt, planHref }: { endsAt: Date; planHref: string | null }) {
+function TrialBanner({
+  endsAt,
+  planHref,
+}: {
+  endsAt: Date;
+  planHref: string | null;
+}) {
   const days = trialDaysLeft(endsAt);
   return (
     <p className="notice trial-banner">
       <span>
         <strong>Prueba gratuita del plan PRO:</strong>{" "}
-        {days <= 1 ? "termina en menos de un día" : `te quedan ${days} días`}. Después la organización pasa al plan
-        Básico, sin perder datos.
+        {days <= 1 ? "termina en menos de un día" : `te quedan ${days} días`}.
+        Después tendrás que elegir un plan para seguir usando el panel.
       </span>
       {planHref && (
         <Link href={planHref} className="trial-banner-link">
@@ -214,5 +339,85 @@ function TrialBanner({ endsAt, planHref }: { endsAt: Date; planHref: string | nu
         </Link>
       )}
     </p>
+  );
+}
+
+/** Panel de una organización bloqueada (D-068): solo «Plan», la cuenta y salir. */
+function LockedShell({
+  user,
+  orgName,
+  role,
+  base,
+  children,
+}: {
+  user: { displayName: string };
+  orgName: string;
+  role: keyof typeof ROLE_LABELS;
+  base: string;
+  children: React.ReactNode;
+}) {
+  const brand = (
+    <Link href={`${base}/plan`} className="brand-link">
+      <span className="brand-mark" aria-hidden="true">
+        {initials(orgName)}
+      </span>
+      <span>
+        <strong>{orgName}</strong>
+        <small>Nébora</small>
+      </span>
+    </Link>
+  );
+  return (
+    <PanelShell
+      brand={brand}
+      sidebar={
+        <>
+          <SidebarNav
+            label="Secciones de la organización"
+            local={null}
+            groups={[
+              {
+                title: "",
+                items: [
+                  { href: `${base}/plan`, label: "Plan", icon: "summary" },
+                ],
+              },
+            ]}
+          />
+          <div className="side-footer">
+            <div className="side-user">
+              <span className="avatar" aria-hidden="true">
+                {initials(user.displayName)}
+              </span>
+              <span>
+                <strong>{user.displayName}</strong>
+                <small>{ROLE_LABELS[role]}</small>
+              </span>
+              <Link
+                href="/app?elegir"
+                className="icon-button"
+                title="Cambiar de organización"
+              >
+                <PanelIcon name="switch" />
+                <span className="visually-hidden">Cambiar de organización</span>
+              </Link>
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  className="icon-button"
+                  title="Cerrar sesión"
+                >
+                  <PanelIcon name="logout" />
+                  <span className="visually-hidden">Cerrar sesión</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </>
+      }
+    >
+      <h1 className="panel-org">{orgName}</h1>
+      {children}
+    </PanelShell>
   );
 }

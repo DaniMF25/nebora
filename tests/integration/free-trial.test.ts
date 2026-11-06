@@ -44,7 +44,7 @@ describe("prueba gratuita", () => {
     });
   });
 
-  it("una prueba por persona: la segunda organización empieza en Básico", async () => {
+  it("una prueba por persona: la segunda organización empieza sin prueba, en Básico y bloqueada", async () => {
     const owner = await createTestUser("trial-once");
     await newOrg(owner, "first");
     const second = await newOrg(owner, "second");

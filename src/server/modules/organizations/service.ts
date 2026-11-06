@@ -21,6 +21,8 @@ export interface OrganizationSummary {
   plan: Plan;
   /** Fin de la prueba gratuita del PRO, si está en curso (D-062). */
   trialEndsAt: Date | null;
+  /** Bloqueada sin plan desde esta fecha (D-068). */
+  lockedAt: Date | null;
 }
 
 /** Base del identificador automático: el nombre sin tildes ni símbolos, o «restaurante». */
@@ -39,6 +41,7 @@ export interface Organization {
   createdAt: Date;
   plan: Plan;
   trialEndsAt: Date | null;
+  lockedAt: Date | null;
 }
 
 // `.strict()` rechaza campos no previstos (asignación masiva: organization_id, role...).
@@ -54,7 +57,8 @@ export async function listMyOrganizations(tx: Tx, ctx: UserContext): Promise<Org
     `SELECT o.id, o.name, o.slug::text AS slug, m.role,
             -- Una prueba ya terminada se muestra como Básico aunque aún no se haya aplicado (D-062).
             CASE WHEN o.trial_ends_at <= now() THEN 'basic' ELSE o.plan END AS plan,
-            CASE WHEN o.trial_ends_at > now() THEN o.trial_ends_at END AS "trialEndsAt"
+            CASE WHEN o.trial_ends_at > now() THEN o.trial_ends_at END AS "trialEndsAt",
+            CASE WHEN o.trial_ends_at <= now() THEN o.trial_ends_at ELSE o.locked_at END AS "lockedAt"
        FROM organizations o
        JOIN memberships m ON m.organization_id = o.id
       WHERE m.user_id = $1 AND m.status = 'active'
@@ -92,9 +96,11 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
   await tx.query("SELECT set_config('app.org_id', $1, true)", [id]);
   // Prueba gratuita del PRO (D-062): solo la primera organización de cada persona.
   const trial = await tx.query<{ started: boolean }>("SELECT app.start_trial($1, $2) AS started", [id, TRIAL_DAYS]);
+  // Sin prueba (ya usó la suya), la organización necesita un plan desde el principio (D-068).
+  if (!trial.rows[0]!.started) await tx.query("UPDATE organizations SET locked_at = now() WHERE id = $1", [id]);
   await recordAudit(
     tx,
-    { userId: ctx.userId, organizationId: id, role: "owner", plan: "basic", permissions: new Set(), establishments: "all" },
+    { userId: ctx.userId, organizationId: id, role: "owner", plan: "basic", lockedAt: null, permissions: new Set(), establishments: "all" },
     {
       action: "organization.created",
       entityType: "organization",
@@ -108,7 +114,7 @@ export async function createOrganization(tx: Tx, ctx: UserContext, input: unknow
 export async function getOrganization(tx: Tx, ctx: TenantContext): Promise<Organization> {
   requirePermission(ctx, "organization.read");
   const { rows } = await tx.query<Organization>(
-    `SELECT id, name, slug::text AS slug, created_at AS "createdAt", plan, trial_ends_at AS "trialEndsAt"
+    `SELECT id, name, slug::text AS slug, created_at AS "createdAt", plan, trial_ends_at AS "trialEndsAt", locked_at AS "lockedAt"
        FROM organizations WHERE id = $1`,
     [ctx.organizationId],
   );
@@ -143,14 +149,15 @@ export async function updateOrganization(tx: Tx, ctx: TenantContext, input: unkn
 export async function changePlan(tx: Tx, ctx: TenantContext, input: unknown): Promise<{ from: Plan; to: Plan }> {
   if (ctx.role !== "owner") throw new ForbiddenError();
   const { plan } = parseInput(z.object({ plan: z.enum(PLANS, { message: "Elige un plan" }) }).strict(), input);
-  const { rows } = await tx.query<{ plan: Plan; trial: boolean }>(
-    "SELECT plan, trial_ends_at IS NOT NULL AS trial FROM organizations WHERE id = $1 FOR UPDATE",
+  const { rows } = await tx.query<{ plan: Plan; trial: boolean; locked: boolean }>(
+    "SELECT plan, trial_ends_at IS NOT NULL AS trial, locked_at IS NOT NULL AS locked FROM organizations WHERE id = $1 FOR UPDATE",
     [ctx.organizationId],
   );
   const from = rows[0]!.plan;
   const inTrial = rows[0]!.trial;
-  // Elegir un plan termina la prueba (D-062), aunque sea el mismo PRO de la prueba.
-  if (from === plan && !inTrial) return { from, to: plan };
+  const locked = rows[0]!.locked;
+  // Elegir un plan termina la prueba (D-062) y desbloquea (D-068), aunque sea el mismo plan.
+  if (from === plan && !inTrial && !locked) return { from, to: plan };
   if (plan === "basic") {
     const others = await tx.query<{ members: number; invitations: number }>(
       `SELECT (SELECT count(*)::int FROM memberships WHERE organization_id = $1 AND user_id <> $2) AS members,
@@ -162,19 +169,24 @@ export async function changePlan(tx: Tx, ctx: TenantContext, input: unknown): Pr
     const { members, invitations } = others.rows[0]!;
     if (members > 0 || invitations > 0) {
       throw new ConflictError(
-        "El plan Básico es para una sola persona: quita antes a los demás miembros y revoca las invitaciones abiertas",
+        locked
+          ? "El plan Básico es para una sola persona y tu organización tiene más miembros: elige el Avanzado o el PRO"
+          : "El plan Básico es para una sola persona: quita antes a los demás miembros y revoca las invitaciones abiertas",
       );
     }
     await tx.query("UPDATE reservation_settings SET public_enabled = false WHERE organization_id = $1 AND public_enabled", [
       ctx.organizationId,
     ]);
   }
-  await tx.query("UPDATE organizations SET plan = $2, trial_ends_at = NULL WHERE id = $1", [ctx.organizationId, plan]);
+  await tx.query("UPDATE organizations SET plan = $2, trial_ends_at = NULL, locked_at = NULL WHERE id = $1", [
+    ctx.organizationId,
+    plan,
+  ]);
   await recordAudit(tx, ctx, {
     action: "organization.plan_changed",
     entityType: "organization",
     entityId: ctx.organizationId,
-    metadata: { from, to: plan, endedTrial: inTrial },
+    metadata: { from, to: plan, endedTrial: inTrial, unlocked: locked },
   });
   return { from, to: plan };
 }

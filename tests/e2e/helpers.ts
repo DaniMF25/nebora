@@ -37,9 +37,11 @@ export async function createOrganization(page: Page, name: string, plan: PlanId 
   await page.getByLabel("Identificador (URL)").fill(`${name.toLowerCase().replace(/\s+/g, "-")}-${suffix()}`);
   await page.getByRole("button", { name: "Crear organización" }).click();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-  // La primera organización de cada persona empieza con la prueba del PRO (D-062).
+  // La primera organización de cada persona empieza con la prueba del PRO (D-062);
+  // las siguientes, sin prueba y bloqueadas en «Plan» hasta elegir uno (D-068).
+  await page.waitForURL(/\/app\/[0-9a-f-]{36}(\/plan)?$/);
   const inTrial = await page.getByText("Prueba gratuita del plan PRO").isVisible();
-  if (!(plan === "pro" && inTrial) && !(plan === "basic" && !inTrial)) await choosePlan(page, plan);
+  if (!(plan === "pro" && inTrial)) await choosePlan(page, plan);
   return page.url();
 }
 
@@ -47,17 +49,23 @@ export type PlanId = "basic" | "advanced" | "pro";
 
 /**
  * Cambia el plan de la organización recién abierta desde la página «Plan»
- * (D-046) y vuelve a su inicio. La primera organización de cada persona
- * empieza con la prueba del PRO (D-062) y las siguientes en Básico; las pruebas
- * eligen el plan que necesitan.
+ * (D-046) y vuelve a su inicio. Sirve también para activar el plan de una
+ * organización bloqueada (D-068).
  */
 export async function choosePlan(page: Page, plan: PlanId): Promise<void> {
-  await page.waitForURL(/\/app\/[0-9a-f-]{36}$/);
-  const home = page.url();
+  await page.waitForURL(/\/app\/[0-9a-f-]{36}(\/plan)?$/);
+  const home = page.url().replace(/\/plan$/, "");
   await page.goto(`${home}/plan`);
   await page.locator(`input[name="plan"][value="${plan}"]`).check();
-  await page.getByRole("button", { name: "Cambiar de plan" }).click();
-  await expect(page.getByText("Plan cambiado")).toBeVisible();
+  const activate = page.getByRole("button", { name: "Activar el plan" });
+  if (await activate.isVisible()) {
+    // Organización bloqueada (D-068): al activar, el panel lleva a su inicio.
+    await activate.click();
+    await page.waitForURL(/\?plan=activado$/);
+  } else {
+    await page.getByRole("button", { name: "Cambiar de plan" }).click();
+    await expect(page.getByText("Plan cambiado")).toBeVisible();
+  }
   await page.goto(home);
 }
 

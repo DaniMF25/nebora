@@ -14,6 +14,11 @@ export interface TenantContext extends UserContext {
   role: Role;
   /** Plan de la organización (D-046): limita los permisos del rol. */
   plan: Plan;
+  /**
+   * Bloqueada por no tener plan (fin de la prueba, D-068): sin permisos salvo
+   * ver la organización; solo el propietario puede elegir plan.
+   */
+  lockedAt: Date | null;
   permissions: ReadonlySet<Permission>;
   /**
    * Locales a los que accede: "all" o los identificadores asignados. RLS
@@ -66,17 +71,18 @@ export async function withTenant<T>(
     const { rows } = await tx.query<{
       role: string;
       plan: string;
+      locked_at: Date | null;
       all_establishments: boolean;
       establishment_ids: string[];
     }>(
-      `SELECT m.role, o.plan, m.all_establishments,
+      `SELECT m.role, o.plan, o.locked_at, m.all_establishments,
               coalesce(array_agg(me.establishment_id) FILTER (WHERE me.establishment_id IS NOT NULL), '{}')
                 AS establishment_ids
          FROM memberships m
          JOIN organizations o ON o.id = m.organization_id
          LEFT JOIN membership_establishments me ON me.organization_id = m.organization_id AND me.membership_id = m.id
         WHERE m.organization_id = $1 AND m.user_id = $2 AND m.status = 'active'
-        GROUP BY m.id, o.plan`,
+        GROUP BY m.id, o.plan, o.locked_at`,
       [organizationId, user.id],
     );
     const role = rows[0]?.role;
@@ -84,12 +90,18 @@ export async function withTenant<T>(
     const all = rows[0]!.all_establishments;
     const plan = rows[0]!.plan;
     if (!isPlan(plan)) throw new Error("Plan de organización desconocido");
+    const lockedAt = rows[0]!.locked_at;
+    const permissions = permissionsFor(role, all, plan);
     return fn(tx, {
       userId: user.id,
       organizationId,
       role,
       plan,
-      permissions: permissionsFor(role, all, plan),
+      lockedAt,
+      // Bloqueada: nada salvo ver la organización (la comprobación es del servidor, D-068).
+      permissions: lockedAt
+        ? new Set([...permissions].filter((p) => p === "organization.read"))
+        : permissions,
       establishments: all ? "all" : new Set(rows[0]!.establishment_ids),
     });
   });

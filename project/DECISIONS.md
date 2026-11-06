@@ -1087,3 +1087,28 @@ Añadir decisiones con fecha, contexto, opciones consideradas, decisión, consec
 - **Textos:** el Básico deja de presentarse como gratis. La web, el alta y la bienvenida dicen ahora que al acabar la prueba se elige plan, desde 14,99 € al mes, y que, al no haber tarjeta, nada se cobra solo.
 
 **Pendiente (decisión del titular):** el sistema sigue pasando la organización al plan Básico cuando termina la prueba (D-062). Mientras no haya proveedor de cobros, eso equivale a un Básico sin pagar. Al conectar los cobros hay que decidir qué ocurre al acabar la prueba sin elegir plan: bloquear el panel en solo lectura, mantener la web publicada unos días o despublicarla.
+
+## D-068 — Fin de la prueba: bloqueo del panel, 15 días de web y borrado
+**Fecha:** 2026-11-06. **Estado:** aceptada (decisión del titular; sustituye el paso automático al Básico de D-062).
+
+**Decisión:**
+- **Bloqueo** (`organizations.locked_at`, migración 0040):
+  - cuándo: al terminar la prueba de 7 días sin haber elegido plan, y al crear una organización sin prueba (la persona ya usó la suya), porque el Básico es de pago (D-067);
+  - qué permite: el panel solo muestra «Plan», con el aviso, las fechas y la elección de plan; el resto de rutas redirige ahí;
+  - en el servidor: `withTenant` deja la organización sin permisos salvo `organization.read`, y solo el propietario puede elegir plan;
+  - la reserva online se desactiva y las invitaciones abiertas se anulan.
+- **15 días de web:** la web y la carta siguen visibles 15 días desde el bloqueo (`LOCK_GRACE_DAYS`), con el aspecto del plan Básico.
+- **Borrado completo:** a los 15 días, si sigue bloqueada, `app.purge_locked_organizations()` la borra con todos sus datos.
+  - **Qué se borra:** todas las tablas con `organization_id`, incluidas fotos, auditoría, clientes y recuentos cerrados. El recorrido es automático y se repite mientras queden filas que dependan de otras, así que una tabla nueva no se queda fuera.
+  - **Qué queda:** solo una constancia (`purged_organizations`: identificador y fechas, sin nombres ni datos personales). Las cuentas de usuario no se borran, porque pueden pertenecer a otras organizaciones.
+  - **Cuándo se ejecuta:** al servir las páginas públicas (como mucho cada 30 s por proceso) y con la tarea diaria `pnpm orgs:purge`.
+- **Desbloqueo:** al elegir un plan («Activar el plan»), el panel vuelve con todo. Con más miembros, el Básico (una sola persona) no se ofrece como salida y el mensaje pide elegir Avanzado o PRO, porque durante el bloqueo no se puede gestionar el equipo.
+- **Garantías:**
+  - el rol de la aplicación solo puede poner `locked_at` a la hora actual o quitarlo (disparador), así que no puede adelantar un borrado;
+  - no puede ejecutar `app.purge_organization` directamente;
+  - pruebas de integración y de mutación: sin recortar permisos falla la prueba de bloqueo; sin los reintentos del borrado falla la de borrado completo.
+
+**Límites conocidos:**
+- No hay aviso por correo antes del bloqueo ni del borrado (falta proveedor de correo). El aviso solo se ve en el panel.
+- Sin cobros, «Activar el plan» desbloquea sin pagar. Al conectar el proveedor de pagos, la activación debe exigir el pago.
+- Si nadie visita la web ni se programa `pnpm orgs:purge`, el borrado espera a la siguiente visita. El resultado es el mismo, porque la web sigue sirviéndose hasta entonces.

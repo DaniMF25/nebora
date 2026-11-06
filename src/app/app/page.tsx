@@ -33,7 +33,7 @@ export default async function OrganizationsPage({
     trial: await canStartTrial(tx, ctx),
   }));
   const choosing = (await searchParams).elegir !== undefined;
-  if (orgs.length === 1 && !choosing) redirect(`/app/${orgs[0]!.id}`);
+  if (orgs.length === 1 && !choosing) redirect(orgs[0]!.lockedAt ? `/app/${orgs[0]!.id}/plan` : `/app/${orgs[0]!.id}`);
 
   const header = (
     <header className="single-top">
@@ -60,7 +60,7 @@ export default async function OrganizationsPage({
           <p className="notice">
             <span>
               <strong>{TRIAL_DAYS} días gratis del plan PRO</strong>: reservas, equipo, inventario y compras incluidos,
-              sin tarjeta. Al terminar eliges plan, sin perder nada de lo que hayas montado.
+              sin tarjeta. Al terminar eliges plan y sigues con todo lo que hayas montado.
             </span>
           </p>
         )}
@@ -104,7 +104,7 @@ export default async function OrganizationsPage({
           const n = establishments[i];
           return (
             <li key={o.id}>
-              <Link href={`/app/${o.id}`} className="org-card">
+              <Link href={o.lockedAt ? `/app/${o.id}/plan` : `/app/${o.id}`} className="org-card">
                 <span className="org-avatar" aria-hidden="true">
                   {o.name.trim().charAt(0).toUpperCase()}
                 </span>
@@ -115,7 +115,9 @@ export default async function OrganizationsPage({
                     {n !== null && ` · ${n === 1 ? "1 local" : `${n} locales`}`}
                   </span>
                 </span>
-                <span className="badge">{o.trialEndsAt ? "Prueba PRO" : PLAN_LABELS[o.plan]}</span>
+                <span className={o.lockedAt ? "badge badge-warn" : "badge"}>
+                  {o.lockedAt ? "Sin plan" : o.trialEndsAt ? "Prueba PRO" : PLAN_LABELS[o.plan]}
+                </span>
               </Link>
             </li>
           );

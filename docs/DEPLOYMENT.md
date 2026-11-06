@@ -97,6 +97,7 @@ ALTER ROLE nebora_app WITH LOGIN PASSWORD '<secreto>';
 | Tarea | Frecuencia | Comando |
 |---|---|---|
 | Anonimización de datos de clientes y limpieza de límites de peticiones | Diaria | `docker run --rm -e DATABASE_ADMIN_URL=… nebora-tools pnpm privacy:retention` |
+| Fin de las pruebas gratuitas: bloqueo y borrado de organizaciones con más de 15 días sin plan (D-068) | Diaria | `docker run --rm -e DATABASE_ADMIN_URL=… nebora-tools pnpm orgs:purge` |
 
 Sin esta tarea **no hay anonimización automática** (D-020).
 

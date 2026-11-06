@@ -9,6 +9,12 @@ export type PlanId = "basic" | "advanced" | "pro";
 /** Días de prueba gratuita del plan PRO al crear la organización. */
 export const TRIAL_DAYS = 7;
 
+/**
+ * Días que la web y la carta siguen visibles tras bloquearse la organización
+ * sin plan; después se borra (D-068). Debe coincidir con la migración 0040.
+ */
+export const LOCK_GRACE_DAYS = 15;
+
 export interface PlanInfo {
   id: PlanId;
   name: string;

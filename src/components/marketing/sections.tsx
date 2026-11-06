@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDailyPrice, formatPrice, PLAN_INFO, TRIAL_DAYS } from "@/lib/plans";
+import { formatDailyPrice, formatPrice, LOCK_GRACE_DAYS, PLAN_INFO, TRIAL_DAYS } from "@/lib/plans";
 import { primaryCta, type MarketingAccess } from "./shell";
 import styles from "./marketing.module.css";
 
@@ -82,7 +82,7 @@ export function TrialBand({ access }: { access: MarketingAccess }) {
             </li>
             <li>
               <strong>El día {TRIAL_DAYS + 1}</strong> Eliges tu plan, desde {formatPrice(PLAN_INFO[0]!.monthlyPrice)} al
-              mes. Como no diste tarjeta, nada se cobra solo, y no se borra nada de lo que hayas montado.
+              mes, y sigues con todo lo que hayas montado. Como no diste tarjeta, nada se cobra solo.
             </li>
           </ol>
           {!access.loggedIn && <Actions access={access} invert />}
@@ -140,7 +140,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "¿Qué pasa cuando acaba la prueba?",
-    a: `Eliges tu plan, desde ${formatPrice(PLAN_INFO[0]!.monthlyPrice)} al mes. Tu cuenta pasa al Básico: la web y las cartas siguen como estaban, y lo de los planes superiores (como la reserva online) deja de verse, pero no se borra. Si subes de plan, vuelve todo.`,
+    a: `Eliges tu plan, desde ${formatPrice(PLAN_INFO[0]!.monthlyPrice)} al mes, y sigues con todo lo que hayas montado. Hasta que lo elijas, el panel queda en pausa; tu web y tu carta siguen visibles ${LOCK_GRACE_DAYS} días más. Si en ese tiempo no eliges plan, borramos tu restaurante y sus datos: no guardamos datos de nadie sin motivo.`,
   },
   {
     q: "Tengo dos locales. ¿Pago dos veces?",
